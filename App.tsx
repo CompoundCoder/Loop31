@@ -17,14 +17,14 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        <StatusBar style="auto" />
+        <StatusBar style="dark" />
         <Tab.Navigator
           screenOptions={({ route }) => ({
             tabBarIcon: ({ focused, color, size }) => {
               let iconName;
 
               switch (route.name) {
-                case 'Scheduled':
+                case 'Queue':
                   iconName = focused ? 'calendar' : 'calendar-outline';
                   break;
                 case 'Analytics':
@@ -46,15 +46,68 @@ export default function App() {
               return <Ionicons name={iconName as any} size={size} color={color} />;
             },
             tabBarActiveTintColor: '#2f95dc',
-            tabBarInactiveTintColor: 'gray',
+            tabBarInactiveTintColor: '#999',
             headerShown: true,
+            headerStyle: {
+              backgroundColor: '#fff',
+              elevation: 0,
+              shadowOpacity: 0,
+              borderBottomWidth: 1,
+              borderBottomColor: '#f0f0f0',
+            },
+            headerTitleStyle: {
+              fontSize: 17,
+              fontWeight: '600',
+              color: '#333',
+            },
+            tabBarStyle: {
+              backgroundColor: '#fff',
+              borderTopColor: '#f0f0f0',
+              height: 88,
+              paddingBottom: 30,
+              paddingTop: 10,
+            },
+            tabBarLabelStyle: {
+              fontSize: 12,
+              marginTop: 4,
+            },
           })}
         >
-          <Tab.Screen name="Scheduled" component={ScheduledScreen} />
-          <Tab.Screen name="Analytics" component={AnalyticsScreen} />
-          <Tab.Screen name="Create" component={CreateScreen} />
-          <Tab.Screen name="History" component={HistoryScreen} />
-          <Tab.Screen name="Settings" component={SettingsScreen} />
+          <Tab.Screen 
+            name="Queue" 
+            component={ScheduledScreen}
+            options={{
+              title: 'Content Queue',
+            }}
+          />
+          <Tab.Screen 
+            name="Analytics" 
+            component={AnalyticsScreen}
+            options={{
+              title: 'Analytics',
+            }}
+          />
+          <Tab.Screen 
+            name="Create" 
+            component={CreateScreen}
+            options={{
+              title: 'Create Post',
+            }}
+          />
+          <Tab.Screen 
+            name="History" 
+            component={HistoryScreen}
+            options={{
+              title: 'Post History',
+            }}
+          />
+          <Tab.Screen 
+            name="Settings" 
+            component={SettingsScreen}
+            options={{
+              title: 'Settings',
+            }}
+          />
         </Tab.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
