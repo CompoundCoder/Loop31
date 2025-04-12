@@ -1,5 +1,5 @@
 // Platform types
-export type Platform = 'twitter' | 'instagram' | 'facebook' | 'linkedin' | 'pinterest' | 'tiktok' | 'youtube';
+export type Platform = 'twitter' | 'instagram' | 'facebook' | 'linkedin' | 'pinterest' | 'tiktok';
 
 // Media types
 export type MediaType = 'image' | 'video';
@@ -26,11 +26,6 @@ export type Post = {
   mentions: string[];
   links: string[];
   analytics?: PostAnalytics;
-  metadata: {
-    createdAt: string;
-    updatedAt: string;
-    publishedAt?: string;
-  };
 };
 
 // Analytics types
