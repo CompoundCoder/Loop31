@@ -17,6 +17,20 @@ const SOCIAL_ACCOUNTS = [
   { id: 'tw1', platform: 'twitter', name: '@brandhandle', icon: 'logo-twitter' },
 ];
 
+// Add mock group data (this would come from settings/backend later)
+const PLATFORM_GROUPS = {
+  'main-brand': {
+    id: 'main-brand',
+    name: 'Main Brand',
+    accountIds: ['ig1', 'fb1', 'tt1'],
+  },
+  'secondary-brand': {
+    id: 'secondary-brand',
+    name: 'Secondary Brand',
+    accountIds: ['ig2', 'tw1'],
+  },
+};
+
 export default function CreateScreen() {
   const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>([]);
   const [caption, setCaption] = useState('');
@@ -83,6 +97,73 @@ export default function CreateScreen() {
     setSelectedAccountIds(draft.platforms);
   };
 
+  const isGroupSelection = (selectedIds: string[]) => {
+    return Object.values(PLATFORM_GROUPS).some(group => 
+      group.accountIds.length === selectedIds.length && 
+      group.accountIds.every(id => selectedIds.includes(id))
+    );
+  };
+
+  const getSelectedGroup = (selectedIds: string[]) => {
+    return Object.values(PLATFORM_GROUPS).find(group => 
+      group.accountIds.length === selectedIds.length && 
+      group.accountIds.every(id => selectedIds.includes(id))
+    );
+  };
+
+  const renderSelectedPlatforms = () => {
+    const group = getSelectedGroup(selectedAccountIds);
+    
+    if (group) {
+      // Render group view with stacked icons
+      const accounts = group.accountIds.map(id => 
+        SOCIAL_ACCOUNTS.find(acc => acc.id === id)
+      ).filter(Boolean);
+      
+      return (
+        <View style={styles.groupDisplay}>
+          <View style={styles.groupBubble}>
+            <View style={styles.stackedIcons}>
+              {accounts.map((account, index) => (
+                <View 
+                  key={account?.id} 
+                  style={[
+                    styles.stackedIcon,
+                    { 
+                      left: index * 16,  // Increased spacing between icons
+                    }
+                  ]}
+                >
+                  <Ionicons 
+                    name={account?.icon as keyof typeof Ionicons.glyphMap}
+                    size={20}
+                    color="#2f95dc"
+                  />
+                </View>
+              ))}
+            </View>
+            <Text style={styles.groupName}>{group.name}</Text>
+          </View>
+        </View>
+      );
+    }
+
+    // Render individual platform icons
+    return (
+      <View style={styles.selectedPlatforms}>
+        {selectedAccounts.map(account => (
+          <View key={account.id} style={styles.platformIcon}>
+            <Ionicons 
+              name={account.icon as keyof typeof Ionicons.glyphMap}
+              size={20}
+              color="#2f95dc"
+            />
+          </View>
+        ))}
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
       <KeyboardAvoidingView 
@@ -140,20 +221,7 @@ export default function CreateScreen() {
               onPress={() => setShowPlatformSelect(true)}
             >
               {selectedAccountIds.length > 0 ? (
-                <View style={styles.selectedPlatforms}>
-                  {selectedAccounts.map(account => (
-                    <View key={account.id} style={styles.selectedPlatform}>
-                      <Ionicons 
-                        name={account.icon as keyof typeof Ionicons.glyphMap} 
-                        size={20} 
-                        color="#2f95dc" 
-                      />
-                      <Text style={styles.selectedPlatformText} numberOfLines={1}>
-                        {account.name}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
+                renderSelectedPlatforms()
               ) : (
                 <View style={styles.platformSelectorContent}>
                   <Ionicons name="share-social-outline" size={22} color="#666" />
@@ -318,8 +386,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#f8f8f8',
-    padding: 16,
+    padding: 12,
     borderRadius: 12,
+    minHeight: 48,
   },
   platformSelectorContent: {
     flexDirection: 'row',
@@ -334,24 +403,51 @@ const styles = StyleSheet.create({
   selectedPlatforms: {
     flex: 1,
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginRight: 8,
+    alignItems: 'center',
+    gap: 8,
   },
-  selectedPlatform: {
+  platformIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  groupDisplay: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e8f3ff',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 16,
-    marginRight: 8,
-    marginBottom: 8,
   },
-  selectedPlatformText: {
-    fontSize: 14,
-    color: '#2f95dc',
-    marginLeft: 6,
-    maxWidth: 120,
+  groupBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    gap: 4,  // Added gap for consistent spacing
+  },
+  stackedIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 24,
+    position: 'relative',
+    minWidth: 60,  // Increased to accommodate wider spacing
+  },
+  stackedIcon: {
+    width: 32,  // Increased width for hit box
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    backgroundColor: 'transparent',
+  },
+  groupName: {
+    fontSize: 15,
+    color: '#333',
+    fontWeight: '500',
+    marginLeft: 4,  // Reduced margin to bring text closer
   },
   captionHeader: {
     flexDirection: 'row',
