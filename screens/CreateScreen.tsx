@@ -341,6 +341,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    paddingTop: Platform.OS === 'ios' ? 44 : 0,
   },
   keyboardAvoidingView: {
     flex: 1,
@@ -355,6 +356,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+    paddingTop: 16,
   },
   sectionTitle: {
     fontSize: 17,
@@ -370,7 +372,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginHorizontal: 16,
     borderRadius: 12,
-    marginBottom: 16,
+    marginBottom: 8,
   },
   draftSelectorContent: {
     flexDirection: 'row',

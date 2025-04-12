@@ -30,14 +30,14 @@ export default function SettingsMainScreen() {
             icon="share-social-outline"
             iconColor="#FF2D55"
             value={`${connectedCount} connected`}
-            onPress={() => navigation.navigate('AccountSettings')}
+            onPress={() => navigation.navigate('ConnectedAccounts')}
           />
           <SettingItem
             label="Brand Groups"
             icon="layers-outline"
             iconColor="#5856D6"
             value={`${groupCount} groups`}
-            onPress={() => navigation.navigate('AccountSettings')}
+            onPress={() => navigation.navigate('BrandGroups')}
           />
           <SettingItem
             label="Notifications"

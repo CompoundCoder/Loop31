@@ -5,7 +5,7 @@ export default function PostsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Content Queue</Text>
+        <Text style={styles.title}>Posting Schedule</Text>
       </View>
       <View style={styles.content}>
         <Text style={styles.placeholder}>No scheduled posts</Text>

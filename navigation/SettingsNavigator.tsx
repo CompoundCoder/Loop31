@@ -6,6 +6,9 @@ import NotificationSettingsScreen from '../screens/settings/NotificationSettings
 import SchedulingSettingsScreen from '../screens/settings/SchedulingSettingsScreen';
 import ComposingSettingsScreen from '../screens/settings/ComposingSettingsScreen';
 import BillingSettingsScreen from '../screens/settings/BillingSettingsScreen';
+import BrandGroupsScreen from '../screens/settings/BrandGroupsScreen';
+import ConnectedAccountsScreen from '../screens/settings/ConnectedAccountsScreen';
+import SocialAccountDetailsScreen from '../screens/settings/SocialAccountDetailsScreen';
 
 export type SettingsStackParamList = {
   SettingsMain: undefined;
@@ -15,6 +18,9 @@ export type SettingsStackParamList = {
   SchedulingSettings: undefined;
   ComposingSettings: undefined;
   BillingSettings: undefined;
+  BrandGroups: undefined;
+  ConnectedAccounts: undefined;
+  SocialAccountDetails: { accountId: string };
 };
 
 const Stack = createNativeStackNavigator<SettingsStackParamList>();
@@ -46,12 +52,22 @@ export default function SettingsNavigator() {
       <Stack.Screen 
         name="ProfileSettings" 
         component={ProfileSettingsScreen}
-        options={{ title: 'Profile' }}
+        options={{ title: 'Account Settings' }}
       />
       <Stack.Screen 
-        name="AccountSettings" 
-        component={AccountSettingsScreen}
-        options={{ title: 'Account' }}
+        name="BrandGroups" 
+        component={BrandGroupsScreen}
+        options={{ title: 'Brand Groups' }}
+      />
+      <Stack.Screen 
+        name="ConnectedAccounts" 
+        component={ConnectedAccountsScreen}
+        options={{ title: 'Connected Accounts' }}
+      />
+      <Stack.Screen 
+        name="SocialAccountDetails" 
+        component={SocialAccountDetailsScreen}
+        options={{ title: 'Account Details' }}
       />
       <Stack.Screen 
         name="NotificationSettings" 

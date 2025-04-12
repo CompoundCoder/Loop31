@@ -25,6 +25,7 @@ export default function TabNavigator() {
         name="Posts"
         component={PostsScreen}
         options={{
+          title: 'Posting Schedule',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="list-outline" size={size} color={color} />
           ),

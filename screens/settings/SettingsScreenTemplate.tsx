@@ -4,55 +4,70 @@ import { Ionicons } from '@expo/vector-icons';
 type SettingItemProps = {
   label: string;
   value?: string;
-  icon?: keyof typeof Ionicons.glyphMap;
+  icon?: string;
   iconColor?: string;
   onPress?: () => void;
-  toggle?: boolean;
   onToggle?: (value: boolean) => void;
+  toggle?: boolean;
   showChevron?: boolean;
+  numberOfLines?: number;
+  platformIcons?: string;
 };
 
 export const SettingItem = ({ 
   label, 
   value, 
   icon, 
-  iconColor = '#666',
+  iconColor = '#007AFF',
   onPress, 
-  toggle, 
   onToggle,
-  showChevron = true 
+  toggle,
+  showChevron = true,
+  numberOfLines = 1,
+  platformIcons,
 }: SettingItemProps) => {
   const content = (
     <View style={styles.settingItem}>
-      <View style={styles.settingItemLeft}>
-        {icon && (
-          <View style={[styles.iconContainer, { backgroundColor: iconColor + '20' }]}>
-            <Ionicons name={icon} size={20} color={iconColor} />
-          </View>
-        )}
-        <Text style={[styles.settingItemLabel, !icon && { marginLeft: 0 }]}>
-          {label}
-        </Text>
-      </View>
-      <View style={styles.settingItemRight}>
-        {value && <Text style={styles.settingItemValue}>{value}</Text>}
-        {toggle !== undefined && (
-          <Switch
-            value={toggle}
-            onValueChange={onToggle}
-            trackColor={{ false: '#e9e9ea', true: '#34C759' }}
-          />
-        )}
-        {showChevron && !toggle && (
-          <Ionicons name="chevron-forward" size={20} color="#ccc" />
+      {icon && (
+        <View style={styles.iconContainer}>
+          <Ionicons name={icon as any} size={22} color={iconColor} />
+        </View>
+      )}
+      <View style={styles.labelContainer}>
+        <Text style={styles.label} numberOfLines={numberOfLines}>{label}</Text>
+        {value && (
+          <Text style={styles.value} numberOfLines={1}>{value}</Text>
         )}
       </View>
+      {platformIcons && (
+        <View style={styles.platformIcons}>
+          {platformIcons.split(',').map((iconName, index) => (
+            <View key={iconName} style={[styles.platformIcon, index > 0 && styles.platformIconOffset]}>
+              <Ionicons name={iconName as any} size={18} color="#8E8E93" />
+            </View>
+          ))}
+        </View>
+      )}
+      {showChevron && !toggle && (
+        <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+      )}
+      {toggle !== undefined && (
+        <View style={[styles.toggle, toggle ? styles.toggleOn : styles.toggleOff]}>
+          <View style={[styles.toggleKnob, toggle ? styles.toggleKnobOn : styles.toggleKnobOff]} />
+        </View>
+      )}
     </View>
   );
 
-  if (onPress) {
+  if (onPress || onToggle) {
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+      <TouchableOpacity 
+        onPress={() => {
+          if (onPress) onPress();
+          if (onToggle) onToggle(!toggle);
+        }}
+        activeOpacity={0.7}
+      >
         {content}
       </TouchableOpacity>
     );
@@ -121,11 +136,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#e5e5ea',
   },
-  settingItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
   iconContainer: {
     width: 32,
     height: 32,
@@ -133,18 +143,56 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  settingItemLabel: {
+  labelContainer: {
+    flex: 1,
+    marginRight: 8,
+  },
+  label: {
     fontSize: 16,
     color: '#333',
-    marginLeft: 12,
   },
-  settingItemRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  settingItemValue: {
+  value: {
     fontSize: 15,
     color: '#666',
+  },
+  platformIcons: {
+    flexDirection: 'row',
+    marginRight: 8,
+  },
+  platformIcon: {
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  platformIconOffset: {
+    marginLeft: -8,
+  },
+  toggle: {
+    width: 44,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#e9e9ea',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  toggleOn: {
+    backgroundColor: '#34C759',
+  },
+  toggleOff: {
+    backgroundColor: '#e9e9ea',
+  },
+  toggleKnob: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    marginHorizontal: 2,
+  },
+  toggleKnobOn: {
+    marginLeft: 22,
+  },
+  toggleKnobOff: {
+    marginLeft: 2,
   },
 }); 
