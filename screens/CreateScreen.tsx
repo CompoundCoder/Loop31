@@ -127,6 +127,15 @@ export default function CreateScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* Draft Selector */}
+          <TouchableOpacity style={styles.draftSelector} onPress={() => console.log('Open drafts')}>
+            <View style={styles.draftSelectorContent}>
+              <Ionicons name="document-text-outline" size={22} color="#666" />
+              <Text style={styles.draftSelectorText}>Select from drafts</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#666" />
+          </TouchableOpacity>
+
           {/* Platform Selection */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Share to</Text>
@@ -399,5 +408,23 @@ const styles = StyleSheet.create({
   datePickerIOS: {
     height: 250,
     width: '100%',
+  },
+  draftSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8f8f8',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  draftSelectorContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  draftSelectorText: {
+    fontSize: 16,
+    color: '#666',
+    marginLeft: 12,
   },
 }); 
