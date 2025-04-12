@@ -5,37 +5,30 @@ import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import BottomActionBar from './create/BottomActionBar';
 import { format } from 'date-fns';
+import DraftsScreen from './DraftsScreen';
+import PlatformSelectModal from './create/PlatformSelectModal';
 
-type SocialPlatform = 'instagram' | 'facebook' | 'tiktok' | 'youtube';
-
-interface PlatformOption {
-  id: SocialPlatform;
-  name: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  maxCharacters?: number;
-}
-
-const PLATFORMS: PlatformOption[] = [
-  { id: 'instagram', name: 'Instagram', icon: 'logo-instagram', maxCharacters: 2200 },
-  { id: 'facebook', name: 'Facebook', icon: 'logo-facebook', maxCharacters: 63206 },
-  { id: 'tiktok', name: 'TikTok', icon: 'logo-tiktok', maxCharacters: 2200 },
-  { id: 'youtube', name: 'YouTube Shorts', icon: 'logo-youtube', maxCharacters: 100 },
+// Import SOCIAL_ACCOUNTS from PlatformSelectModal when moving to proper state management
+const SOCIAL_ACCOUNTS = [
+  { id: 'ig1', platform: 'instagram', name: 'Brand Main', icon: 'logo-instagram' },
+  { id: 'ig2', platform: 'instagram', name: 'Brand Secondary', icon: 'logo-instagram' },
+  { id: 'fb1', platform: 'facebook', name: 'Brand Page', icon: 'logo-facebook' },
+  { id: 'tt1', platform: 'tiktok', name: 'Brand TikTok', icon: 'logo-tiktok' },
+  { id: 'tw1', platform: 'twitter', name: '@brandhandle', icon: 'logo-twitter' },
 ];
 
 export default function CreateScreen() {
-  const [selectedPlatforms, setSelectedPlatforms] = useState<SocialPlatform[]>([]);
+  const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>([]);
   const [caption, setCaption] = useState('');
   const [mediaUri, setMediaUri] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [scheduledDate, setScheduledDate] = useState(new Date());
+  const [showDrafts, setShowDrafts] = useState(false);
+  const [showPlatformSelect, setShowPlatformSelect] = useState(false);
 
-  const togglePlatform = (platform: SocialPlatform) => {
-    setSelectedPlatforms(prev =>
-      prev.includes(platform)
-        ? prev.filter(p => p !== platform)
-        : [...prev, platform]
-    );
-  };
+  const selectedAccounts = SOCIAL_ACCOUNTS.filter(account => 
+    selectedAccountIds.includes(account.id)
+  );
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -51,19 +44,15 @@ export default function CreateScreen() {
   };
 
   const getCharacterCount = () => {
-    if (selectedPlatforms.length === 0) return null;
-    const minLimit = Math.min(
-      ...selectedPlatforms.map(p => 
-        PLATFORMS.find(plat => plat.id === p)?.maxCharacters || Infinity
-      )
-    );
-    return `${caption.length}/${minLimit}`;
+    if (selectedAccountIds.length === 0) return null;
+    // You'll need to implement proper character limits based on selected accounts
+    return `${caption.length}/2200`;
   };
 
   const handleSaveDraft = () => {
     const draft = {
       id: Date.now().toString(),
-      platforms: selectedPlatforms,
+      accountIds: selectedAccountIds,
       caption,
       mediaUri,
       scheduledDate: scheduledDate.toISOString(),
@@ -84,10 +73,14 @@ export default function CreateScreen() {
   };
 
   const handleSchedule = () => {
-    if (!selectedPlatforms.length || !caption) return;
-    
+    if (!selectedAccountIds.length || !caption) return;
     console.log('Scheduling post for:', scheduledDate);
-    // TODO: Implement actual scheduling
+  };
+
+  const handleEditDraft = (draft: any) => {
+    setCaption(draft.caption);
+    setMediaUri(draft.mediaUri);
+    setSelectedAccountIds(draft.platforms);
   };
 
   return (
@@ -128,7 +121,10 @@ export default function CreateScreen() {
           </View>
 
           {/* Draft Selector */}
-          <TouchableOpacity style={styles.draftSelector} onPress={() => console.log('Open drafts')}>
+          <TouchableOpacity 
+            style={styles.draftSelector} 
+            onPress={() => setShowDrafts(true)}
+          >
             <View style={styles.draftSelectorContent}>
               <Ionicons name="document-text-outline" size={22} color="#666" />
               <Text style={styles.draftSelectorText}>Select from drafts</Text>
@@ -136,35 +132,36 @@ export default function CreateScreen() {
             <Ionicons name="chevron-forward" size={20} color="#666" />
           </TouchableOpacity>
 
-          {/* Platform Selection */}
+          {/* Share To Section */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Share to</Text>
-            <View style={styles.platformGrid}>
-              {PLATFORMS.map(platform => (
-                <TouchableOpacity
-                  key={platform.id}
-                  style={[
-                    styles.platformButton,
-                    selectedPlatforms.includes(platform.id) && styles.platformButtonSelected
-                  ]}
-                  onPress={() => togglePlatform(platform.id)}
-                >
-                  <Ionicons
-                    name={platform.icon}
-                    size={24}
-                    color={selectedPlatforms.includes(platform.id) ? '#fff' : '#666'}
-                  />
-                  <Text
-                    style={[
-                      styles.platformText,
-                      selectedPlatforms.includes(platform.id) && styles.platformTextSelected
-                    ]}
-                  >
-                    {platform.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <TouchableOpacity 
+              style={styles.platformSelector}
+              onPress={() => setShowPlatformSelect(true)}
+            >
+              {selectedAccountIds.length > 0 ? (
+                <View style={styles.selectedPlatforms}>
+                  {selectedAccounts.map(account => (
+                    <View key={account.id} style={styles.selectedPlatform}>
+                      <Ionicons 
+                        name={account.icon as keyof typeof Ionicons.glyphMap} 
+                        size={20} 
+                        color="#2f95dc" 
+                      />
+                      <Text style={styles.selectedPlatformText} numberOfLines={1}>
+                        {account.name}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.platformSelectorContent}>
+                  <Ionicons name="share-social-outline" size={22} color="#666" />
+                  <Text style={styles.platformSelectorText}>Select platforms</Text>
+                </View>
+              )}
+              <Ionicons name="chevron-forward" size={20} color="#666" />
+            </TouchableOpacity>
           </View>
 
           {/* Caption Input */}
@@ -203,6 +200,7 @@ export default function CreateScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
+      {/* Date Picker Modal */}
       <Modal
         visible={showDatePicker}
         transparent={true}
@@ -244,6 +242,26 @@ export default function CreateScreen() {
         </View>
       </Modal>
 
+      {/* Drafts Modal */}
+      <Modal
+        visible={showDrafts}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <DraftsScreen 
+          onClose={() => setShowDrafts(false)}
+          onEditDraft={handleEditDraft}
+        />
+      </Modal>
+
+      {/* Platform Select Modal */}
+      <PlatformSelectModal
+        visible={showPlatformSelect}
+        onClose={() => setShowPlatformSelect(false)}
+        selectedAccounts={selectedAccountIds}
+        onSelectAccounts={setSelectedAccountIds}
+      />
+
       <BottomActionBar
         onSaveDraft={handleSaveDraft}
       />
@@ -263,7 +281,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollViewContent: {
-    paddingTop: 12,
     paddingBottom: 90,
   },
   section: {
@@ -277,32 +294,93 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 12,
   },
-  platformGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginHorizontal: -8,
-  },
-  platformButton: {
+  draftSelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    padding: 12,
-    borderRadius: 8,
-    marginHorizontal: 8,
+    justifyContent: 'space-between',
+    backgroundColor: '#f8f8f8',
+    padding: 16,
+    marginHorizontal: 16,
+    borderRadius: 12,
     marginBottom: 16,
-    minWidth: '45%',
   },
-  platformButtonSelected: {
-    backgroundColor: '#2f95dc',
+  draftSelectorContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  platformText: {
-    marginLeft: 8,
-    fontSize: 15,
+  draftSelectorText: {
+    fontSize: 16,
     color: '#666',
-    fontWeight: '500',
+    marginLeft: 12,
   },
-  platformTextSelected: {
-    color: '#fff',
+  platformSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8f8f8',
+    padding: 16,
+    borderRadius: 12,
+  },
+  platformSelectorContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  platformSelectorText: {
+    fontSize: 16,
+    color: '#666',
+    marginLeft: 12,
+  },
+  selectedPlatforms: {
+    flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginRight: 8,
+  },
+  selectedPlatform: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e8f3ff',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 16,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  selectedPlatformText: {
+    fontSize: 14,
+    color: '#2f95dc',
+    marginLeft: 6,
+    maxWidth: 120,
+  },
+  captionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  captionInput: {
+    fontSize: 16,
+    color: '#333',
+    minHeight: 100,
+    textAlignVertical: 'top',
+    padding: 0,
+  },
+  scheduleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
+  scheduleContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  scheduleText: {
+    fontSize: 15,
+    color: '#333',
+    marginLeft: 12,
   },
   mediaUpload: {
     borderWidth: 1,
@@ -336,50 +414,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: 12,
   },
-  captionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  characterCount: {
-    fontSize: 14,
-    color: '#999',
-  },
-  captionInput: {
-    fontSize: 16,
-    color: '#333',
-    minHeight: 100,
-    textAlignVertical: 'top',
-    padding: 0,
-  },
-  scheduleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-  },
-  scheduleContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  scheduleText: {
-    fontSize: 15,
-    color: '#333',
-    marginLeft: 12,
-  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end', // Slides up from bottom
+    justifyContent: 'flex-end',
   },
   datePickerContainer: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     overflow: 'hidden',
-    paddingBottom: Platform.OS === 'ios' ? 20 : 0, // Add padding for iOS home indicator
+    paddingBottom: Platform.OS === 'ios' ? 20 : 0,
   },
   datePickerContent: {
     width: '100%',
@@ -409,22 +454,10 @@ const styles = StyleSheet.create({
     height: 250,
     width: '100%',
   },
-  draftSelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#f8f8f8',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 20,
-  },
-  draftSelectorContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  draftSelectorText: {
-    fontSize: 16,
-    color: '#666',
-    marginLeft: 12,
+  characterCount: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'right',
+    marginTop: 8,
   },
 }); 
