@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { nanoid } from 'nanoid';
 import MediaPicker from './create/MediaPicker';
 import PlatformSelector from './create/PlatformSelector';
+import DateTimePicker from './create/DateTimePicker';
 import { Platform, MediaItem, Post } from '../lib/types';
 import { format } from 'date-fns';
 import { storageService } from '../lib/services/storage';
@@ -115,19 +116,10 @@ export default function CreateScreen() {
             </Text>
           </View>
 
-          <TouchableOpacity
-            style={styles.scheduleButton}
-            onPress={() => {
-              // TODO: Show date picker
-            }}
-          >
-            <Ionicons name="calendar-outline" size={24} color="#666" />
-            <Text style={styles.scheduleButtonText}>
-              {scheduledDate
-                ? `Scheduled for ${format(scheduledDate, 'MMM d, yyyy h:mm a')}`
-                : 'Schedule Post'}
-            </Text>
-          </TouchableOpacity>
+          <DateTimePicker
+            value={scheduledDate}
+            onChange={setScheduledDate}
+          />
         </ScrollView>
 
         <View style={styles.footer}>
@@ -137,10 +129,10 @@ export default function CreateScreen() {
               (!caption || selectedPlatforms.length === 0) && styles.createButtonDisabled,
             ]}
             onPress={handleCreatePost}
-            disabled={!caption || selectedPlatforms.length === 0}
+            disabled={!caption || selectedPlatforms.length === 0 || isSubmitting}
           >
             <Text style={styles.createButtonText}>
-              {scheduledDate ? 'Schedule Post' : 'Save as Draft'}
+              {isSubmitting ? 'Saving...' : (scheduledDate ? 'Schedule Post' : 'Save as Draft')}
             </Text>
           </TouchableOpacity>
         </View>
