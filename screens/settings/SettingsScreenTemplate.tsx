@@ -1,91 +1,60 @@
 import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-type SettingItemProps = {
+export interface SettingItemProps {
   label: string;
-  value?: string;
-  icon?: string;
+  icon: string;
   iconColor?: string;
-  onPress?: () => void;
-  onToggle?: (value: boolean) => void;
-  toggle?: boolean;
-  showChevron?: boolean;
-  numberOfLines?: number;
-  platformIcons?: string;
-};
+  onPress: () => void;
+  rightElement?: string;
+  detail?: string;
+  labelStyle?: any;
+  detailStyle?: any;
+  style?: any;
+}
 
-export const SettingItem = ({ 
+export function SettingItem({ 
   label, 
-  value, 
   icon, 
-  iconColor = '#007AFF',
+  iconColor = '#007AFF', 
   onPress, 
-  onToggle,
-  toggle,
-  showChevron = true,
-  numberOfLines = 1,
-  platformIcons,
-}: SettingItemProps) => {
-  const content = (
-    <View style={styles.settingItem}>
-      {icon && (
-        <View style={styles.iconContainer}>
-          <Ionicons name={icon as any} size={22} color={iconColor} />
+  rightElement, 
+  detail,
+  labelStyle,
+  detailStyle,
+  style
+}: SettingItemProps) {
+  return (
+    <TouchableOpacity style={[styles.settingItem, style]} onPress={onPress}>
+      <View style={styles.settingItemContent}>
+        <View style={styles.settingItemLeft}>
+          <Ionicons name={icon as any} size={24} color={iconColor} style={styles.settingItemIcon} />
+          <Text style={[styles.settingItemLabel, labelStyle]}>{label}</Text>
         </View>
-      )}
-      <View style={styles.labelContainer}>
-        <Text style={styles.label} numberOfLines={numberOfLines}>{label}</Text>
-        {value && (
-          <Text style={styles.value} numberOfLines={1}>{value}</Text>
-        )}
+        <View style={styles.settingItemRight}>
+          {detail && <Text style={[styles.settingItemDetail, detailStyle]}>{detail}</Text>}
+          {rightElement && <Ionicons name={rightElement as any} size={20} color="#007AFF" />}
+          <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+        </View>
       </View>
-      {platformIcons && (
-        <View style={styles.platformIcons}>
-          {platformIcons.split(',').map((iconName, index) => (
-            <View key={iconName} style={[styles.platformIcon, index > 0 && styles.platformIconOffset]}>
-              <Ionicons name={iconName as any} size={18} color="#8E8E93" />
-            </View>
-          ))}
-        </View>
-      )}
-      {showChevron && !toggle && (
-        <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
-      )}
-      {toggle !== undefined && (
-        <View style={[styles.toggle, toggle ? styles.toggleOn : styles.toggleOff]}>
-          <View style={[styles.toggleKnob, toggle ? styles.toggleKnobOn : styles.toggleKnobOff]} />
-        </View>
-      )}
-    </View>
+    </TouchableOpacity>
   );
-
-  if (onPress || onToggle) {
-    return (
-      <TouchableOpacity 
-        onPress={() => {
-          if (onPress) onPress();
-          if (onToggle) onToggle(!toggle);
-        }}
-        activeOpacity={0.7}
-      >
-        {content}
-      </TouchableOpacity>
-    );
-  }
-
-  return content;
-};
+}
 
 export const SettingsSection = ({ 
   title, 
-  children 
+  children,
+  titleStyle,
+  style
 }: { 
   title: string;
   children: React.ReactNode;
+  titleStyle?: any;
+  style?: any;
 }) => {
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+    <View style={[styles.section, style]}>
+      <Text style={[styles.sectionTitle, titleStyle]}>{title}</Text>
       <View style={styles.sectionContent}>
         {children}
       </View>
@@ -94,12 +63,14 @@ export const SettingsSection = ({
 };
 
 export const SettingsContainer = ({ 
-  children 
+  children,
+  style
 }: { 
   children: React.ReactNode;
+  style?: any;
 }) => {
   return (
-    <ScrollView style={styles.container} bounces={true}>
+    <ScrollView style={[styles.container, style]} bounces={true}>
       {children}
     </ScrollView>
   );
@@ -136,63 +107,32 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#e5e5ea',
   },
-  iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
+  settingItemContent: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-  },
-  labelContainer: {
+    justifyContent: 'space-between',
     flex: 1,
+  },
+  settingItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  settingItemIcon: {
+    width: 24,
+    height: 24,
     marginRight: 8,
   },
-  label: {
+  settingItemLabel: {
     fontSize: 16,
     color: '#333',
   },
-  value: {
+  settingItemRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  settingItemDetail: {
     fontSize: 15,
     color: '#666',
-  },
-  platformIcons: {
-    flexDirection: 'row',
     marginRight: 8,
-  },
-  platformIcon: {
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  platformIconOffset: {
-    marginLeft: -8,
-  },
-  toggle: {
-    width: 44,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#e9e9ea',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  toggleOn: {
-    backgroundColor: '#34C759',
-  },
-  toggleOff: {
-    backgroundColor: '#e9e9ea',
-  },
-  toggleKnob: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#fff',
-    marginHorizontal: 2,
-  },
-  toggleKnobOn: {
-    marginLeft: 22,
-  },
-  toggleKnobOff: {
-    marginLeft: 2,
   },
 }); 

@@ -9,6 +9,7 @@ import BillingSettingsScreen from '../screens/settings/BillingSettingsScreen';
 import BrandGroupsScreen from '../screens/settings/BrandGroupsScreen';
 import ConnectedAccountsScreen from '../screens/settings/ConnectedAccountsScreen';
 import SocialAccountDetailsScreen from '../screens/settings/SocialAccountDetailsScreen';
+import AnalyticsSettingsScreen from '../screens/settings/AnalyticsSettingsScreen';
 
 export type SettingsStackParamList = {
   SettingsMain: undefined;
@@ -21,6 +22,7 @@ export type SettingsStackParamList = {
   BrandGroups: undefined;
   ConnectedAccounts: undefined;
   SocialAccountDetails: { accountId: string };
+  AnalyticsSettings: undefined;
 };
 
 const Stack = createNativeStackNavigator<SettingsStackParamList>();
@@ -45,8 +47,7 @@ export default function SettingsNavigator() {
         name="SettingsMain" 
         component={SettingsMainScreen}
         options={{ 
-          title: 'Settings',
-          headerLargeTitle: true,
+          headerShown: false,
         }}
       />
       <Stack.Screen 
@@ -88,6 +89,11 @@ export default function SettingsNavigator() {
         name="BillingSettings" 
         component={BillingSettingsScreen}
         options={{ title: 'Billing' }}
+      />
+      <Stack.Screen 
+        name="AnalyticsSettings" 
+        component={AnalyticsSettingsScreen}
+        options={{ title: 'Analytics' }}
       />
     </Stack.Navigator>
   );

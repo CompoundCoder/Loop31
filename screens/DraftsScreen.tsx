@@ -1,99 +1,93 @@
-import { StyleSheet, View, Text, TouchableOpacity, Image, FlatList } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
-import { format } from 'date-fns';
+import { useNavigation } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { RootTabParamList } from '../navigation/BottomTabNavigator';
+import PostCard from '../components/PostCard';
 
-// Temporary mock data
-const MOCK_DRAFTS = [
+type DraftsScreenNavigationProp = BottomTabNavigationProp<RootTabParamList>;
+
+type Platform = {
+  id: string;
+  type: 'instagram' | 'facebook' | 'twitter' | 'linkedin' | 'tiktok';
+  name: string;
+};
+
+interface DraftPost {
+  id: string;
+  mediaUri: string;
+  caption: string;
+  platforms: Platform[];
+  date: Date;
+  lastEdited?: Date;
+  creator: string;
+}
+
+// Mock data for draft posts
+const MOCK_DRAFTS: DraftPost[] = [
   {
     id: '1',
-    caption: 'This is a test draft post',
-    mediaUri: 'https://picsum.photos/400/300',
-    createdAt: '2024-04-11T10:30:00Z',
-    platforms: ['instagram', 'facebook'],
-    creator: 'Trevor Powers', // This should come from user context/auth
+    mediaUri: 'https://picsum.photos/800/800',
+    caption: 'Working on this amazing chrome delete project. What do you think of the progress so far? #InProgress #VinylWrap',
+    platforms: [
+      { id: 'ig1', type: 'instagram', name: 'Brand Main' },
+    ],
+    date: new Date(),
+    lastEdited: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
+    creator: 'John Doe'
   },
   {
     id: '2',
-    caption: 'Another draft waiting to be scheduled',
-    mediaUri: 'https://picsum.photos/400/300',
-    createdAt: '2024-04-10T15:45:00Z',
-    platforms: ['tiktok'],
-    creator: 'Trevor Powers',
+    mediaUri: 'https://picsum.photos/900/1200',
+    caption: 'Sneak peek of our latest project! Full reveal coming soon... 👀 #ComingSoon #CarWrap',
+    platforms: [
+      { id: 'ig1', type: 'instagram', name: 'Brand Main' },
+      { id: 'fb1', type: 'facebook', name: 'Brand Page' },
+    ],
+    date: new Date(),
+    lastEdited: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+    creator: 'Jane Smith'
   },
 ];
 
-interface DraftCardProps {
-  draft: typeof MOCK_DRAFTS[0];
-  onEdit: () => void;
-  onDelete: () => void;
-  onSchedule: () => void;
-}
-
-function DraftCard({ draft, onEdit, onDelete, onSchedule }: DraftCardProps) {
-  return (
-    <View style={styles.draftCard}>
-      <View style={styles.draftHeader}>
-        <View style={styles.draftInfo}>
-          <Text style={styles.draftCreator}>{draft.creator}</Text>
-          <Text style={styles.draftDate}>
-            {format(new Date(draft.createdAt), 'MMM d, yyyy • h:mm a')}
-          </Text>
-        </View>
-      </View>
-
-      <Text style={styles.draftCaption}>{draft.caption}</Text>
-
-      {draft.mediaUri && (
-        <View style={styles.mediaContainer}>
-          <Image source={{ uri: draft.mediaUri }} style={styles.mediaPreview} />
-          <View style={styles.playButton}>
-            <Ionicons name="play" size={40} color="#fff" />
-          </View>
-        </View>
-      )}
-
-      <View style={styles.actionButtons}>
-        <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={onDelete}>
-          <Text style={styles.deleteButtonText}>Delete</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionButton, styles.editButton]} onPress={onEdit}>
-          <Text style={styles.editButtonText}>Edit</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionButton, styles.scheduleButton]} onPress={onSchedule}>
-          <Text style={styles.scheduleButtonText}>Post</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-}
-
-interface DraftsScreenProps {
-  onClose: () => void;
-  onEditDraft: (draft: typeof MOCK_DRAFTS[0]) => void;
-}
-
-export default function DraftsScreen({ onClose, onEditDraft }: DraftsScreenProps) {
+export default function DraftsScreen() {
+  const navigation = useNavigation<DraftsScreenNavigationProp>();
   const [activeTab, setActiveTab] = useState<'drafts' | 'awaiting'>('drafts');
   
   const handleDeleteDraft = (draftId: string) => {
-    // TODO: Move to trash instead of deleting
-    console.log('Move to trash:', draftId);
+    console.log('Delete draft:', draftId);
   };
 
-  const handleEditDraft = (draft: typeof MOCK_DRAFTS[0]) => {
-    onEditDraft(draft);
-    onClose();
+  const handleEditDraft = (draft: DraftPost) => {
+    console.log('Edit draft:', draft.id);
   };
 
   const handleScheduleDraft = (draftId: string) => {
     console.log('Schedule draft:', draftId);
   };
 
+  const renderPost = ({ item }: { item: DraftPost }) => (
+    <PostCard
+      mediaUri={item.mediaUri}
+      caption={item.caption}
+      platforms={item.platforms}
+      date={item.lastEdited || item.date}
+      status="draft"
+      onEdit={() => handleEditDraft(item)}
+      onDelete={() => handleDeleteDraft(item.id)}
+      onSchedule={() => handleScheduleDraft(item.id)}
+    />
+  );
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+        <TouchableOpacity 
+          style={styles.closeButton} 
+          onPress={() => navigation.navigate('Create')}
+        >
           <Ionicons name="close" size={24} color="#666" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Drafts</Text>
@@ -122,36 +116,28 @@ export default function DraftsScreen({ onClose, onEditDraft }: DraftsScreenProps
         </TouchableOpacity>
       </View>
 
-      {/* Draft List */}
       <FlatList
         data={activeTab === 'drafts' ? MOCK_DRAFTS : []}
-        renderItem={({ item }) => (
-          <DraftCard
-            draft={item}
-            onDelete={() => handleDeleteDraft(item.id)}
-            onEdit={() => handleEditDraft(item)}
-            onSchedule={() => handleScheduleDraft(item.id)}
-          />
-        )}
+        renderItem={renderPost}
         keyExtractor={item => item.id}
-        contentContainerStyle={styles.draftList}
+        contentContainerStyle={styles.listContent}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f2f2f7',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
@@ -159,19 +145,24 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
     color: '#333',
+    flex: 1,
+    textAlign: 'center',
   },
   closeButton: {
-    padding: 8,
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginLeft: -8,
   },
   headerRight: {
-    width: 40, // Balance the close button
+    width: 44, // Match close button width for centering
   },
   tabs: {
     flexDirection: 'row',
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
-    backgroundColor: '#fff',
   },
   tab: {
     flex: 1,
@@ -180,10 +171,10 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 2,
-    borderBottomColor: '#2f95dc',
+    borderBottomColor: '#007AFF',
   },
   tabText: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#666',
   },
   activeTabText: {
@@ -193,94 +184,7 @@ const styles = StyleSheet.create({
   tabCount: {
     color: '#666',
   },
-  draftList: {
+  listContent: {
     padding: 16,
-  },
-  draftCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    marginBottom: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
-  },
-  draftHeader: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  draftInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  draftCreator: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#333',
-  },
-  draftDate: {
-    fontSize: 14,
-    color: '#666',
-  },
-  draftCaption: {
-    fontSize: 16,
-    color: '#333',
-    padding: 12,
-  },
-  mediaContainer: {
-    position: 'relative',
-    width: '100%',
-    height: 200,
-    backgroundColor: '#f9f9f9',
-  },
-  mediaPreview: {
-    width: '100%',
-    height: '100%',
-  },
-  playButton: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -20 }, { translateY: -20 }],
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 20,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    padding: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  actionButton: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  deleteButton: {
-    marginRight: 8,
-  },
-  editButton: {
-    marginHorizontal: 8,
-  },
-  scheduleButton: {
-    marginLeft: 8,
-  },
-  deleteButtonText: {
-    color: '#ff3b30',
-    fontSize: 15,
-  },
-  editButtonText: {
-    color: '#2f95dc',
-    fontSize: 15,
-  },
-  scheduleButtonText: {
-    color: '#2f95dc',
-    fontSize: 15,
   },
 }); 

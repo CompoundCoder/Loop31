@@ -1,12 +1,13 @@
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity, TextInput, Image, KeyboardAvoidingView, Platform, Modal, SafeAreaView } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, TouchableOpacity, TextInput, Image, KeyboardAvoidingView, Platform, Modal, SafeAreaView, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import BottomActionBar from './create/BottomActionBar';
 import { format } from 'date-fns';
 import DraftsScreen from './DraftsScreen';
 import PlatformSelectModal from './create/PlatformSelectModal';
+import AnimatedHeader from '../components/AnimatedHeader';
 
 // Import SOCIAL_ACCOUNTS from PlatformSelectModal when moving to proper state management
 const SOCIAL_ACCOUNTS = [
@@ -39,6 +40,7 @@ export default function CreateScreen() {
   const [scheduledDate, setScheduledDate] = useState(new Date());
   const [showDrafts, setShowDrafts] = useState(false);
   const [showPlatformSelect, setShowPlatformSelect] = useState(false);
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   const selectedAccounts = SOCIAL_ACCOUNTS.filter(account => 
     selectedAccountIds.includes(account.id)
@@ -166,12 +168,16 @@ export default function CreateScreen() {
 
   return (
     <View style={styles.container}>
+      <AnimatedHeader 
+        title="Create" 
+        titleStyle={styles.headerTitle}
+      />
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
       >
-        <ScrollView 
+        <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollViewContent}
         >
@@ -340,8 +346,7 @@ export default function CreateScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    paddingTop: Platform.OS === 'ios' ? 44 : 0,
+    backgroundColor: '#f2f2f7',
   },
   keyboardAvoidingView: {
     flex: 1,
@@ -350,10 +355,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollViewContent: {
+    paddingTop: 100,
     paddingBottom: 90,
   },
   section: {
     padding: 16,
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
     paddingTop: 16,
@@ -368,11 +375,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#fff',
     padding: 16,
     marginHorizontal: 16,
     borderRadius: 12,
     marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   draftSelectorContent: {
     flexDirection: 'row',
@@ -557,5 +569,10 @@ const styles = StyleSheet.create({
     color: '#999',
     textAlign: 'right',
     marginTop: 8,
+  },
+  headerTitle: {
+    color: '#000',
+    fontSize: 17,
+    fontWeight: '600',
   },
 }); 
