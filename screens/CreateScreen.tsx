@@ -208,16 +208,19 @@ export default function CreateScreen() {
           </View>
 
           {/* Draft Selector */}
-          <TouchableOpacity 
-            style={styles.draftSelector} 
-            onPress={() => setShowDrafts(true)}
-          >
-            <View style={styles.draftSelectorContent}>
-              <Ionicons name="document-text-outline" size={22} color="#666" />
-              <Text style={styles.draftSelectorText}>Select from drafts</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#666" />
-          </TouchableOpacity>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Draft</Text>
+            <TouchableOpacity 
+              style={styles.platformSelector} 
+              onPress={() => setShowDrafts(true)}
+            >
+              <View style={styles.platformSelectorContent}>
+                <Ionicons name="document-text-outline" size={22} color="#666" />
+                <Text style={styles.platformSelectorText}>Select from drafts</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#666" />
+            </TouchableOpacity>
+          </View>
 
           {/* Share To Section */}
           <View style={styles.section}>
@@ -377,14 +380,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#fff',
     padding: 16,
-    marginHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   draftSelectorContent: {
     flexDirection: 'row',
@@ -399,7 +396,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#fff',
     padding: 12,
     borderRadius: 12,
     minHeight: 48,

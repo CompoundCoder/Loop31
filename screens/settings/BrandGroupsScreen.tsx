@@ -30,8 +30,8 @@ export default function BrandGroupsScreen() {
             label={group.name}
             icon="layers-outline"
             iconColor="#5856D6"
-            value={`${group.accountIds.length} accounts`}
-            platformIcons={getGroupPlatformIcons(group.accountIds)}
+            value={`${group.accounts.length} accounts`}
+            platformIcons={getGroupPlatformIcons(group.accounts)}
             numberOfLines={1}
             onPress={() => {}}
           />

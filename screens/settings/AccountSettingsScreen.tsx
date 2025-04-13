@@ -60,7 +60,7 @@ export default function AccountSettingsScreen() {
             label={group.name}
             icon="layers-outline"
             iconColor="#5856D6"
-            value={`${group.accountIds.length} accounts`}
+            value={`${group.accounts.length} accounts`}
             onPress={() => {}}
           />
         ))}

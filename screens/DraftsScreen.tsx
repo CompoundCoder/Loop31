@@ -51,6 +51,7 @@ const MOCK_DRAFTS: DraftPost[] = [
 
 type DraftsScreenProps = {
   onClose?: () => void;
+  onEditDraft?: (draft: DraftPost) => void;
 };
 
 export default function DraftsScreen({ onClose }: DraftsScreenProps) {

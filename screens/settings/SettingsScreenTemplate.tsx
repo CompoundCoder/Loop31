@@ -1,12 +1,15 @@
 import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-export interface SettingItemProps {
+interface SettingItemProps {
   label: string;
-  icon: string;
+  icon: keyof typeof Ionicons.glyphMap;
   iconColor?: string;
   onPress: () => void;
-  rightElement?: string;
+  rightElement?: keyof typeof Ionicons.glyphMap;
+  value?: string;
+  platformIcons?: string;
+  numberOfLines?: number;
   detail?: string;
   labelStyle?: any;
   detailStyle?: any;
@@ -19,6 +22,9 @@ export function SettingItem({
   iconColor = '#007AFF', 
   onPress, 
   rightElement, 
+  value,
+  platformIcons,
+  numberOfLines,
   detail,
   labelStyle,
   detailStyle,
