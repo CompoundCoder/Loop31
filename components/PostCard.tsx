@@ -30,6 +30,7 @@ interface PostCardProps {
   onDelete?: () => void;
   onSchedule?: () => void;
   onShare?: () => void;
+  onPost?: () => void;
 }
 
 const MAX_CAPTION_LENGTH = 100;
@@ -44,7 +45,8 @@ export default function PostCard({
   onEdit,
   onDelete,
   onSchedule,
-  onShare
+  onShare,
+  onPost
 }: PostCardProps) {
   const truncatedCaption = caption.length > MAX_CAPTION_LENGTH 
     ? `${caption.substring(0, MAX_CAPTION_LENGTH)}...` 
@@ -90,6 +92,10 @@ export default function PostCard({
       case 'scheduled':
         return (
           <View style={styles.actions}>
+            <TouchableOpacity style={styles.actionButton} onPress={onPost}>
+              <Ionicons name="paper-plane-outline" size={20} color="#007AFF" />
+              <Text style={styles.actionText}>Post Now</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
               <Ionicons name="create-outline" size={20} color="#34C759" />
               <Text style={styles.actionText}>Edit</Text>

@@ -55,6 +55,10 @@ export default function PostsScreen() {
     console.log('Delete post:', postId);
   };
 
+  const handlePost = (postId: string) => {
+    console.log('Post now:', postId);
+  };
+
   const renderPost = ({ item }: { item: ScheduledPost }) => (
     <PostCard
       mediaUri={item.mediaUri}
@@ -62,6 +66,7 @@ export default function PostsScreen() {
       platforms={item.platforms}
       date={item.date}
       status="scheduled"
+      onPost={() => handlePost(item.id)}
       onEdit={() => handleEdit(item.id)}
       onDelete={() => handleDelete(item.id)}
     />
@@ -86,7 +91,7 @@ export default function PostsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f2f2f7',
   },
   headerTitle: {
     color: '#000',
@@ -98,6 +103,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
     paddingBottom: 90,
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#f2f2f7',
   },
 }); 

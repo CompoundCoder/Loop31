@@ -12,6 +12,11 @@ interface AnalyticsData {
   followers: number;
   posts: number;
   growth: number;
+  platforms: ('twitter' | 'linkedin' | 'instagram')[];
+  recentPerformance: {
+    improvement: string;
+    period: string;
+  };
 }
 
 const MOCK_DATA: AnalyticsData = {
@@ -20,6 +25,11 @@ const MOCK_DATA: AnalyticsData = {
   followers: 12500,
   posts: 45,
   growth: 12.3,
+  platforms: ['twitter', 'linkedin', 'instagram'],
+  recentPerformance: {
+    improvement: '+15.4%',
+    period: 'vs last period'
+  }
 };
 
 function MetricCard({ title, value, icon, trend = null }: { 

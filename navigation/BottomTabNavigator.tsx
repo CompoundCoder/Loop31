@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { View, StyleSheet, Text } from 'react-native';
 import CreateScreen from '../screens/CreateScreen';
 import PostsScreen from '../screens/PostsScreen';
-import DraftsScreen from '../screens/DraftsScreen';
+import SentScreen from '../screens/SentScreen';
 import AnalyticsScreen from '../screens/AnalyticsScreen';
 import SettingsNavigator from './SettingsNavigator';
 
@@ -11,6 +11,7 @@ export type RootTabParamList = {
   Schedule: undefined;
   Create: undefined;
   Sent: undefined;
+  Analytics: undefined;
   Settings: undefined;
 };
 
@@ -23,8 +24,8 @@ export default function BottomTabNavigator() {
         tabBarActiveTintColor: '#007AFF',
         tabBarInactiveTintColor: '#8E8E93',
         tabBarStyle: {
-          backgroundColor: '#fff',
-          borderTopColor: '#f0f0f0',
+          backgroundColor: '#FF000030',
+          borderTopColor: '#0000FF50',
           height: 90,
           paddingBottom: 30,
           paddingTop: 10,
@@ -38,8 +39,8 @@ export default function BottomTabNavigator() {
         options={{
           tabBarIcon: ({ color }) => (
             <View style={styles.tabItem}>
-              <Ionicons name="list-outline" size={24} color={color} />
-              <Text style={[styles.tabLabel, { color }]}>Posting Schedule</Text>
+              <Ionicons name="calendar-outline" size={24} color={color} />
+              <Text style={[styles.tabLabel, { color }]}>Schedule</Text>
             </View>
           ),
         }}
@@ -60,12 +61,24 @@ export default function BottomTabNavigator() {
       />
       <Tab.Screen
         name="Sent"
+        component={SentScreen}
+        options={{
+          tabBarIcon: ({ color }) => (
+            <View style={styles.tabItem}>
+              <Ionicons name="checkmark-circle-outline" size={24} color={color} />
+              <Text style={[styles.tabLabel, { color }]}>Posts</Text>
+            </View>
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Analytics"
         component={AnalyticsScreen}
         options={{
           tabBarIcon: ({ color }) => (
             <View style={styles.tabItem}>
-              <Ionicons name="checkmark-circle" size={24} color={color} />
-              <Text style={[styles.tabLabel, { color }]}>Sent</Text>
+              <Ionicons name="stats-chart-outline" size={24} color={color} />
+              <Text style={[styles.tabLabel, { color }]}>Analytics</Text>
             </View>
           ),
         }}
@@ -90,10 +103,12 @@ const styles = StyleSheet.create({
   tabItem: {
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#00FF0030',
   },
   tabLabel: {
     fontSize: 12,
     marginTop: 4,
+    backgroundColor: '#FF00FF30',
   },
   createButtonContainer: {
     position: 'absolute',
@@ -101,11 +116,12 @@ const styles = StyleSheet.create({
     top: -30,
     left: 0,
     right: 0,
+    backgroundColor: '#FFFF0030',
   },
   createButton: {
     width: 70,
     height: 70,
-    backgroundColor: '#fff',
+    backgroundColor: '#00FFFF30',
     borderRadius: 35,
     justifyContent: 'center',
     alignItems: 'center',
@@ -121,5 +137,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#007AFF',
     marginTop: 2,
+    backgroundColor: '#FFA50030',
   },
 }); 

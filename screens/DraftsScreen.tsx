@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { RootTabParamList } from '../navigation/BottomTabNavigator';
-import PostCard from '../components/PostCard';
+import PostCard, { PostStatus } from '../components/PostCard';
 
 type DraftsScreenNavigationProp = BottomTabNavigationProp<RootTabParamList>;
 
@@ -21,8 +21,7 @@ interface DraftPost {
   caption: string;
   platforms: Platform[];
   date: Date;
-  lastEdited?: Date;
-  creator: string;
+  status: PostStatus;
 }
 
 // Mock data for draft posts
@@ -35,8 +34,7 @@ const MOCK_DRAFTS: DraftPost[] = [
       { id: 'ig1', type: 'instagram', name: 'Brand Main' },
     ],
     date: new Date(),
-    lastEdited: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
-    creator: 'John Doe'
+    status: 'draft'
   },
   {
     id: '2',
@@ -47,37 +45,41 @@ const MOCK_DRAFTS: DraftPost[] = [
       { id: 'fb1', type: 'facebook', name: 'Brand Page' },
     ],
     date: new Date(),
-    lastEdited: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    creator: 'Jane Smith'
+    status: 'draft'
   },
 ];
 
-export default function DraftsScreen() {
+type DraftsScreenProps = {
+  onClose?: () => void;
+};
+
+export default function DraftsScreen({ onClose }: DraftsScreenProps) {
   const navigation = useNavigation<DraftsScreenNavigationProp>();
   const [activeTab, setActiveTab] = useState<'drafts' | 'awaiting'>('drafts');
+  const [drafts] = useState<DraftPost[]>(MOCK_DRAFTS);
   
-  const handleDeleteDraft = (draftId: string) => {
-    console.log('Delete draft:', draftId);
+  const handleDelete = (id: string) => {
+    console.log('Delete draft:', id);
   };
 
-  const handleEditDraft = (draft: DraftPost) => {
-    console.log('Edit draft:', draft.id);
+  const handleEdit = (id: string) => {
+    console.log('Edit draft:', id);
   };
 
-  const handleScheduleDraft = (draftId: string) => {
-    console.log('Schedule draft:', draftId);
+  const handleSchedule = (id: string) => {
+    console.log('Schedule draft:', id);
   };
 
-  const renderPost = ({ item }: { item: DraftPost }) => (
+  const renderDraft = ({ item }: { item: DraftPost }) => (
     <PostCard
       mediaUri={item.mediaUri}
       caption={item.caption}
       platforms={item.platforms}
-      date={item.lastEdited || item.date}
-      status="draft"
-      onEdit={() => handleEditDraft(item)}
-      onDelete={() => handleDeleteDraft(item.id)}
-      onSchedule={() => handleScheduleDraft(item.id)}
+      date={item.date}
+      status={item.status}
+      onEdit={() => handleEdit(item.id)}
+      onDelete={() => handleDelete(item.id)}
+      onSchedule={() => handleSchedule(item.id)}
     />
   );
 
@@ -86,7 +88,7 @@ export default function DraftsScreen() {
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.closeButton} 
-          onPress={() => navigation.navigate('Create')}
+          onPress={() => onClose ? onClose() : navigation.navigate('Create')}
         >
           <Ionicons name="close" size={24} color="#666" />
         </TouchableOpacity>
@@ -117,9 +119,9 @@ export default function DraftsScreen() {
       </View>
 
       <FlatList
-        data={activeTab === 'drafts' ? MOCK_DRAFTS : []}
-        renderItem={renderPost}
-        keyExtractor={item => item.id}
+        data={activeTab === 'drafts' ? drafts : []}
+        renderItem={renderDraft}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
       />
     </SafeAreaView>

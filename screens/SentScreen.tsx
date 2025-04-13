@@ -105,7 +105,7 @@ export default function SentScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f2f2f7',
   },
   headerTitle: {
     color: '#000',
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingHorizontal: 16,
     paddingBottom: 90,
-    backgroundColor: '#fff',
+    backgroundColor: '#f2f2f7',
   },
   postContainer: {
     marginBottom: 16,
