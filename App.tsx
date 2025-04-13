@@ -1,16 +1,13 @@
 import { NavigationContainer } from '@react-navigation/native';
-import TabNavigator from './navigation/TabNavigator';
+import BottomTabNavigator from './navigation/BottomTabNavigator';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { AccountProvider } from './context/AccountContext';
 
 export default function App() {
   return (
     <SafeAreaProvider>
-      <AccountProvider>
-        <NavigationContainer>
-          <TabNavigator />
-        </NavigationContainer>
-      </AccountProvider>
+      <NavigationContainer>
+        <BottomTabNavigator />
+      </NavigationContainer>
     </SafeAreaProvider>
   );
 }

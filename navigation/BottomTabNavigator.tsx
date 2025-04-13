@@ -24,11 +24,11 @@ export default function BottomTabNavigator() {
         tabBarActiveTintColor: '#007AFF',
         tabBarInactiveTintColor: '#8E8E93',
         tabBarStyle: {
-          backgroundColor: '#FF000030',
-          borderTopColor: '#0000FF50',
-          height: 90,
+          backgroundColor: '#FFFFFF',
+          borderTopColor: '#E5E5EA',
+          height: 84,
           paddingBottom: 30,
-          paddingTop: 10,
+          paddingTop: 12,
         },
         headerShown: false,
       }}
@@ -37,12 +37,20 @@ export default function BottomTabNavigator() {
         name="Schedule"
         component={PostsScreen}
         options={{
-          tabBarIcon: ({ color }) => (
-            <View style={styles.tabItem}>
-              <Ionicons name="calendar-outline" size={24} color={color} />
-              <Text style={[styles.tabLabel, { color }]}>Schedule</Text>
-            </View>
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="calendar-outline" size={24} color={color} />
           ),
+          tabBarLabel: 'Schedule',
+        }}
+      />
+      <Tab.Screen
+        name="Sent"
+        component={SentScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="checkmark-circle-outline" size={24} color={color} />
+          ),
+          tabBarLabel: 'Posts',
         }}
       />
       <Tab.Screen
@@ -50,49 +58,31 @@ export default function BottomTabNavigator() {
         component={CreateScreen}
         options={{
           tabBarIcon: ({ color }) => (
-            <View style={styles.createButtonContainer}>
-              <View style={styles.createButton}>
-                <Ionicons name="create-outline" size={28} color="#007AFF" />
-                <Text style={styles.createLabel}>Create</Text>
-              </View>
+            <View style={styles.createButton}>
+              <Ionicons name="add" size={28} color="#FFFFFF" />
             </View>
           ),
-        }}
-      />
-      <Tab.Screen
-        name="Sent"
-        component={SentScreen}
-        options={{
-          tabBarIcon: ({ color }) => (
-            <View style={styles.tabItem}>
-              <Ionicons name="checkmark-circle-outline" size={24} color={color} />
-              <Text style={[styles.tabLabel, { color }]}>Posts</Text>
-            </View>
-          ),
+          tabBarLabel: '',
         }}
       />
       <Tab.Screen
         name="Analytics"
         component={AnalyticsScreen}
         options={{
-          tabBarIcon: ({ color }) => (
-            <View style={styles.tabItem}>
-              <Ionicons name="stats-chart-outline" size={24} color={color} />
-              <Text style={[styles.tabLabel, { color }]}>Analytics</Text>
-            </View>
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="stats-chart-outline" size={24} color={color} />
           ),
+          tabBarLabel: 'Analytics',
         }}
       />
       <Tab.Screen
         name="Settings"
         component={SettingsNavigator}
         options={{
-          tabBarIcon: ({ color }) => (
-            <View style={styles.tabItem}>
-              <Ionicons name="settings-outline" size={24} color={color} />
-              <Text style={[styles.tabLabel, { color }]}>Settings</Text>
-            </View>
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="settings-outline" size={24} color={color} />
           ),
+          tabBarLabel: 'Settings',
         }}
       />
     </Tab.Navigator>
@@ -100,43 +90,18 @@ export default function BottomTabNavigator() {
 }
 
 const styles = StyleSheet.create({
-  tabItem: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#00FF0030',
-  },
-  tabLabel: {
-    fontSize: 12,
-    marginTop: 4,
-    backgroundColor: '#FF00FF30',
-  },
-  createButtonContainer: {
-    position: 'absolute',
-    alignItems: 'center',
-    top: -30,
-    left: 0,
-    right: 0,
-    backgroundColor: '#FFFF0030',
-  },
   createButton: {
-    width: 70,
-    height: 70,
-    backgroundColor: '#00FFFF30',
-    borderRadius: 35,
+    width: 56,
+    height: 56,
+    backgroundColor: '#007AFF',
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: -32,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
-  },
-  createLabel: {
-    fontSize: 12,
-    color: '#007AFF',
-    marginTop: 2,
-    backgroundColor: '#FFA50030',
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
 }); 

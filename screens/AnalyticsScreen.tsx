@@ -1,139 +1,87 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, ScrollView, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
-type ViewMode = 'all' | 'account' | 'group';
 type TimeRange = '7d' | '30d' | '90d' | '1y';
+type SelectionType = 'all' | 'group' | 'account';
 
-interface AnalyticsData {
-  impressions: number;
-  engagement: number;
-  followers: number;
-  posts: number;
-  growth: number;
-  platforms: ('twitter' | 'linkedin' | 'instagram')[];
-  recentPerformance: {
-    improvement: string;
-    period: string;
-  };
-}
+// Temporary mock data until AccountProvider is set up
+const MOCK_ACCOUNTS = [
+  { id: '1', name: 'Nike Instagram', type: 'instagram' },
+  { id: '2', name: 'Nike Twitter', type: 'twitter' },
+  { id: '3', name: 'Adidas Instagram', type: 'instagram' },
+  { id: '4', name: 'Adidas Twitter', type: 'twitter' },
+];
 
-const MOCK_DATA: AnalyticsData = {
-  impressions: 28900,
-  engagement: 8.5,
-  followers: 12500,
-  posts: 45,
-  growth: 12.3,
-  platforms: ['twitter', 'linkedin', 'instagram'],
-  recentPerformance: {
-    improvement: '+15.4%',
-    period: 'vs last period'
-  }
-};
-
-function MetricCard({ title, value, icon, trend = null }: { 
-  title: string;
-  value: number | string;
-  icon: keyof typeof Ionicons.glyphMap;
-  trend?: { value: string; positive: boolean } | null;
-}) {
-  return (
-    <View style={styles.metricCard}>
-      <View style={styles.metricHeader}>
-        <Ionicons name={icon} size={20} color="#666" />
-        <Text style={styles.metricTitle}>{title}</Text>
-      </View>
-      <View style={styles.metricContent}>
-        <Text style={styles.metricValue}>{value.toLocaleString()}</Text>
-        {trend && (
-          <View style={[
-            styles.trendBadge,
-            { backgroundColor: trend.positive ? '#e6f7ed' : '#ffebee' }
-          ]}>
-            <Text style={[
-              styles.trendText,
-              { color: trend.positive ? '#1b873f' : '#cb2431' }
-            ]}>
-              {trend.value}
-            </Text>
-          </View>
-        )}
-      </View>
-    </View>
-  );
-}
-
-function PlatformSelector() {
-  const getPlatformIcon = (platform: typeof MOCK_DATA.platforms[number]): keyof typeof Ionicons.glyphMap => {
-    switch (platform) {
-      case 'twitter':
-        return 'logo-twitter';
-      case 'linkedin':
-        return 'logo-linkedin';
-      case 'instagram':
-        return 'logo-instagram';
-      default:
-        return 'share-social';
-    }
-  };
-
-  return (
-    <View style={styles.platformSelector}>
-      <TouchableOpacity style={[styles.platformButton, styles.platformButtonActive]}>
-        <Ionicons name="stats-chart" size={18} color="#2f95dc" />
-        <Text style={styles.platformButtonTextActive}>Overview</Text>
-      </TouchableOpacity>
-      {MOCK_DATA.platforms.map((platform) => (
-        <TouchableOpacity key={platform} style={styles.platformButton}>
-          <Ionicons name={getPlatformIcon(platform)} size={18} color="#666" />
-          <Text style={styles.platformButtonText}>{platform.charAt(0).toUpperCase() + platform.slice(1)}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-}
-
-function PerformanceCard() {
-  return (
-    <View style={styles.performanceCard}>
-      <View style={styles.performanceHeader}>
-        <Text style={styles.performanceTitle}>Recent Performance</Text>
-        <TouchableOpacity style={styles.periodSelector}>
-          <Text style={styles.periodText}>Last 30 days</Text>
-          <Ionicons name="chevron-down" size={16} color="#666" />
-        </TouchableOpacity>
-      </View>
-      <View style={styles.performanceContent}>
-        <Text style={styles.performanceMetric}>{MOCK_DATA.recentPerformance.improvement}</Text>
-        <Text style={styles.performancePeriod}>{MOCK_DATA.recentPerformance.period}</Text>
-      </View>
-    </View>
-  );
-}
+const MOCK_GROUPS = [
+  { id: 'g1', name: 'Nike', accounts: ['1', '2'] },
+  { id: 'g2', name: 'Adidas', accounts: ['3', '4'] },
+];
 
 export default function AnalyticsScreen() {
-  const [viewMode, setViewMode] = useState<ViewMode>('all');
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
+  const [selectionType, setSelectionType] = useState<SelectionType>('all');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const renderMetricCard = (label: string, value: string | number, change?: number) => (
-    <View style={styles.metricCard}>
-      <Text style={styles.metricLabel}>{label}</Text>
-      <Text style={styles.metricValue}>{typeof value === 'number' ? value.toLocaleString() : value}</Text>
-      {change !== undefined && (
-        <View style={styles.changeIndicator}>
-          <Ionicons 
-            name={change >= 0 ? 'arrow-up' : 'arrow-down'} 
-            size={12} 
-            color={change >= 0 ? '#34C759' : '#FF3B30'} 
-          />
-          <Text style={[styles.changeText, { color: change >= 0 ? '#34C759' : '#FF3B30' }]}>
-            {Math.abs(change)}%
-          </Text>
+  const renderMetricCard = (label: string, value: string | number, previousValue: number, icon: keyof typeof Ionicons.glyphMap) => {
+    const percentChange = previousValue ? ((Number(value) - previousValue) / previousValue) * 100 : 0;
+    
+    return (
+      <View style={styles.metricCard}>
+        <View style={styles.metricHeader}>
+          <Ionicons name={icon} size={20} color="#666" />
+          <Text style={styles.metricTitle}>{label}</Text>
         </View>
-      )}
-    </View>
+        <View style={styles.metricContent}>
+          <Text style={styles.metricValue}>
+            {typeof value === 'number' ? value.toLocaleString() : value}
+          </Text>
+          {percentChange !== 0 && (
+            <View style={[
+              styles.trendBadge,
+              { backgroundColor: percentChange > 0 ? '#e6f7ed' : '#ffebee' }
+            ]}>
+              <Text style={[
+                styles.trendText,
+                { color: percentChange > 0 ? '#1b873f' : '#cb2431' }
+              ]}>
+                {percentChange > 0 ? '+' : ''}{percentChange.toFixed(1)}%
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+    );
+  };
+
+  const renderSelectionItem = ({ item }: { item: any }) => (
+    <TouchableOpacity
+      style={[
+        styles.selectionOption,
+        selectedId === item.id && styles.activeSelectionOption
+      ]}
+      onPress={() => setSelectedId(item.id)}
+    >
+      <Text style={[
+        styles.selectionText,
+        selectedId === item.id && styles.activeSelectionText
+      ]}>
+        {item.name}
+      </Text>
+    </TouchableOpacity>
   );
+
+  const getSelectionData = () => {
+    switch (selectionType) {
+      case 'group':
+        return MOCK_GROUPS;
+      case 'account':
+        return MOCK_ACCOUNTS;
+      default:
+        return [];
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -141,30 +89,52 @@ export default function AnalyticsScreen() {
         <Text style={styles.headerTitle}>Analytics</Text>
       </View>
 
-      {/* View Mode Selector */}
+      {/* Selection Type */}
       <View style={styles.viewSelector}>
         <TouchableOpacity 
-          style={[styles.viewOption, viewMode === 'all' && styles.activeViewOption]}
-          onPress={() => setViewMode('all')}
+          style={[styles.viewOption, selectionType === 'all' && styles.activeViewOption]}
+          onPress={() => {
+            setSelectionType('all');
+            setSelectedId(null);
+          }}
         >
-          <Text style={[styles.viewOptionText, viewMode === 'all' && styles.activeViewOptionText]}>All</Text>
+          <Text style={[styles.viewOptionText, selectionType === 'all' && styles.activeViewOptionText]}>
+            Overview
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity 
-          style={[styles.viewOption, viewMode === 'group' && styles.activeViewOption]}
-          onPress={() => setViewMode('group')}
+          style={[styles.viewOption, selectionType === 'group' && styles.activeViewOption]}
+          onPress={() => setSelectionType('group')}
         >
-          <Text style={[styles.viewOptionText, viewMode === 'group' && styles.activeViewOptionText]}>Groups</Text>
+          <Text style={[styles.viewOptionText, selectionType === 'group' && styles.activeViewOptionText]}>
+            Groups
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity 
-          style={[styles.viewOption, viewMode === 'account' && styles.activeViewOption]}
-          onPress={() => setViewMode('account')}
+          style={[styles.viewOption, selectionType === 'account' && styles.activeViewOption]}
+          onPress={() => setSelectionType('account')}
         >
-          <Text style={[styles.viewOptionText, viewMode === 'account' && styles.activeViewOptionText]}>Accounts</Text>
+          <Text style={[styles.viewOptionText, selectionType === 'account' && styles.activeViewOptionText]}>
+            Accounts
+          </Text>
         </TouchableOpacity>
       </View>
 
+      {/* Selection List */}
+      {selectionType !== 'all' && (
+        <FlatList
+          data={getSelectionData()}
+          renderItem={renderSelectionItem}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.selectionList}
+          contentContainerStyle={styles.selectionContent}
+          keyExtractor={(item) => item.id}
+        />
+      )}
+
       {/* Time Range Selector */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.timeSelector}>
+      <View style={styles.timeSelector}>
         {(['7d', '30d', '90d', '1y'] as TimeRange[]).map((range) => (
           <TouchableOpacity
             key={range}
@@ -172,20 +142,24 @@ export default function AnalyticsScreen() {
             onPress={() => setTimeRange(range)}
           >
             <Text style={[styles.timeOptionText, timeRange === range && styles.activeTimeOptionText]}>
-              {range === '1y' ? 'Year' : `${range.replace('d', ' Days')}`}
+              {range === '7d' ? '7D' : 
+               range === '30d' ? '30D' : 
+               range === '90d' ? '90D' : 
+               '1Y'}
             </Text>
           </TouchableOpacity>
         ))}
-      </ScrollView>
+      </View>
 
       {/* Metrics Grid */}
       <ScrollView style={styles.content}>
         <View style={styles.metricsGrid}>
-          {renderMetricCard('Impressions', MOCK_DATA.impressions, 8.2)}
-          {renderMetricCard('Engagement', `${MOCK_DATA.engagement}%`, -2.1)}
-          {renderMetricCard('Followers', MOCK_DATA.followers, 5.4)}
-          {renderMetricCard('Posts', MOCK_DATA.posts, 12.3)}
-          {renderMetricCard('Growth', `${MOCK_DATA.growth}%`, MOCK_DATA.growth)}
+          {renderMetricCard('Total Reach', 145200, 132000, 'eye-outline')}
+          {renderMetricCard('Impressions', 289000, 265000, 'bar-chart-outline')}
+          {renderMetricCard('Engagement Rate', '4.8%', 4.2, 'heart-outline')}
+          {renderMetricCard('Followers', 12500, 11800, 'people-outline')}
+          {renderMetricCard('Total Posts', 45, 42, 'document-text-outline')}
+          {renderMetricCard('Avg. Interactions', 256, 234, 'chatbubble-outline')}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -235,28 +209,60 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '600',
   },
-  timeSelector: {
+  selectionList: {
     backgroundColor: '#fff',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
+    maxHeight: 48,
   },
-  timeOption: {
+  selectionContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  selectionOption: {
     paddingHorizontal: 16,
     paddingVertical: 6,
     borderRadius: 16,
-    marginHorizontal: 4,
+    marginRight: 8,
     backgroundColor: '#f2f2f7',
+  },
+  activeSelectionOption: {
+    backgroundColor: '#007AFF',
+  },
+  selectionText: {
+    fontSize: 13,
+    color: '#666',
+  },
+  activeSelectionText: {
+    color: '#fff',
+    fontWeight: '500',
+  },
+  timeSelector: {
+    backgroundColor: '#fff',
+    flexDirection: 'row',
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  timeOption: {
+    height: 32,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginRight: 8,
+    backgroundColor: '#f2f2f7',
+    minWidth: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   activeTimeOption: {
     backgroundColor: '#007AFF',
   },
   timeOptionText: {
-    fontSize: 14,
+    fontSize: 13,
+    fontWeight: '500',
     color: '#666',
   },
   activeTimeOptionText: {
     color: '#fff',
-    fontWeight: '500',
   },
   content: {
     flex: 1,
@@ -276,100 +282,8 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  metricLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-  },
-  metricValue: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  changeIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  changeText: {
-    fontSize: 12,
-    marginLeft: 2,
-  },
-  platformSelector: {
-    flexDirection: 'row',
-    padding: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  platformButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginRight: 12,
-    borderRadius: 20,
-    backgroundColor: '#f8f9fa',
-  },
-  platformButtonActive: {
-    backgroundColor: '#e8f3ff',
-  },
-  platformButtonText: {
-    marginLeft: 6,
-    fontSize: 14,
-    color: '#666',
-  },
-  platformButtonTextActive: {
-    marginLeft: 6,
-    fontSize: 14,
-    color: '#2f95dc',
-  },
-  performanceCard: {
-    margin: 16,
-    padding: 16,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-  },
-  performanceHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  performanceTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  periodSelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  periodText: {
-    fontSize: 14,
-    color: '#666',
-    marginRight: 4,
-  },
-  performanceContent: {
-    alignItems: 'center',
-  },
-  performanceMetric: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#1b873f',
-    marginBottom: 4,
-  },
-  performancePeriod: {
-    fontSize: 14,
-    color: '#666',
   },
   metricHeader: {
     flexDirection: 'row',
@@ -382,17 +296,16 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   metricContent: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  metricValue: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
   },
   trendBadge: {
-    alignSelf: 'flex-start',
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 16,
