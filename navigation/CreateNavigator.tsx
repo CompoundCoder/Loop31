@@ -7,10 +7,22 @@ import MediaPickerScreen from '../screens/create/MediaPickerScreen';
 import ScheduleScreen from '../screens/create/ScheduleScreen';
 
 export type CreateStackParamList = {
-  CreateMain: undefined;
+  CreateMain: {
+    draft?: {
+      caption: string;
+      mediaUri: string;
+      accountIds: string[];
+      scheduledDate: string;
+    };
+  } | undefined;
   PlatformSelect: undefined;
   MediaPicker: { platforms: string[] };
-  Schedule: { platforms: string[]; media?: string[]; content: string };
+  Schedule: {
+    platforms: string[];
+    media: string[];
+    content: string;
+  };
+  Posts: undefined;
 };
 
 const Stack = createNativeStackNavigator<CreateStackParamList>();

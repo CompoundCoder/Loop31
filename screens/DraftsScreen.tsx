@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, FlatList } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { RootTabParamList } from '../navigation/BottomTabNavigator';
 import PostCard, { PostStatus } from '../components/PostCard';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type DraftsScreenNavigationProp = BottomTabNavigationProp<RootTabParamList>;
 
@@ -15,73 +16,117 @@ type Platform = {
   name: string;
 };
 
-interface DraftPost {
+export interface DraftPost {
   id: string;
   mediaUri: string;
   caption: string;
-  platforms: Platform[];
-  date: Date;
+  accountIds: Array<{
+    id: string;
+    type: 'instagram' | 'facebook' | 'twitter' | 'linkedin' | 'tiktok';
+    name: string;
+  }>;
+  scheduledDate: string;
+  createdAt: string;
   status: PostStatus;
 }
-
-// Mock data for draft posts
-const MOCK_DRAFTS: DraftPost[] = [
-  {
-    id: '1',
-    mediaUri: 'https://picsum.photos/800/800',
-    caption: 'Working on this amazing chrome delete project. What do you think of the progress so far? #InProgress #VinylWrap',
-    platforms: [
-      { id: 'ig1', type: 'instagram', name: 'Brand Main' },
-    ],
-    date: new Date(),
-    status: 'draft'
-  },
-  {
-    id: '2',
-    mediaUri: 'https://picsum.photos/900/1200',
-    caption: 'Sneak peek of our latest project! Full reveal coming soon... 👀 #ComingSoon #CarWrap',
-    platforms: [
-      { id: 'ig1', type: 'instagram', name: 'Brand Main' },
-      { id: 'fb1', type: 'facebook', name: 'Brand Page' },
-    ],
-    date: new Date(),
-    status: 'draft'
-  },
-];
 
 type DraftsScreenProps = {
   onClose?: () => void;
   onEditDraft?: (draft: DraftPost) => void;
 };
 
-export default function DraftsScreen({ onClose }: DraftsScreenProps) {
+export default function DraftsScreen({ onClose, onEditDraft }: DraftsScreenProps) {
   const navigation = useNavigation<DraftsScreenNavigationProp>();
   const [activeTab, setActiveTab] = useState<'drafts' | 'awaiting'>('drafts');
-  const [drafts] = useState<DraftPost[]>(MOCK_DRAFTS);
+  const [drafts, setDrafts] = useState<DraftPost[]>([]);
+
+  useEffect(() => {
+    loadDrafts();
+  }, []);
+
+  const loadDrafts = async () => {
+    try {
+      const draftsJson = await AsyncStorage.getItem('drafts');
+      if (draftsJson) {
+        const loadedDrafts = JSON.parse(draftsJson);
+        setDrafts(loadedDrafts);
+      }
+    } catch (error) {
+      console.error('Error loading drafts:', error);
+      Alert.alert('Error', 'Failed to load drafts');
+    }
+  };
   
-  const handleDelete = (id: string) => {
-    console.log('Delete draft:', id);
+  const handleDelete = async (id: string) => {
+    Alert.alert(
+      'Delete Draft',
+      'Are you sure you want to delete this draft? This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const updatedDrafts = drafts.filter(draft => draft.id !== id);
+              await AsyncStorage.setItem('drafts', JSON.stringify(updatedDrafts));
+              setDrafts(updatedDrafts);
+            } catch (error) {
+              console.error('Error deleting draft:', error);
+              Alert.alert('Error', 'Failed to delete draft');
+            }
+          },
+        },
+      ],
+    );
   };
 
   const handleEdit = (id: string) => {
-    console.log('Edit draft:', id);
+    const draft = drafts.find(d => d.id === id);
+    if (draft) {
+      if (onEditDraft) {
+        onEditDraft(draft);
+      } else {
+        // If no onEditDraft prop, navigate to Create screen with draft data
+        navigation.navigate('Create', {
+          draft: {
+            caption: draft.caption,
+            mediaUri: draft.mediaUri,
+            accountIds: draft.accountIds.map(acc => acc.id),
+            scheduledDate: draft.scheduledDate,
+          }
+        });
+      }
+    }
   };
 
   const handleSchedule = (id: string) => {
-    console.log('Schedule draft:', id);
+    const draft = drafts.find(d => d.id === id);
+    if (draft) {
+      navigation.navigate('Schedule', {
+        platforms: draft.accountIds.map(acc => acc.id),
+        media: draft.mediaUri ? [draft.mediaUri] : [],
+        content: draft.caption,
+      });
+    }
   };
 
   const renderDraft = ({ item }: { item: DraftPost }) => (
-    <PostCard
-      mediaUri={item.mediaUri}
-      caption={item.caption}
-      platforms={item.platforms}
-      date={item.date}
-      status={item.status}
-      onEdit={() => handleEdit(item.id)}
-      onDelete={() => handleDelete(item.id)}
-      onSchedule={() => handleSchedule(item.id)}
-    />
+    <View key={item.id} style={styles.postCardContainer}>
+      <PostCard
+        mediaUri={item.mediaUri || ''}
+        caption={item.caption}
+        platforms={item.accountIds}
+        date={new Date(item.scheduledDate)}
+        status="draft"
+        onEdit={() => handleEdit(item.id)}
+        onDelete={() => handleDelete(item.id)}
+        onSchedule={() => handleSchedule(item.id)}
+      />
+    </View>
   );
 
   return (
@@ -105,7 +150,7 @@ export default function DraftsScreen({ onClose }: DraftsScreenProps) {
         >
           <Text style={[styles.tabText, activeTab === 'drafts' && styles.activeTabText]}>
             Drafts
-            <Text style={styles.tabCount}> {MOCK_DRAFTS.length}</Text>
+            <Text style={styles.tabCount}> {drafts.length}</Text>
           </Text>
         </TouchableOpacity>
         <TouchableOpacity 
@@ -122,7 +167,7 @@ export default function DraftsScreen({ onClose }: DraftsScreenProps) {
       <FlatList
         data={activeTab === 'drafts' ? drafts : []}
         renderItem={renderDraft}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
       />
     </SafeAreaView>
@@ -189,5 +234,8 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
+  },
+  postCardContainer: {
+    marginBottom: 16,
   },
 }); 

@@ -1,13 +1,20 @@
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity, TextInput, Image, KeyboardAvoidingView, Platform, Modal, SafeAreaView, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { CreateStackParamList } from '../navigation/CreateNavigator';
 import BottomActionBar from './create/BottomActionBar';
 import { format } from 'date-fns';
 import DraftsScreen from './DraftsScreen';
 import PlatformSelectModal from './create/PlatformSelectModal';
 import AnimatedHeader from '../components/AnimatedHeader';
+import { RouteProp } from '@react-navigation/native';
+
+type CreateScreenNavigationProp = NativeStackNavigationProp<CreateStackParamList>;
 
 // Import SOCIAL_ACCOUNTS from PlatformSelectModal when moving to proper state management
 const SOCIAL_ACCOUNTS = [
@@ -33,6 +40,8 @@ const PLATFORM_GROUPS = {
 };
 
 export default function CreateScreen() {
+  const navigation = useNavigation<CreateScreenNavigationProp>();
+  const route = useRoute<RouteProp<CreateStackParamList, 'CreateMain'>>();
   const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>([]);
   const [caption, setCaption] = useState('');
   const [mediaUri, setMediaUri] = useState<string | null>(null);
@@ -41,6 +50,17 @@ export default function CreateScreen() {
   const [showDrafts, setShowDrafts] = useState(false);
   const [showPlatformSelect, setShowPlatformSelect] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
+
+  // Initialize form with draft data if available
+  useEffect(() => {
+    if (route.params?.draft) {
+      const { caption: draftCaption, mediaUri: draftMediaUri, accountIds, scheduledDate: draftScheduledDate } = route.params.draft;
+      setCaption(draftCaption);
+      setMediaUri(draftMediaUri);
+      setSelectedAccountIds(accountIds);
+      setScheduledDate(new Date(draftScheduledDate));
+    }
+  }, [route.params?.draft]);
 
   const selectedAccounts = SOCIAL_ACCOUNTS.filter(account => 
     selectedAccountIds.includes(account.id)
@@ -65,18 +85,60 @@ export default function CreateScreen() {
     return `${caption.length}/2200`;
   };
 
-  const handleSaveDraft = () => {
-    const draft = {
-      id: Date.now().toString(),
-      accountIds: selectedAccountIds,
-      caption,
-      mediaUri,
-      scheduledDate: scheduledDate.toISOString(),
-      createdAt: new Date().toISOString(),
+  const handleSaveDraft = useCallback(async () => {
+    if (!caption && !mediaUri && selectedAccountIds.length === 0) {
+      // Don't save empty drafts
+      return;
+    }
+
+    try {
+      // Get existing drafts
+      const draftsJson = await AsyncStorage.getItem('drafts');
+      const drafts = draftsJson ? JSON.parse(draftsJson) : [];
+      
+      // Create new draft
+      const newDraft = {
+        id: Date.now().toString(),
+        caption,
+        mediaUri,
+        accountIds: selectedAccountIds,
+        scheduledDate: scheduledDate.toISOString(),
+        createdAt: new Date().toISOString(),
+      };
+      
+      // Add to drafts array
+      drafts.unshift(newDraft);
+      
+      // Save back to storage
+      await AsyncStorage.setItem('drafts', JSON.stringify(drafts));
+      
+      // Clear form
+      setCaption('');
+      setMediaUri(null);
+      setSelectedAccountIds([]);
+      
+      // Show success feedback
+      alert('Draft saved successfully');
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      alert('Failed to save draft');
+    }
+  }, [caption, mediaUri, selectedAccountIds, scheduledDate]);
+
+  const handleSchedulePost = useCallback(() => {
+    if (!caption || selectedAccountIds.length === 0) {
+      alert('Please add a caption and select at least one platform');
+      return;
+    }
+
+    const post = {
+      platforms: selectedAccountIds,
+      media: mediaUri ? [mediaUri] : [],
+      content: caption,
     };
-    
-    console.log('Saved draft:', draft);
-  };
+
+    navigation.navigate('Schedule', post);
+  }, [caption, mediaUri, selectedAccountIds, navigation]);
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     if (selectedDate) {
@@ -88,16 +150,15 @@ export default function CreateScreen() {
     setShowDatePicker(false);
   };
 
-  const handleSchedule = () => {
-    if (!selectedAccountIds.length || !caption) return;
-    console.log('Scheduling post for:', scheduledDate);
-  };
-
-  const handleEditDraft = (draft: any) => {
-    setCaption(draft.caption);
+  const handleEditDraft = useCallback((draft: any) => {
+    setCaption(draft.caption || '');
     setMediaUri(draft.mediaUri);
-    setSelectedAccountIds(draft.platforms);
-  };
+    setSelectedAccountIds(draft.accountIds || []);
+    if (draft.scheduledDate) {
+      setScheduledDate(new Date(draft.scheduledDate));
+    }
+    setShowDrafts(false);
+  }, []);
 
   const isGroupSelection = (selectedIds: string[]) => {
     return Object.values(PLATFORM_GROUPS).some(group => 
@@ -341,6 +402,8 @@ export default function CreateScreen() {
 
       <BottomActionBar
         onSaveDraft={handleSaveDraft}
+        onSchedule={handleSchedulePost}
+        isValid={caption.trim().length > 0 && selectedAccountIds.length > 0}
       />
     </View>
   );

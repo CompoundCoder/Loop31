@@ -3,10 +3,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface BottomActionBarProps {
   onSaveDraft: () => void;
+  onSchedule: () => void;
+  isValid: boolean;
 }
 
 export default function BottomActionBar({ 
   onSaveDraft,
+  onSchedule,
+  isValid,
 }: BottomActionBarProps) {
   const insets = useSafeAreaInsets();
 
@@ -20,9 +24,13 @@ export default function BottomActionBar({
           <Text style={styles.secondaryButtonText}>Save as Draft</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.primaryButton}
+          style={[styles.primaryButton, !isValid && styles.primaryButtonDisabled]}
+          onPress={onSchedule}
+          disabled={!isValid}
         >
-          <Text style={styles.primaryButtonText}>Schedule Post</Text>
+          <Text style={[styles.primaryButtonText, !isValid && styles.primaryButtonTextDisabled]}>
+            Schedule Post
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -52,10 +60,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 12,
   },
+  primaryButtonDisabled: {
+    backgroundColor: '#b4d8f0',
+  },
   primaryButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  primaryButtonTextDisabled: {
+    color: 'rgba(255, 255, 255, 0.7)',
   },
   secondaryButton: {
     flex: 1,

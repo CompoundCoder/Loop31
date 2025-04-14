@@ -1,21 +1,47 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet, Text, Animated } from 'react-native';
 import CreateScreen from '../screens/CreateScreen';
 import PostsScreen from '../screens/PostsScreen';
 import SentScreen from '../screens/SentScreen';
 import AnalyticsScreen from '../screens/AnalyticsScreen';
 import SettingsNavigator from './SettingsNavigator';
+import { useEffect, useRef } from 'react';
 
 export type RootTabParamList = {
   Schedule: undefined;
   Create: undefined;
+  Posts: undefined;
   Sent: undefined;
-  Analytics: undefined;
   Settings: undefined;
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
+
+const AnimatedCreateButton = ({ focused }: { focused: boolean }) => {
+  const colorAnim = useRef(new Animated.Value(focused ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(colorAnim, {
+      toValue: focused ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [focused]);
+
+  const backgroundColor = colorAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['#8E8E93', '#007AFF'],
+  });
+
+  return (
+    <View style={styles.contentWrapper}>
+      <Animated.View style={[styles.createButton, { backgroundColor }]}>
+        <Ionicons name="add" size={28} color="#FFFFFF" />
+      </Animated.View>
+    </View>
+  );
+};
 
 export default function BottomTabNavigator() {
   return (
@@ -44,7 +70,7 @@ export default function BottomTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Sent"
+        name="Posts"
         component={SentScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
@@ -57,22 +83,20 @@ export default function BottomTabNavigator() {
         name="Create"
         component={CreateScreen}
         options={{
-          tabBarIcon: ({ color }) => (
-            <View style={styles.createButton}>
-              <Ionicons name="add" size={28} color="#FFFFFF" />
-            </View>
+          tabBarIcon: ({ focused }) => (
+            <AnimatedCreateButton focused={focused} />
           ),
           tabBarLabel: '',
         }}
       />
       <Tab.Screen
-        name="Analytics"
-        component={AnalyticsScreen}
+        name="Sent"
+        component={SentScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="stats-chart-outline" size={24} color={color} />
+            <Ionicons name="paper-plane-outline" size={24} color={color} />
           ),
-          tabBarLabel: 'Analytics',
+          tabBarLabel: 'Sent',
         }}
       />
       <Tab.Screen
@@ -90,18 +114,23 @@ export default function BottomTabNavigator() {
 }
 
 const styles = StyleSheet.create({
+  contentWrapper: {
+    width: 60,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: -20,
+  },
   createButton: {
     width: 56,
     height: 56,
-    backgroundColor: '#007AFF',
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: -32,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.3,
     shadowRadius: 4,
-    elevation: 5,
+    elevation: 6,
   },
 }); 
