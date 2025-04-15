@@ -1,10 +1,14 @@
 import React from 'react';
-import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity, Dimensions, Modal, Animated, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity, Dimensions, Modal, Animated, ScrollView, Platform, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { colors } from '../theme';
+import PostCard from '../components/PostCard';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Enhanced mock data with more metrics
 const MOCK_POSTS = [
@@ -19,7 +23,9 @@ const MOCK_POSTS = [
       likes: 2450,
       comments: 230,
       shares: 120,
-      impressions: 28900
+      impressions: 28900,
+      views: 30000,
+      engagement: 2800
     }
   },
   {
@@ -33,7 +39,9 @@ const MOCK_POSTS = [
       likes: 1890,
       comments: 450,
       shares: 80,
-      impressions: 15670
+      impressions: 15670,
+      views: 16000,
+      engagement: 2420
     }
   },
   {
@@ -47,7 +55,9 @@ const MOCK_POSTS = [
       likes: 12450,
       comments: 890,
       shares: 1560,
-      impressions: 156700
+      impressions: 156700,
+      views: 160000,
+      engagement: 14900
     }
   },
   // Add more mock posts with different dates for grouping
@@ -62,10 +72,21 @@ const MOCK_POSTS = [
       likes: 780,
       comments: 234,
       shares: 567,
-      impressions: 23400
+      impressions: 23400,
+      views: 24000,
+      engagement: 1581
     }
   }
 ];
+
+interface PostMetrics {
+  likes: number;
+  views: number;
+  shares: number;
+  comments: number;
+  impressions: number;
+  engagement: number;
+}
 
 interface Post {
   id: string;
@@ -74,18 +95,30 @@ interface Post {
   publishedAt: string;
   platforms: string[];
   folder?: string;
-  metrics: {
-    likes: number;
-    comments: number;
-    shares: number;
-    impressions: number;
-  };
+  metrics: PostMetrics;
 }
 
 interface PostGroup {
   title: string;
   data: Post[];
 }
+
+const getMetricIcon = (metricName: keyof PostMetrics): keyof typeof Ionicons.glyphMap => {
+  switch (metricName) {
+    case 'likes':
+      return 'heart-outline';
+    case 'views':
+      return 'eye-outline';
+    case 'shares':
+      return 'share-outline';
+    case 'comments':
+      return 'chatbubble-outline';
+    case 'impressions':
+      return 'analytics-outline';
+    case 'engagement':
+      return 'trending-up-outline';
+  }
+};
 
 function getHighlightMetric(metrics: Post['metrics']) {
   const values = [
@@ -105,54 +138,273 @@ function formatMetricNumber(num: number) {
   return num.toString();
 }
 
-function CompactPostCard({ post, onPress }: { post: Post; onPress: () => void }) {
-  const highlight = getHighlightMetric(post.metrics);
-  const screenWidth = Dimensions.get('window').width;
-  const cardWidth = (screenWidth - 48) / 2; // 16px padding on sides + 16px gap
+const VIEW_MODE_STORAGE_KEY = '@published_view_mode';
+
+export type SortOption = 'recent' | 'oldest' | 'popular' | 'engagement' | 'impressions';
+export type FilterOption = 'all' | 'instagram' | 'facebook' | 'twitter' | 'linkedin';
+export type DropdownType = 'sort' | 'filter';
+
+interface DropdownOption {
+  label: string;
+  value: SortOption | FilterOption;
+  icon: keyof typeof Ionicons.glyphMap;
+}
+
+interface DropdownPosition {
+  x: number;
+  y: number;
+  width: number;
+  isAbove?: boolean;
+}
+
+interface DropdownPositions {
+  sort?: DropdownPosition;
+  filter?: DropdownPosition;
+}
+
+function DropdownMenu({ 
+  visible, 
+  options, 
+  selectedValue, 
+  onSelect,
+  onClose,
+  style,
+  anchorPosition,
+}: { 
+  visible: boolean;
+  options: DropdownOption[];
+  selectedValue: string;
+  onSelect: (value: string) => void;
+  onClose: () => void;
+  style?: any;
+  anchorPosition?: { x: number; y: number; width: number; isAbove?: boolean };
+}) {
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const dropdownRef = useRef<View>(null);
+
+  useEffect(() => {
+    if (visible) {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible]);
+
+  if (!visible) return null;
+
+  const dropdownStyle = {
+    ...styles.dropdownMenu,
+    ...(anchorPosition && {
+      position: 'absolute',
+      top: anchorPosition.y,
+      left: anchorPosition.x,
+      width: anchorPosition.width,
+      maxHeight: 250, // Limit maximum height
+    }),
+    ...style,
+  };
 
   return (
-    <TouchableOpacity 
-      style={[styles.compactCard, { width: cardWidth }]} 
-      onPress={onPress}
-      activeOpacity={0.8}
-    >
-      <View style={styles.compactImageContainer}>
-        <Image 
-          source={{ uri: post.mediaUrl }} 
-          style={styles.compactImage}
+    <>
+      {visible && (
+        <TouchableOpacity 
+          style={[styles.dropdownOverlay, { zIndex: 998 }]} 
+          activeOpacity={1} 
+          onPress={onClose}
         />
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.4)']}
-          style={styles.compactGradient}
+      )}
+      <Animated.View 
+        ref={dropdownRef}
+        style={[
+          dropdownStyle,
+          { opacity: fadeAnim, zIndex: 999 },
+          { transform: [{ 
+            translateY: fadeAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [anchorPosition?.isAbove ? 8 : -8, 0]
+            })
+          }] }
+        ]}
+      >
+        <ScrollView 
+          bounces={false} 
+          showsVerticalScrollIndicator={false}
+          style={{ maxHeight: 250 }}
         >
-          <View style={styles.compactMetric}>
-            <Ionicons 
-              name={highlight.label === 'impressions' ? 'eye-outline' : 
-                    highlight.label === 'shares' ? 'share-outline' :
-                    highlight.label === 'comments' ? 'chatbubble-outline' : 
-                    'heart-outline'} 
-              size={14} 
-              color="#fff" 
-            />
-            <Text style={styles.compactMetricText}>
-              {formatMetricNumber(highlight.value)}
-            </Text>
-          </View>
-        </LinearGradient>
-      </View>
-      <View style={styles.compactContent}>
-        <Text style={styles.compactCaption} numberOfLines={1}>
-          {post.content}
-        </Text>
-      </View>
-    </TouchableOpacity>
+          {options.map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              style={[
+                styles.dropdownMenuItem,
+                selectedValue === option.value && styles.dropdownMenuItemSelected
+              ]}
+              onPress={() => {
+                onSelect(option.value);
+                onClose();
+              }}
+            >
+              {option.icon && (
+                <View style={styles.dropdownMenuIcon}>
+                  <Ionicons name={option.icon as any} size={16} color={selectedValue === option.value ? '#007AFF' : '#666'} />
+                </View>
+              )}
+              <Text style={[
+                styles.dropdownMenuText,
+                selectedValue === option.value && styles.dropdownMenuTextSelected
+              ]}>
+                {option.label}
+              </Text>
+              {selectedValue === option.value && (
+                <Ionicons name="checkmark" size={16} color="#007AFF" />
+              )}
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </Animated.View>
+    </>
   );
 }
 
-function WeekSection({ group, onPostPress, isLatestWeek }: { 
+function CompactPostCard({ post, onPress, viewMode, sortBy }: { 
+  post: Post; 
+  onPress: () => void;
+  viewMode: 'grid' | 'list';
+  sortBy: SortOption;
+}) {
+  const [fadeAnim] = useState(new Animated.Value(1));
+  
+  const getMetricForSort = () => {
+    switch (sortBy) {
+      case 'popular':
+        return { 
+          icon: 'heart-outline' as const,
+          value: post.metrics.likes,
+          label: 'likes'
+        };
+      case 'impressions':
+        return { 
+          icon: 'eye-outline' as const,
+          value: post.metrics.impressions,
+          label: 'views'
+        };
+      case 'engagement':
+        const engagement = post.metrics.likes + post.metrics.comments + post.metrics.shares;
+        return { 
+          icon: 'trending-up-outline' as const,
+          value: engagement,
+          label: 'engagement'
+        };
+      default:
+        return { 
+          icon: 'time-outline' as const,
+          value: format(new Date(post.publishedAt), 'MMM d'),
+          label: 'date',
+          isDate: true
+        };
+    }
+  };
+
+  const metric = getMetricForSort();
+
+  useEffect(() => {
+    fadeAnim.setValue(0);
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [sortBy]);
+
+  const highlight = getHighlightMetric(post.metrics);
+  const screenWidth = Dimensions.get('window').width;
+  const cardWidth = viewMode === 'grid' 
+    ? (screenWidth - 48) / 2 // 16px padding on sides + 16px gap
+    : screenWidth - 32; // 16px padding on both sides
+
+  if (viewMode === 'list') {
+    return (
+      <Animated.View style={{ opacity: fadeAnim }}>
+        <TouchableOpacity 
+          style={[styles.listCard, { width: cardWidth }]} 
+          onPress={onPress}
+          activeOpacity={0.8}
+        >
+          <View style={styles.listContent}>
+            <Text style={styles.listCaption} numberOfLines={3}>
+              {post.content}
+            </Text>
+            <View style={styles.listMeta}>
+              <View style={styles.listPlatforms}>
+                {post.platforms.map((platform) => (
+                  <View key={platform} style={styles.weekPlatformIcon}>
+                    <Ionicons 
+                      name={platform === 'instagram' ? 'logo-instagram' :
+                            platform === 'facebook' ? 'logo-facebook' :
+                            platform === 'twitter' ? 'logo-twitter' :
+                            platform === 'linkedin' ? 'logo-linkedin' :
+                            platform === 'tiktok' ? 'logo-tiktok' :
+                            'share-social'} 
+                      size={12} 
+                      color="#666" 
+                    />
+                  </View>
+                ))}
+              </View>
+              <View style={styles.listMetric}>
+                <Ionicons name={metric.icon} size={14} color="#666" />
+                <Text style={styles.listMetricText}>
+                  {metric.isDate ? metric.value : formatMetricNumber(metric.value as number)}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  }
+
+  return (
+    <Animated.View style={{ opacity: fadeAnim }}>
+      <TouchableOpacity 
+        style={[styles.compactCard, { width: cardWidth }]} 
+        onPress={onPress}
+        activeOpacity={0.8}
+      >
+        <View style={styles.compactImageContainer}>
+          <Image 
+            source={{ uri: post.mediaUrl }} 
+            style={styles.compactImage}
+          />
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.4)']}
+            style={styles.compactGradient}
+          >
+            <View style={styles.compactMetric}>
+              <Ionicons name={metric.icon} size={14} color="#fff" />
+              <Text style={styles.compactMetricText}>
+                {metric.isDate ? metric.value : formatMetricNumber(metric.value as number)}
+              </Text>
+            </View>
+          </LinearGradient>
+        </View>
+        <View style={styles.compactContent}>
+          <Text style={styles.compactCaption} numberOfLines={1}>
+            {post.content}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+}
+
+function WeekSection({ group, onPostPress, isLatestWeek, viewMode, sortBy }: { 
   group: PostGroup; 
   onPostPress: (post: Post) => void;
   isLatestWeek?: boolean;
+  viewMode: 'grid' | 'list';
+  sortBy: SortOption;
 }) {
   const [isCollapsed, setIsCollapsed] = useState(!isLatestWeek);
   const animatedHeight = useRef(new Animated.Value(isLatestWeek ? 1 : 0)).current;
@@ -205,7 +457,8 @@ function WeekSection({ group, onPostPress, isLatestWeek }: {
       </TouchableOpacity>
 
       <Animated.View style={[
-        styles.postsGrid,
+        styles.postsContainer,
+        viewMode === 'grid' && styles.postsGrid,
         {
           maxHeight: animatedHeight.interpolate({
             inputRange: [0, 1],
@@ -219,6 +472,8 @@ function WeekSection({ group, onPostPress, isLatestWeek }: {
             key={post.id}
             post={post}
             onPress={() => onPostPress(post)}
+            viewMode={viewMode}
+            sortBy={sortBy}
           />
         ))}
       </Animated.View>
@@ -232,15 +487,15 @@ function PostDetailModal({ post, visible, onClose }: {
   onClose: () => void;
 }) {
   const [imageAspectRatio, setImageAspectRatio] = useState(1);
+  const insets = useSafeAreaInsets();
 
-  // Get image dimensions when component mounts
   useEffect(() => {
     if (post.mediaUrl) {
       Image.getSize(post.mediaUrl, (width, height) => {
         setImageAspectRatio(width / height);
       }, (error) => {
         console.log('Error getting image size:', error);
-        setImageAspectRatio(1); // Fallback to square if error
+        setImageAspectRatio(1);
       });
     }
   }, [post.mediaUrl]);
@@ -252,173 +507,98 @@ function PostDetailModal({ post, visible, onClose }: {
       visible={visible}
       onRequestClose={onClose}
     >
-      <SafeAreaView style={styles.modalContainer} edges={['top', 'bottom']}>
-        <View style={styles.modalInnerContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity 
-              onPress={onClose} 
-              style={styles.modalBackButton}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Ionicons name="close" size={24} color="#000" />
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Post Details</Text>
-            <View style={styles.modalBackButton} />
-          </View>
-
-          <ScrollView 
-            style={styles.modalContent}
-            showsVerticalScrollIndicator={false}
-            bounces={false}
+      <View style={[styles.modalContainer, { backgroundColor: '#fff' }]}>
+        <View 
+          style={[
+            styles.modalHeader, 
+            { marginTop: insets.top }
+          ]}
+        >
+          <TouchableOpacity 
+            onPress={onClose} 
+            style={styles.modalBackButton}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <View style={styles.contentCard}>
-              <View style={styles.mediaWrapper}>
-                <Image 
-                  source={{ uri: post.mediaUrl }} 
-                  style={[styles.modalImage, { aspectRatio: imageAspectRatio }]}
-                  resizeMode="cover"
-                />
+            <Ionicons name="close" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.modalTitle}>Post Details</Text>
+          <View style={styles.modalBackButton} />
+        </View>
+
+        <ScrollView 
+          style={styles.modalContent}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+          contentContainerStyle={{ paddingBottom: insets.bottom }}
+        >
+          <View style={styles.contentCard}>
+            <View style={styles.mediaWrapper}>
+              <Image 
+                source={{ uri: post.mediaUrl }} 
+                style={[styles.modalImage, { aspectRatio: imageAspectRatio }]}
+                resizeMode="cover"
+              />
+            </View>
+            
+            <View style={styles.detailsContainer}>
+              <View style={styles.platformsContainer}>
+                {post.platforms.map((platform) => (
+                  <View key={platform} style={styles.platformBadge}>
+                    <Ionicons 
+                      name={platform === 'instagram' ? 'logo-instagram' :
+                            platform === 'facebook' ? 'logo-facebook' :
+                            platform === 'twitter' ? 'logo-twitter' :
+                            platform === 'linkedin' ? 'logo-linkedin' :
+                            platform === 'tiktok' ? 'logo-tiktok' :
+                            'share-social'} 
+                      size={16} 
+                      color="#666" 
+                    />
+                  </View>
+                ))}
               </View>
-              
-              <View style={styles.detailsContainer}>
-                <View style={styles.platformsContainer}>
-                  {post.platforms.map((platform) => (
-                    <View key={platform} style={styles.platformBadge}>
-                      <Ionicons 
-                        name={platform === 'instagram' ? 'logo-instagram' :
-                              platform === 'facebook' ? 'logo-facebook' :
-                              platform === 'twitter' ? 'logo-twitter' :
-                              platform === 'linkedin' ? 'logo-linkedin' :
-                              platform === 'tiktok' ? 'logo-tiktok' :
-                              'share-social'} 
-                        size={16} 
-                        color="#666" 
-                      />
-                    </View>
-                  ))}
+
+              {post.folder && (
+                <View style={styles.folderContainer}>
+                  <Ionicons name="folder-outline" size={16} color="#666" />
+                  <Text style={styles.folderText}>{post.folder}</Text>
                 </View>
+              )}
 
-                {post.folder && (
-                  <View style={styles.folderContainer}>
-                    <Ionicons name="folder-outline" size={16} color="#666" />
-                    <Text style={styles.folderText}>{post.folder}</Text>
-                  </View>
-                )}
+              <Text style={styles.modalCaption}>{post.content}</Text>
 
-                <Text style={styles.modalCaption}>{post.content}</Text>
-
-                <View style={styles.statsGrid}>
-                  <View style={styles.statItem}>
-                    <Ionicons name="heart-outline" size={20} color="#666" />
-                    <Text style={styles.statValue}>
-                      {formatMetricNumber(post.metrics.likes)}
+              <View style={styles.statsGrid}>
+                {Object.entries(post.metrics as PostMetrics).map(([metricName, value], index) => (
+                  <View key={index} style={styles.metricRow}>
+                    <Ionicons 
+                      name={getMetricIcon(metricName as keyof PostMetrics)} 
+                      size={24} 
+                      color={colors.primary} 
+                    />
+                    <Text style={styles.metricValue}>{value}</Text>
+                    <Text style={styles.metricLabel}>
+                      {metricName.charAt(0).toUpperCase() + metricName.slice(1)}
                     </Text>
-                    <Text style={styles.statLabel}>Likes</Text>
                   </View>
-                  <View style={styles.statItem}>
-                    <Ionicons name="chatbubble-outline" size={20} color="#666" />
-                    <Text style={styles.statValue}>
-                      {formatMetricNumber(post.metrics.comments)}
-                    </Text>
-                    <Text style={styles.statLabel}>Comments</Text>
-                  </View>
-                  <View style={styles.statItem}>
-                    <Ionicons name="share-outline" size={20} color="#666" />
-                    <Text style={styles.statValue}>
-                      {formatMetricNumber(post.metrics.shares)}
-                    </Text>
-                    <Text style={styles.statLabel}>Shares</Text>
-                  </View>
-                  <View style={styles.statItem}>
-                    <Ionicons name="eye-outline" size={20} color="#666" />
-                    <Text style={styles.statValue}>
-                      {formatMetricNumber(post.metrics.impressions)}
-                    </Text>
-                    <Text style={styles.statLabel}>Impressions</Text>
-                  </View>
-                </View>
+                ))}
               </View>
             </View>
-          </ScrollView>
-
-          <View style={styles.bottomButtonContainer}>
-            <TouchableOpacity 
-              style={styles.repostButtonFull}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.repostButtonText}>Repost</Text>
-            </TouchableOpacity>
           </View>
-        </View>
-      </SafeAreaView>
-    </Modal>
-  );
-}
+        </ScrollView>
 
-type SortOption = 'recent' | 'popular';
-type FilterOption = 'all' | 'instagram' | 'facebook' | 'twitter' | 'tiktok';
-
-interface DropdownOption {
-  label: string;
-  value: string;
-  icon?: string;
-}
-
-function DropdownMenu({ 
-  visible, 
-  options, 
-  selectedValue, 
-  onSelect,
-  onClose,
-  style,
-}: { 
-  visible: boolean;
-  options: DropdownOption[];
-  selectedValue: string;
-  onSelect: (value: string) => void;
-  onClose: () => void;
-  style?: any;
-}) {
-  if (!visible) return null;
-
-  return (
-    <>
-      <TouchableOpacity 
-        style={styles.dropdownOverlay} 
-        activeOpacity={1} 
-        onPress={onClose}
-      />
-      <View style={[styles.dropdownMenu, style]}>
-        {options.map((option) => (
-          <TouchableOpacity
-            key={option.value}
-            style={[
-              styles.dropdownMenuItem,
-              selectedValue === option.value && styles.dropdownMenuItemSelected
-            ]}
-            onPress={() => {
-              onSelect(option.value);
-              onClose();
-            }}
+        <View style={[
+          styles.bottomButtonContainer, 
+          { paddingBottom: Math.max(insets.bottom, 16) }
+        ]}>
+          <TouchableOpacity 
+            style={styles.repostButtonFull}
+            activeOpacity={0.8}
           >
-            {option.icon && (
-              <View style={styles.dropdownMenuIcon}>
-                <Ionicons name={option.icon as any} size={16} color={selectedValue === option.value ? '#007AFF' : '#666'} />
-              </View>
-            )}
-            <Text style={[
-              styles.dropdownMenuText,
-              selectedValue === option.value && styles.dropdownMenuTextSelected
-            ]}>
-              {option.label}
-            </Text>
-            {selectedValue === option.value && (
-              <Ionicons name="checkmark" size={16} color="#007AFF" />
-            )}
+            <Text style={styles.repostButtonText}>Repost</Text>
           </TouchableOpacity>
-        ))}
+        </View>
       </View>
-    </>
+    </Modal>
   );
 }
 
@@ -429,6 +609,7 @@ function DropdownButton({
   isOpen,
   onPress,
   dropdownStyle,
+  buttonRef,
 }: { 
   label: string;
   value: string;
@@ -436,12 +617,14 @@ function DropdownButton({
   isOpen: boolean;
   onPress: () => void;
   dropdownStyle?: any;
+  buttonRef: React.RefObject<View>;
 }) {
   const selectedOption = options.find(opt => opt.value === value);
 
   return (
     <View style={styles.dropdownContainer}>
       <TouchableOpacity 
+        ref={buttonRef}
         style={[
           styles.dropdownButton,
           isOpen && styles.dropdownButtonActive
@@ -453,7 +636,11 @@ function DropdownButton({
           <Text style={styles.dropdownLabel}>{label}</Text>
           <View style={styles.dropdownValue}>
             {selectedOption?.icon && (
-              <Ionicons name={selectedOption.icon as any} size={16} color="#666" />
+              <Ionicons 
+                name={selectedOption.icon as keyof typeof Ionicons.glyphMap} 
+                size={16} 
+                color="#666" 
+              />
             )}
             <Text style={styles.dropdownValueText}>
               {selectedOption?.label || 'Select'}
@@ -472,46 +659,67 @@ function DropdownButton({
 
 export default function PublishedScreen() {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const [sortBy, setSortBy] = useState<SortOption>('recent');
-  const [filterBy, setFilterBy] = useState<FilterOption>('all');
-  const [openDropdown, setOpenDropdown] = useState<'sort' | 'filter' | null>(null);
+  const [selectedSort, setSelectedSort] = useState<SortOption>('recent');
+  const [selectedFilter, setSelectedFilter] = useState<FilterOption>('all');
+  const [openDropdown, setOpenDropdown] = useState<DropdownType | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [dropdownPositions, setDropdownPositions] = useState<DropdownPositions>({});
+
+  const sortButtonRef = useRef<View>(null);
+  const filterButtonRef = useRef<View>(null);
 
   const sortOptions: DropdownOption[] = [
-    { label: 'Most Recent', value: 'recent' },
-    { label: 'Most Popular', value: 'popular' },
+    { label: 'Most Recent', value: 'recent', icon: 'time-outline' },
+    { label: 'Oldest', value: 'oldest', icon: 'calendar-outline' },
+    { label: 'Most Popular', value: 'popular', icon: 'trending-up-outline' },
+    { label: 'Most Engagement', value: 'engagement', icon: 'heart-outline' },
   ];
 
   const filterOptions: DropdownOption[] = [
-    { label: 'All Platforms', value: 'all' },
+    { label: 'All Platforms', value: 'all', icon: 'apps-outline' },
     { label: 'Instagram', value: 'instagram', icon: 'logo-instagram' },
     { label: 'Facebook', value: 'facebook', icon: 'logo-facebook' },
     { label: 'Twitter', value: 'twitter', icon: 'logo-twitter' },
-    { label: 'TikTok', value: 'tiktok', icon: 'logo-tiktok' },
+    { label: 'LinkedIn', value: 'linkedin', icon: 'logo-linkedin' },
   ];
 
-  const sortPosts = (posts: Post[]): Post[] => {
-    switch (sortBy) {
-      case 'popular':
-        return [...posts].sort((a, b) => {
-          const engagementA = a.metrics.likes + a.metrics.comments + a.metrics.shares;
-          const engagementB = b.metrics.likes + b.metrics.comments + b.metrics.shares;
-          return engagementB - engagementA;
-        });
-      default:
-        return [...posts].sort((a, b) => 
-          new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
-        );
-    }
+  const handleSortChange = (value: SortOption) => {
+    setSelectedSort(value);
+    setOpenDropdown(null);
+  };
+
+  const handleFilterChange = (value: FilterOption) => {
+    setSelectedFilter(value);
+    setOpenDropdown(null);
+  };
+
+  const sortPosts = (posts: Post[], sortBy: SortOption) => {
+    return [...posts].sort((a, b) => {
+      switch (sortBy) {
+        case 'recent':
+          return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+        case 'oldest':
+          return new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime();
+        case 'popular':
+          return b.metrics.likes - a.metrics.likes;
+        case 'engagement':
+          return b.metrics.engagement - a.metrics.engagement;
+        case 'impressions':
+          return b.metrics.impressions - a.metrics.impressions;
+        default:
+          return 0;
+      }
+    });
   };
 
   const filterPosts = (posts: Post[]): Post[] => {
-    if (filterBy === 'all') return posts;
-    return posts.filter(post => post.platforms.includes(filterBy));
+    if (selectedFilter === 'all') return posts;
+    return posts.filter(post => post.platforms.includes(selectedFilter));
   };
 
   const groupPostsByWeek = (posts: Post[]): PostGroup[] => {
     const filteredPosts = filterPosts(posts);
-    const sortedPosts = sortPosts(filteredPosts);
+    const sortedPosts = sortPosts(filteredPosts, selectedSort);
 
     const grouped = sortedPosts.reduce((groups: { [key: string]: Post[] }, post) => {
       const date = new Date(post.publishedAt);
@@ -540,44 +748,163 @@ export default function PublishedScreen() {
 
   const groupedPosts = groupPostsByWeek(MOCK_POSTS);
 
+  // Load saved view mode preference
+  useEffect(() => {
+    const loadViewMode = async () => {
+      try {
+        const savedMode = await AsyncStorage.getItem(VIEW_MODE_STORAGE_KEY);
+        if (savedMode === 'grid' || savedMode === 'list') {
+          setViewMode(savedMode);
+        }
+      } catch (error) {
+        console.log('Error loading view mode:', error);
+      }
+    };
+    loadViewMode();
+  }, []);
+
+  const toggleViewMode = async () => {
+    const newMode = viewMode === 'grid' ? 'list' : 'grid';
+    setViewMode(newMode);
+    try {
+      await AsyncStorage.setItem(VIEW_MODE_STORAGE_KEY, newMode);
+    } catch (error) {
+      console.log('Error saving view mode:', error);
+    }
+  };
+
+  const handleDropdownPress = (type: DropdownType, ref: React.RefObject<View>) => {
+    if (ref.current) {
+      setTimeout(() => {
+        ref.current?.measureInWindow((x, y, width, height) => {
+          const screenHeight = Dimensions.get('window').height;
+          const dropdownHeight = 200;
+          const safeAreaOffset = Platform.OS === 'ios' ? 44 : 0; // Account for status bar
+          const headerHeight = 44; // Height of your header
+          const filtersHeight = 84; // Height of filters container (padding + content)
+          
+          // Adjust y position to account for header and safe area
+          const adjustedY = y - safeAreaOffset - headerHeight;
+          
+          // Check if dropdown should show above
+          const shouldShowAbove = y + height + dropdownHeight > screenHeight - 100;
+          
+          setDropdownPositions(prev => ({
+            ...prev,
+            [type]: {
+              x,
+              y: shouldShowAbove ? adjustedY - dropdownHeight - 4 : adjustedY + height + 4,
+              width,
+              isAbove: shouldShowAbove
+            }
+          }));
+        });
+      }, 50); // Increased timeout to ensure layout is complete
+    }
+    setOpenDropdown(openDropdown === type ? null : type);
+  };
+
+  const renderIcon = (icon: keyof typeof Ionicons.glyphMap) => {
+    return <Ionicons name={icon} size={20} color={colors.grey[600]} />;
+  };
+
+  const renderSortIcon = (option: DropdownOption) => {
+    if (!option.icon) return null;
+    return (
+      <View style={styles.iconContainer}>
+        {renderIcon(option.icon)}
+      </View>
+    );
+  };
+
+  const renderFilterIcon = (option: DropdownOption) => {
+    if (!option.icon) return null;
+    return (
+      <View style={styles.iconContainer}>
+        {renderIcon(option.icon)}
+      </View>
+    );
+  };
+
+  const renderMetricValue = (value: number, type: 'number' | 'percentage' = 'number') => {
+    if (type === 'percentage') {
+      return `${value.toFixed(1)}%`;
+    }
+    return value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value.toString();
+  };
+
+  const renderMetricCard = (metrics: PostMetrics | undefined, label: string, iconName: keyof typeof Ionicons.glyphMap) => {
+    if (!metrics) return null;
+    
+    const metricKey = label.toLowerCase() as keyof PostMetrics;
+    const value = metrics[metricKey];
+    if (value === undefined) return null;
+    
+    return (
+      <View style={styles.metricCard}>
+        <Ionicons name={iconName} size={24} color={colors.primary} />
+        <Text style={styles.metricValue}>
+          {renderMetricValue(value)}
+        </Text>
+        <Text style={styles.metricLabel}>{label}</Text>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
+        <View style={styles.headerLeft} />
         <Text style={styles.headerTitle}>Published</Text>
+        <View style={styles.headerRight}>
+          <TouchableOpacity 
+            style={styles.iconButton}
+            onPress={toggleViewMode}
+            activeOpacity={0.7}
+          >
+            <Ionicons 
+              name={viewMode === 'grid' ? 'list-outline' : 'grid-outline'} 
+              size={22} 
+              color="#007AFF" 
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.filtersContainer}>
         <DropdownButton
           label="Sort by"
-          value={sortBy}
+          value={selectedSort}
           options={sortOptions}
           isOpen={openDropdown === 'sort'}
-          onPress={() => setOpenDropdown(openDropdown === 'sort' ? null : 'sort')}
+          onPress={() => handleDropdownPress('sort', sortButtonRef)}
+          buttonRef={sortButtonRef}
         />
         <DropdownButton
           label="Filter by"
-          value={filterBy}
+          value={selectedFilter}
           options={filterOptions}
           isOpen={openDropdown === 'filter'}
-          onPress={() => setOpenDropdown(openDropdown === 'filter' ? null : 'filter')}
+          onPress={() => handleDropdownPress('filter', filterButtonRef)}
+          buttonRef={filterButtonRef}
         />
 
         <DropdownMenu
           visible={openDropdown === 'sort'}
           options={sortOptions}
-          selectedValue={sortBy}
-          onSelect={(value) => setSortBy(value as SortOption)}
+          selectedValue={selectedSort}
+          onSelect={(value) => handleSortChange(value as SortOption)}
           onClose={() => setOpenDropdown(null)}
-          style={styles.sortDropdownPosition}
+          anchorPosition={dropdownPositions.sort}
         />
 
         <DropdownMenu
           visible={openDropdown === 'filter'}
           options={filterOptions}
-          selectedValue={filterBy}
-          onSelect={(value) => setFilterBy(value as FilterOption)}
+          selectedValue={selectedFilter}
+          onSelect={(value) => handleFilterChange(value as FilterOption)}
           onClose={() => setOpenDropdown(null)}
-          style={styles.filterDropdownPosition}
+          anchorPosition={dropdownPositions.filter}
         />
       </View>
 
@@ -588,6 +915,8 @@ export default function PublishedScreen() {
             group={item}
             onPostPress={setSelectedPost}
             isLatestWeek={index === 0}
+            viewMode={viewMode}
+            sortBy={selectedSort}
           />
         )}
         keyExtractor={item => item.title}
@@ -613,18 +942,35 @@ const styles = StyleSheet.create({
   },
   header: {
     height: 44,
-    justifyContent: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5EA',
     backgroundColor: '#fff',
     zIndex: 1,
+    paddingHorizontal: 16,
+  },
+  headerLeft: {
+    width: 32,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: 17,
     fontWeight: '600',
     color: '#000',
     textAlign: 'center',
+    flex: 1,
+  },
+  iconButton: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
   },
   listContainer: {
     padding: 16,
@@ -661,11 +1007,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  postsContainer: {
+    overflow: 'hidden',
+  },
   postsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 16,
-    overflow: 'hidden',
   },
   compactCard: {
     backgroundColor: '#fff',
@@ -713,7 +1061,6 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   modalInnerContainer: {
     flex: 1,
@@ -728,6 +1075,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5EA',
     paddingHorizontal: 4,
+    zIndex: 1,
   },
   modalBackButton: {
     width: 44,
@@ -745,6 +1093,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     flex: 1,
+    backgroundColor: '#f2f2f7',
   },
   contentCard: {
     backgroundColor: '#fff',
@@ -875,23 +1224,29 @@ const styles = StyleSheet.create({
   dropdownOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'transparent',
-    zIndex: 1,
   },
-  dropdownMenu: {
-    position: 'absolute',
-    top: '100%',
-    left: 0,
-    right: 0,
-    marginTop: 4,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
-    zIndex: 2,
-  },
+  dropdownMenu: Platform.select({
+    ios: {
+      position: 'absolute',
+      backgroundColor: '#fff',
+      borderRadius: 10,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
+      elevation: 4,
+      overflow: 'hidden' as const,
+      zIndex: 1000,
+    },
+    android: {
+      position: 'absolute',
+      backgroundColor: '#fff',
+      borderRadius: 10,
+      elevation: 4,
+      overflow: 'hidden' as const,
+      zIndex: 1000,
+    },
+  }) as ViewStyle,
   dropdownMenuItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -918,13 +1273,67 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontWeight: '500',
   },
-  sortDropdownPosition: {
-    left: 16,
-    width: '45%',
+  listCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+    marginBottom: 12,
   },
-  filterDropdownPosition: {
-    right: 16,
-    width: '45%',
+  listContent: {
+    padding: 12,
+  },
+  listCaption: {
+    fontSize: 15,
+    color: '#000',
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  listMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  listPlatforms: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  listMetric: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  listMetricText: {
+    fontSize: 13,
+    color: '#666',
+    fontWeight: '500',
+  },
+  iconContainer: {
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  metricCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  metricValue: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#000',
+  },
+  metricLabel: {
+    fontSize: 13,
+    color: '#666',
+  },
+  metricRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
   },
   dropdownContent: {
     gap: 4,
