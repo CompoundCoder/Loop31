@@ -1,12 +1,14 @@
 import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface SettingItemProps {
   label: string;
   icon: keyof typeof Ionicons.glyphMap;
   iconColor?: string;
-  onPress: () => void;
-  rightElement?: keyof typeof Ionicons.glyphMap;
+  onPress?: () => void;
+  rightElement?: keyof typeof Ionicons.glyphMap | React.ReactElement;
   value?: string;
   platformIcons?: string;
   numberOfLines?: number;
@@ -14,6 +16,9 @@ interface SettingItemProps {
   labelStyle?: any;
   detailStyle?: any;
   style?: any;
+  toggle?: boolean;
+  onToggle?: (value: boolean) => void;
+  disabled?: boolean;
 }
 
 export function SettingItem({ 
@@ -28,19 +33,93 @@ export function SettingItem({
   detail,
   labelStyle,
   detailStyle,
-  style
+  style,
+  toggle,
+  onToggle,
+  disabled
 }: SettingItemProps) {
+  const handlePress = () => {
+    if (disabled) return;
+    if (onPress) onPress();
+  };
+
+  const handleToggle = (value: boolean) => {
+    if (disabled) return;
+    if (onToggle) onToggle(value);
+  };
+
   return (
-    <TouchableOpacity style={[styles.settingItem, style]} onPress={onPress}>
+    <TouchableOpacity 
+      style={[
+        styles.settingItem, 
+        style,
+        disabled && styles.settingItemDisabled
+      ]} 
+      onPress={handlePress}
+      disabled={disabled}
+    >
       <View style={styles.settingItemContent}>
         <View style={styles.settingItemLeft}>
-          <Ionicons name={icon as any} size={24} color={iconColor} style={styles.settingItemIcon} />
-          <Text style={[styles.settingItemLabel, labelStyle]}>{label}</Text>
+          <Ionicons 
+            name={icon} 
+            size={24} 
+            color={disabled ? '#999' : iconColor} 
+            style={styles.settingItemIcon} 
+          />
+          <Text style={[
+            styles.settingItemLabel, 
+            labelStyle,
+            disabled && styles.settingItemLabelDisabled
+          ]}>
+            {label}
+          </Text>
+          {value && (
+            <View style={styles.valueContainer}>
+              <Text 
+                style={[
+                  styles.settingItemValue,
+                  disabled && styles.settingItemValueDisabled
+                ]}
+                numberOfLines={1}
+              >
+                {value}
+              </Text>
+              <LinearGradient
+                colors={['rgba(255,255,255,0)', 'rgba(255,255,255,1)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.textFade}
+              />
+            </View>
+          )}
         </View>
         <View style={styles.settingItemRight}>
-          {detail && <Text style={[styles.settingItemDetail, detailStyle]}>{detail}</Text>}
-          {rightElement && <Ionicons name={rightElement as any} size={20} color="#007AFF" />}
-          <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+          {detail && (
+            <Text style={[
+              styles.settingItemDetail, 
+              detailStyle,
+              disabled && styles.settingItemDetailDisabled
+            ]}>
+              {detail}
+            </Text>
+          )}
+          {toggle !== undefined ? (
+            <Switch
+              value={toggle}
+              onValueChange={handleToggle}
+              disabled={disabled}
+            />
+          ) : rightElement && (
+            typeof rightElement === 'string' ? (
+              <Ionicons 
+                name={rightElement} 
+                size={20} 
+                color={disabled ? '#999' : '#007AFF'} 
+              />
+            ) : (
+              rightElement
+            )
+          )}
         </View>
       </View>
     </TouchableOpacity>
@@ -140,5 +219,37 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#666',
     marginRight: 8,
+  },
+  valueContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 8,
+    marginRight: 16,
+    position: 'relative',
+  },
+  settingItemValue: {
+    fontSize: 16,
+    color: '#666',
+    flex: 1,
+  },
+  textFade: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 40,
+  },
+  settingItemDisabled: {
+    opacity: 0.8,
+  },
+  settingItemLabelDisabled: {
+    color: '#999',
+  },
+  settingItemValueDisabled: {
+    color: '#999',
+  },
+  settingItemDetailDisabled: {
+    color: '#999',
   },
 }); 

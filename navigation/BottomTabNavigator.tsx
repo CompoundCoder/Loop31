@@ -3,16 +3,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { View, StyleSheet, Text, Animated } from 'react-native';
 import CreateScreen from '../screens/CreateScreen';
 import PostsScreen from '../screens/PostsScreen';
-import SentScreen from '../screens/SentScreen';
-import AnalyticsScreen from '../screens/AnalyticsScreen';
+import HistoryScreen from '../screens/HistoryScreen';
 import SettingsNavigator from './SettingsNavigator';
+import AnalyticsNavigator from './AnalyticsNavigator';
 import { useEffect, useRef } from 'react';
 
 export type RootTabParamList = {
   Schedule: undefined;
-  Create: undefined;
   Posts: undefined;
-  Sent: undefined;
+  Create: undefined;
+  Analytics: undefined;
   Settings: undefined;
 };
 
@@ -71,10 +71,10 @@ export default function BottomTabNavigator() {
       />
       <Tab.Screen
         name="Posts"
-        component={SentScreen}
+        component={HistoryScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="checkmark-circle-outline" size={24} color={color} />
+            <Ionicons name="file-tray-full-outline" size={24} color={color} />
           ),
           tabBarLabel: 'Posts',
         }}
@@ -90,13 +90,13 @@ export default function BottomTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Sent"
-        component={SentScreen}
+        name="Analytics"
+        component={AnalyticsNavigator}
         options={{
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="paper-plane-outline" size={24} color={color} />
+            <Ionicons name="stats-chart-outline" size={24} color={color} />
           ),
-          tabBarLabel: 'Sent',
+          tabBarLabel: 'Analytics',
         }}
       />
       <Tab.Screen

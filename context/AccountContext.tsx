@@ -1,96 +1,80 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 export interface Account {
   id: string;
   name: string;
-  type: 'instagram' | 'facebook' | 'twitter' | 'linkedin' | 'tiktok';
-  isConnected: boolean;
+  platform: string;
+  avatar?: string;
 }
 
 export interface BrandGroup {
   id: string;
   name: string;
-  accounts: string[];
+  accounts: string[]; // Array of account IDs
 }
 
 interface AccountContextType {
   accounts: Account[];
   brandGroups: BrandGroup[];
-  addAccount: (account: Account) => void;
-  removeAccount: (id: string) => void;
-  updateAccount: (id: string, updates: Partial<Account>) => void;
   addGroup: (group: BrandGroup) => void;
-  removeGroup: (id: string) => void;
-  updateGroup: (id: string, updates: Partial<BrandGroup>) => void;
+  updateGroup: (groupId: string, updates: Partial<BrandGroup>) => void;
+  deleteGroup: (groupId: string) => void;
+  toggleAccountInGroup: (groupId: string, accountId: string) => void;
 }
 
 const AccountContext = createContext<AccountContextType | undefined>(undefined);
 
-// Initial mock data
-const initialAccounts: Account[] = [
-  { id: '1', name: 'Nike Instagram', type: 'instagram', isConnected: true },
-  { id: '2', name: 'Nike Twitter', type: 'twitter', isConnected: true },
-  { id: '3', name: 'Adidas Instagram', type: 'instagram', isConnected: true },
-  { id: '4', name: 'Adidas Twitter', type: 'twitter', isConnected: false },
+// Mock data for testing
+const mockAccounts: Account[] = [
+  { id: '1', name: 'Business Instagram', platform: 'instagram', avatar: 'https://example.com/avatar1.jpg' },
+  { id: '2', name: 'Company Twitter', platform: 'twitter', avatar: 'https://example.com/avatar2.jpg' },
+  { id: '3', name: 'Marketing Facebook', platform: 'facebook', avatar: 'https://example.com/avatar3.jpg' },
 ];
 
-const initialGroups: BrandGroup[] = [
-  { id: 'g1', name: 'Nike', accounts: ['1', '2'] },
-  { id: 'g2', name: 'Adidas', accounts: ['3', '4'] },
+const mockGroups: BrandGroup[] = [
+  { id: 'group-1', name: 'Marketing Team', accounts: ['1', '2'] },
+  { id: 'group-2', name: 'Sales Team', accounts: ['2', '3'] },
 ];
 
-export function AccountProvider({ children }: { children: ReactNode }) {
-  const [accounts, setAccounts] = useState<Account[]>(initialAccounts);
-  const [brandGroups, setBrandGroups] = useState<BrandGroup[]>(initialGroups);
-
-  const addAccount = (account: Account) => {
-    setAccounts(prev => [...prev, account]);
-  };
-
-  const removeAccount = (id: string) => {
-    setAccounts(prev => prev.filter(account => account.id !== id));
-    setBrandGroups(prev => 
-      prev.map(group => ({
-        ...group,
-        accounts: group.accounts.filter(accountId => accountId !== id)
-      }))
-    );
-  };
-
-  const updateAccount = (id: string, updates: Partial<Account>) => {
-    setAccounts(prev => 
-      prev.map(account => 
-        account.id === id ? { ...account, ...updates } : account
-      )
-    );
-  };
+export function AccountProvider({ children }: { children: React.ReactNode }) {
+  const [accounts] = useState<Account[]>(mockAccounts);
+  const [brandGroups, setBrandGroups] = useState<BrandGroup[]>(mockGroups);
 
   const addGroup = (group: BrandGroup) => {
     setBrandGroups(prev => [...prev, group]);
   };
 
-  const removeGroup = (id: string) => {
-    setBrandGroups(prev => prev.filter(group => group.id !== id));
+  const updateGroup = (groupId: string, updates: Partial<BrandGroup>) => {
+    setBrandGroups(prev => prev.map(group => 
+      group.id === groupId ? { ...group, ...updates } : group
+    ));
   };
 
-  const updateGroup = (id: string, updates: Partial<BrandGroup>) => {
-    setBrandGroups(prev => 
-      prev.map(group => 
-        group.id === id ? { ...group, ...updates } : group
-      )
-    );
+  const deleteGroup = (groupId: string) => {
+    setBrandGroups(prev => prev.filter(group => group.id !== groupId));
+  };
+
+  const toggleAccountInGroup = (groupId: string, accountId: string) => {
+    setBrandGroups(prev => prev.map(group => {
+      if (group.id !== groupId) return group;
+      
+      const accountIndex = group.accounts.indexOf(accountId);
+      if (accountIndex === -1) {
+        return { ...group, accounts: [...group.accounts, accountId] };
+      } else {
+        return { ...group, accounts: group.accounts.filter(id => id !== accountId) };
+      }
+    }));
   };
 
   return (
     <AccountContext.Provider value={{
       accounts,
       brandGroups,
-      addAccount,
-      removeAccount,
-      updateAccount,
       addGroup,
-      removeGroup,
       updateGroup,
+      deleteGroup,
+      toggleAccountInGroup,
     }}>
       {children}
     </AccountContext.Provider>

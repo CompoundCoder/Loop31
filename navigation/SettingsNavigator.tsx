@@ -1,12 +1,12 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import SettingsMainScreen from '../screens/settings/SettingsMainScreen';
-import ProfileSettingsScreen from '../screens/settings/ProfileSettingsScreen';
 import AccountSettingsScreen from '../screens/settings/AccountSettingsScreen';
 import NotificationSettingsScreen from '../screens/settings/NotificationSettingsScreen';
 import SchedulingSettingsScreen from '../screens/settings/SchedulingSettingsScreen';
 import ComposingSettingsScreen from '../screens/settings/ComposingSettingsScreen';
 import BillingSettingsScreen from '../screens/settings/BillingSettingsScreen';
 import BrandGroupsScreen from '../screens/settings/BrandGroupsScreen';
+import BrandGroupDetailsScreen from '../screens/settings/BrandGroupDetailsScreen';
 import ConnectedAccountsScreen from '../screens/settings/ConnectedAccountsScreen';
 import SocialAccountDetailsScreen from '../screens/settings/SocialAccountDetailsScreen';
 import AnalyticsSettingsScreen from '../screens/settings/AnalyticsSettingsScreen';
@@ -20,6 +20,7 @@ export type SettingsStackParamList = {
   ComposingSettings: undefined;
   BillingSettings: undefined;
   BrandGroups: undefined;
+  BrandGroupDetails: { groupId: string };
   ConnectedAccounts: undefined;
   SocialAccountDetails: { accountId: string };
   AnalyticsSettings: undefined;
@@ -40,7 +41,7 @@ export default function SettingsNavigator() {
           fontSize: 17,
           fontWeight: '600',
         },
-        headerBackTitle: ' ',
+        headerBackTitle: 'Back',
       }}
     >
       <Stack.Screen 
@@ -52,13 +53,18 @@ export default function SettingsNavigator() {
       />
       <Stack.Screen 
         name="ProfileSettings" 
-        component={ProfileSettingsScreen}
+        component={AccountSettingsScreen}
         options={{ title: 'Account Settings' }}
       />
       <Stack.Screen 
         name="BrandGroups" 
         component={BrandGroupsScreen}
         options={{ title: 'Brand Groups' }}
+      />
+      <Stack.Screen 
+        name="BrandGroupDetails" 
+        component={BrandGroupDetailsScreen}
+        options={{ title: 'Group Details' }}
       />
       <Stack.Screen 
         name="ConnectedAccounts" 
