@@ -26,7 +26,7 @@ export default function CreateScreen({ navigation }: Props) {
     if (selectedPlatforms.length === 0) {
       navigation.navigate('PlatformSelect');
     } else if (content.trim()) {
-      navigation.navigate('Schedule', {
+      navigation.navigate('SchedulePreview', {
         platforms: selectedPlatforms,
         media: selectedMedia,
         content: content.trim(),

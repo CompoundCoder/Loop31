@@ -657,7 +657,7 @@ function DropdownButton({
   );
 }
 
-export default function PublishedScreen() {
+export default function PublishedPostsScreen() {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [selectedSort, setSelectedSort] = useState<SortOption>('recent');
   const [selectedFilter, setSelectedFilter] = useState<FilterOption>('all');

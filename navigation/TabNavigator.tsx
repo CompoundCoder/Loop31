@@ -1,8 +1,8 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import PostsScreen from '../screens/PostsScreen';
+import ScheduledPostsScreen from '../screens/ScheduledPostsScreen';
 import CreateScreen from '../screens/CreateScreen';
-import SentScreen from '../screens/SentScreen';
+import PublishedPostsScreen from '../screens/PublishedPostsScreen';
 import SettingsNavigator from './SettingsNavigator';
 import { TabParamList } from './types';
 
@@ -22,8 +22,8 @@ export default function TabNavigator() {
       }}
     >
       <Tab.Screen
-        name="Posts"
-        component={PostsScreen}
+        name="ScheduledPosts"
+        component={ScheduledPostsScreen}
         options={{
           title: 'Posting Schedule',
           tabBarIcon: ({ color, size }) => (
@@ -42,7 +42,7 @@ export default function TabNavigator() {
       />
       <Tab.Screen
         name="Sent"
-        component={SentScreen}
+        component={PublishedPostsScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="checkmark-circle-outline" size={size} color={color} />
@@ -61,4 +61,14 @@ export default function TabNavigator() {
       />
     </Tab.Navigator>
   );
-} 
+}
+
+type RootStackParamList = {
+  // ... other screens ...
+  SchedulePreview: {
+    platforms: string[];
+    media: string[];
+    content: string;
+  };
+  // ... rest of existing code ...
+}; 

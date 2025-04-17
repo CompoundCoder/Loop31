@@ -14,7 +14,7 @@ import PlatformSelectModal from './create/PlatformSelectModal';
 import AnimatedHeader from '../components/AnimatedHeader';
 import { RouteProp } from '@react-navigation/native';
 
-type CreateScreenNavigationProp = NativeStackNavigationProp<CreateStackParamList>;
+type CreateScreenNavigationProp = NativeStackNavigationProp<CreateStackParamList, 'CreateMain'>;
 
 // Import SOCIAL_ACCOUNTS from PlatformSelectModal when moving to proper state management
 const SOCIAL_ACCOUNTS = [
@@ -125,20 +125,52 @@ export default function CreateScreen() {
     }
   }, [caption, mediaUri, selectedAccountIds, scheduledDate]);
 
-  const handleSchedulePost = useCallback(() => {
+  const handleSchedulePost = useCallback(async () => {
     if (!caption || selectedAccountIds.length === 0) {
       alert('Please add a caption and select at least one platform');
       return;
     }
 
-    const post = {
-      platforms: selectedAccountIds,
-      media: mediaUri ? [mediaUri] : [],
-      content: caption,
-    };
-
-    navigation.navigate('Schedule', post);
-  }, [caption, mediaUri, selectedAccountIds, navigation]);
+    try {
+      console.log('Saving new post to AsyncStorage...');
+      
+      // Get existing scheduled posts
+      const postsJson = await AsyncStorage.getItem('scheduled_posts');
+      console.log('Existing posts from storage:', postsJson);
+      const existingPosts = postsJson ? JSON.parse(postsJson) : [];
+      
+      // Create new post
+      const newPost = {
+        id: Date.now().toString(),
+        caption,
+        media: mediaUri ? [mediaUri] : [],
+        platforms: selectedAccountIds,
+        scheduledDate: scheduledDate.toISOString(),
+        createdAt: new Date().toISOString(),
+      };
+      
+      console.log('New post to save:', newPost);
+      
+      // Add to posts array
+      const updatedPosts = [newPost, ...existingPosts];
+      console.log('Updated posts array:', updatedPosts);
+      
+      // Save back to storage
+      await AsyncStorage.setItem('scheduled_posts', JSON.stringify(updatedPosts));
+      console.log('Successfully saved to AsyncStorage');
+      
+      // Clear form
+      setCaption('');
+      setMediaUri(null);
+      setSelectedAccountIds([]);
+      
+      // Navigate to schedule screen
+      navigation.navigate('Schedule');
+    } catch (error) {
+      console.error('Error scheduling post:', error);
+      alert('Failed to schedule post');
+    }
+  }, [caption, mediaUri, selectedAccountIds, scheduledDate, navigation]);
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     if (selectedDate) {

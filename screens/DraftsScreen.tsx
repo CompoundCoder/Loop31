@@ -106,7 +106,7 @@ export default function DraftsScreen({ onClose, onEditDraft }: DraftsScreenProps
   const handleSchedule = (id: string) => {
     const draft = drafts.find(d => d.id === id);
     if (draft) {
-      navigation.navigate('Schedule', {
+      navigation.navigate('SchedulePreview', {
         platforms: draft.accountIds.map(acc => acc.id),
         media: draft.mediaUri ? [draft.mediaUri] : [],
         content: draft.caption,

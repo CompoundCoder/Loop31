@@ -2,8 +2,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { View, StyleSheet, Text, Animated } from 'react-native';
 import CreateScreen from '../screens/CreateScreen';
-import PostsScreen from '../screens/PostsScreen';
-import HistoryScreen from '../screens/HistoryScreen';
+import ScheduledPostsScreen from '../screens/ScheduledPostsScreen';
+import PublishedPostsScreen from '../screens/PublishedPostsScreen';
 import SettingsNavigator from './SettingsNavigator';
 import AnalyticsNavigator from './AnalyticsNavigator';
 import { useEffect, useRef } from 'react';
@@ -61,7 +61,7 @@ export default function BottomTabNavigator() {
     >
       <Tab.Screen
         name="Schedule"
-        component={PostsScreen}
+        component={ScheduledPostsScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar-outline" size={24} color={color} />
@@ -71,7 +71,7 @@ export default function BottomTabNavigator() {
       />
       <Tab.Screen
         name="Posts"
-        component={HistoryScreen}
+        component={PublishedPostsScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="file-tray-full-outline" size={24} color={color} />

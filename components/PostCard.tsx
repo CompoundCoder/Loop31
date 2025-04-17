@@ -5,11 +5,12 @@ import { format } from 'date-fns';
 
 export type PostStatus = 'draft' | 'scheduled' | 'sent';
 
-interface Platform {
+type Platform = {
   id: string;
-  type: 'instagram' | 'facebook' | 'twitter' | 'linkedin' | 'tiktok';
   name: string;
-}
+  type: string;
+  icon: keyof typeof Ionicons.glyphMap;
+};
 
 interface PostAnalytics {
   likes: number;
@@ -62,7 +63,7 @@ export default function PostCard({
         ]}
       >
         <Ionicons 
-          name={`logo-${platform.type}`}
+          name={platform.icon}
           size={16}
           color="#666"
         />
@@ -200,8 +201,8 @@ const styles = StyleSheet.create({
     elevation: 3,
     overflow: 'hidden',
     width: CARD_WIDTH,
-    maxWidth: 500, // Standard max width for iOS cards
-    alignSelf: 'center', // Center the card if screen is wider than maxWidth
+    maxWidth: 500,
+    alignSelf: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -288,4 +289,4 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
   },
-}); 
+});

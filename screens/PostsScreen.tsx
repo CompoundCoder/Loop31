@@ -44,7 +44,7 @@ const MOCK_SCHEDULED_POSTS: ScheduledPost[] = [
   },
 ];
 
-export default function PostsScreen() {
+export default function ScheduledPostsScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const handleEdit = (postId: string) => {

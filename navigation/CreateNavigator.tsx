@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import CreateScreen from '../screens/create/CreateScreen';
 import PlatformSelectScreen from '../screens/create/PlatformSelectScreen';
 import MediaPickerScreen from '../screens/create/MediaPickerScreen';
-import ScheduleScreen from '../screens/create/ScheduleScreen';
+import SchedulePreviewScreen from '../screens/SchedulePreviewScreen';
 
 export type CreateStackParamList = {
   CreateMain: {
@@ -17,12 +17,12 @@ export type CreateStackParamList = {
   } | undefined;
   PlatformSelect: undefined;
   MediaPicker: { platforms: string[] };
-  Schedule: {
+  SchedulePreview: {
     platforms: string[];
     media: string[];
     content: string;
   };
-  Posts: undefined;
+  ScheduledPosts: undefined;
 };
 
 const Stack = createNativeStackNavigator<CreateStackParamList>();
@@ -65,8 +65,8 @@ export default function CreateNavigator() {
         options={{ title: 'Add Media' }}
       />
       <Stack.Screen 
-        name="Schedule" 
-        component={ScheduleScreen}
+        name="SchedulePreview" 
+        component={SchedulePreviewScreen}
         options={{ title: 'Schedule Post' }}
       />
     </Stack.Navigator>
