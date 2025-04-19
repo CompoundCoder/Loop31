@@ -3,81 +3,13 @@ import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity, Dimensions, 
 import { Ionicons } from '@expo/vector-icons';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../theme';
 import PostCard from '../components/PostCard';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-// Enhanced mock data with more metrics
-const MOCK_POSTS = [
-  {
-    id: '1',
-    content: 'Check out our latest product launch! 🚀 #innovation #tech',
-    mediaUrl: 'https://picsum.photos/400/300',
-    publishedAt: '2024-04-10T15:30:00Z',
-    platforms: ['instagram', 'facebook'],
-    folder: 'Product Launches',
-    metrics: {
-      likes: 2450,
-      comments: 230,
-      shares: 120,
-      impressions: 28900,
-      views: 30000,
-      engagement: 2800
-    }
-  },
-  {
-    id: '2',
-    content: 'Behind the scenes at our annual team meetup! 🎉',
-    mediaUrl: 'https://picsum.photos/400/300',
-    publishedAt: '2024-04-09T12:00:00Z',
-    platforms: ['instagram'],
-    folder: 'Team Culture',
-    metrics: {
-      likes: 1890,
-      comments: 450,
-      shares: 80,
-      impressions: 15670,
-      views: 16000,
-      engagement: 2420
-    }
-  },
-  {
-    id: '3',
-    content: 'New tutorial dropping tomorrow! Stay tuned 📱',
-    mediaUrl: 'https://picsum.photos/400/300',
-    publishedAt: '2024-04-08T18:15:00Z',
-    platforms: ['tiktok', 'instagram'],
-    folder: 'Educational',
-    metrics: {
-      likes: 12450,
-      comments: 890,
-      shares: 1560,
-      impressions: 156700,
-      views: 160000,
-      engagement: 14900
-    }
-  },
-  // Add more mock posts with different dates for grouping
-  {
-    id: '4',
-    content: 'Tips for better productivity in 2024! 💪',
-    mediaUrl: 'https://picsum.photos/400/300',
-    publishedAt: '2024-04-03T14:20:00Z',
-    platforms: ['linkedin', 'twitter'],
-    folder: 'Tips & Tricks',
-    metrics: {
-      likes: 780,
-      comments: 234,
-      shares: 567,
-      impressions: 23400,
-      views: 24000,
-      engagement: 1581
-    }
-  }
-];
+import { useFocusEffect } from '@react-navigation/native';
 
 interface PostMetrics {
   likes: number;
@@ -664,6 +596,8 @@ export default function PublishedPostsScreen() {
   const [openDropdown, setOpenDropdown] = useState<DropdownType | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [dropdownPositions, setDropdownPositions] = useState<DropdownPositions>({});
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const sortButtonRef = useRef<View>(null);
   const filterButtonRef = useRef<View>(null);
@@ -746,7 +680,47 @@ export default function PublishedPostsScreen() {
     );
   };
 
-  const groupedPosts = groupPostsByWeek(MOCK_POSTS);
+  // Load published posts from AsyncStorage
+  const loadPublishedPosts = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const publishedPostsJson = await AsyncStorage.getItem('publishedPosts');
+      if (publishedPostsJson) {
+        const loadedPosts = JSON.parse(publishedPostsJson);
+        // Transform loaded posts to match the Post interface
+        const transformedPosts: Post[] = loadedPosts.map((post: any) => ({
+          id: post.id,
+          content: post.caption || '',
+          mediaUrl: post.media?.[0] || post.mediaUri || '',
+          publishedAt: post.publishedAt || new Date().toISOString(),
+          platforms: post.platforms || [],
+          folder: post.folder,
+          metrics: {
+            likes: Math.floor(Math.random() * 5000),
+            views: Math.floor(Math.random() * 50000),
+            shares: Math.floor(Math.random() * 1000),
+            comments: Math.floor(Math.random() * 500),
+            impressions: Math.floor(Math.random() * 100000),
+            engagement: Math.floor(Math.random() * 10000)
+          }
+        }));
+        setPosts(transformedPosts);
+      }
+    } catch (error) {
+      console.error('Error loading published posts:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Load posts when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadPublishedPosts();
+    }, [loadPublishedPosts])
+  );
+
+  const groupedPosts = groupPostsByWeek(posts);
 
   // Load saved view mode preference
   useEffect(() => {
@@ -922,6 +896,13 @@ export default function PublishedPostsScreen() {
         keyExtractor={item => item.title}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>
+              {isLoading ? 'Loading posts...' : 'No published posts yet'}
+            </Text>
+          </View>
+        }
       />
 
       {selectedPost && (
@@ -1353,5 +1334,16 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#000',
     fontWeight: '500',
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
   },
 }); 

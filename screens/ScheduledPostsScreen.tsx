@@ -1,12 +1,23 @@
-import { View, StyleSheet, FlatList, Text } from 'react-native';
+import { View, StyleSheet, FlatList, Text, Alert, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PostCard from '../components/PostCard';
 import AnimatedHeader from '../components/AnimatedHeader';
 import { useRef, useState, useCallback } from 'react';
 import { Animated } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { publishPost } from '../utils/postPublisher';
+
+type RootStackParamList = {
+  CreatePostScreen: {
+    mode: 'schedule' | 'loop';
+    post?: ScheduledPost;
+  };
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface Platform {
   id: string;
@@ -97,6 +108,7 @@ const getPlatformName = (id: string): string => {
 };
 
 export default function ScheduledPostsScreen() {
+  const navigation = useNavigation<NavigationProp>();
   const scrollY = useRef(new Animated.Value(0)).current;
   const [posts, setPosts] = useState<ScheduledPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -108,7 +120,7 @@ export default function ScheduledPostsScreen() {
       setIsLoading(true);
       setError(null);
       
-      const postsJson = await AsyncStorage.getItem('scheduled_posts');
+      const postsJson = await AsyncStorage.getItem('scheduledPosts');
       console.log('Posts from storage:', postsJson);
       
       if (postsJson) {
@@ -129,14 +141,10 @@ export default function ScheduledPostsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      console.log('Screen focused, loading posts...');
+      console.log('Screen focused, checking for due posts...');
       loadPosts();
     }, [loadPosts])
   );
-
-  const handleEdit = (postId: string) => {
-    console.log('Edit post:', postId);
-  };
 
   const handleDelete = async (postId: string) => {
     try {
@@ -144,7 +152,7 @@ export default function ScheduledPostsScreen() {
       setPosts(currentPosts => currentPosts.filter(post => post.id !== postId));
       
       const updatedPosts = posts.filter(post => post.id !== postId);
-      await AsyncStorage.setItem('scheduled_posts', JSON.stringify(updatedPosts));
+      await AsyncStorage.setItem('scheduledPosts', JSON.stringify(updatedPosts));
       console.log('Post deleted successfully');
     } catch (error) {
       console.error('Error deleting post:', error);
@@ -152,8 +160,33 @@ export default function ScheduledPostsScreen() {
     }
   };
 
-  const handlePost = (postId: string) => {
-    console.log('Post now:', postId);
+  const handlePost = async (postId: string) => {
+    try {
+      console.log('Publishing post:', postId);
+      
+      // Find the post to publish
+      const postToPublish = posts.find(post => post.id === postId);
+      if (!postToPublish) {
+        console.error('Post not found for publishing:', postId);
+        return;
+      }
+
+      // Publish the post using our utility
+      await publishPost(postToPublish);
+      
+      // Update local state to remove the published post
+      setPosts(currentPosts => currentPosts.filter(post => post.id !== postId));
+      
+      console.log('Post published successfully:', postId);
+    } catch (error) {
+      console.error('Error publishing post:', error);
+      Alert.alert(
+        'Error',
+        'Failed to publish post. Please try again.',
+        [{ text: 'OK' }]
+      );
+      loadPosts(); // Reload posts in case of error
+    }
   };
 
   const renderPost = ({ item }: { item: ScheduledPost }) => {
@@ -168,32 +201,37 @@ export default function ScheduledPostsScreen() {
         date={new Date(item.scheduledDate)}
         status="scheduled"
         onPost={() => handlePost(item.id)}
-        onEdit={() => handleEdit(item.id)}
+        onEdit={() => navigation.navigate('CreatePostScreen', { 
+          mode: 'schedule',
+          post: item,
+        })}
         onDelete={() => handleDelete(item.id)}
       />
     );
   };
 
   const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <Text style={styles.emptyText}>No scheduled posts yet</Text>
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyText}>No scheduled posts</Text>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <AnimatedHeader 
-        title="Schedule" 
-        titleStyle={styles.headerTitle}
-      />
+      <View style={styles.header}>
+        <Text style={styles.title}>Scheduled Posts</Text>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('CreatePostScreen', { mode: 'schedule' })}
+        >
+          <Ionicons name="add" size={24} color="#000" />
+        </TouchableOpacity>
+      </View>
+
       <FlatList
         data={posts}
         renderItem={renderPost}
-        keyExtractor={item => item.id}
-        contentContainerStyle={[
-          styles.listContent,
-          posts.length === 0 && styles.emptyListContent
-        ]}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
         ListEmptyComponent={renderEmptyState()}
       />
     </SafeAreaView>
@@ -203,33 +241,33 @@ export default function ScheduledPostsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f2f2f7',
+    backgroundColor: '#fff',
   },
-  headerTitle: {
-    color: '#000',
-    fontSize: 17,
-    fontWeight: '600',
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   listContent: {
-    paddingTop: 60,
-    paddingHorizontal: 0,
-    paddingBottom: 90,
-    alignItems: 'center',
-    backgroundColor: '#f2f2f7',
+    flexGrow: 1,
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
   },
-  emptyListContent: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  emptyState: {
+  emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    backgroundColor: '#fff',
   },
   emptyText: {
     fontSize: 16,
     color: '#666',
-    textAlign: 'center',
   },
 }); 

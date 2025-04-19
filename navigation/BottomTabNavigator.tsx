@@ -1,17 +1,17 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { View, StyleSheet, Text, Animated } from 'react-native';
-import CreateScreen from '../screens/CreateScreen';
 import ScheduledPostsScreen from '../screens/ScheduledPostsScreen';
 import PublishedPostsScreen from '../screens/PublishedPostsScreen';
 import SettingsNavigator from './SettingsNavigator';
 import AnalyticsNavigator from './AnalyticsNavigator';
+import LoopsScreen from '../screens/LoopsScreen';
 import { useEffect, useRef } from 'react';
 
 export type RootTabParamList = {
   Schedule: undefined;
   Posts: undefined;
-  Create: undefined;
+  Loops: undefined;
   Analytics: undefined;
   Settings: undefined;
 };
@@ -76,17 +76,23 @@ export default function BottomTabNavigator() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="file-tray-full-outline" size={24} color={color} />
           ),
-          tabBarLabel: 'Posts',
+          tabBarLabel: 'Published',
         }}
       />
       <Tab.Screen
-        name="Create"
-        component={CreateScreen}
+        name="Loops"
+        component={LoopsScreen}
         options={{
+          headerShown: true,
+          title: 'Loops',
           tabBarIcon: ({ focused }) => (
-            <AnimatedCreateButton focused={focused} />
+            <Ionicons
+              name="repeat-outline"
+              size={24}
+              color={focused ? '#007AFF' : '#8E8E93'}
+            />
           ),
-          tabBarLabel: '',
+          tabBarLabel: 'Loops',
         }}
       />
       <Tab.Screen

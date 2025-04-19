@@ -14,7 +14,28 @@ import PlatformSelectModal from './create/PlatformSelectModal';
 import AnimatedHeader from '../components/AnimatedHeader';
 import { RouteProp } from '@react-navigation/native';
 
-type CreateScreenNavigationProp = NativeStackNavigationProp<CreateStackParamList, 'CreateMain'>;
+type RootStackParamList = {
+  CreateMain: CreateScreenParams;
+  Schedule: undefined;
+};
+
+type CreateScreenParams = {
+  draft?: {
+    caption: string;
+    mediaUri: string;
+    accountIds: string[];
+    scheduledDate: string;
+  };
+  post?: {
+    caption: string;
+    media: string[];
+    platforms: string[];
+    scheduledDate: string;
+  };
+};
+
+type CreateScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type CreateScreenRouteProp = RouteProp<{ CreateMain: CreateScreenParams }, 'CreateMain'>;
 
 // Import SOCIAL_ACCOUNTS from PlatformSelectModal when moving to proper state management
 const SOCIAL_ACCOUNTS = [
@@ -41,7 +62,7 @@ const PLATFORM_GROUPS = {
 
 export default function CreateScreen() {
   const navigation = useNavigation<CreateScreenNavigationProp>();
-  const route = useRoute<RouteProp<CreateStackParamList, 'CreateMain'>>();
+  const route = useRoute<CreateScreenRouteProp>();
   const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>([]);
   const [caption, setCaption] = useState('');
   const [mediaUri, setMediaUri] = useState<string | null>(null);
@@ -49,18 +70,21 @@ export default function CreateScreen() {
   const [scheduledDate, setScheduledDate] = useState(new Date());
   const [showDrafts, setShowDrafts] = useState(false);
   const [showPlatformSelect, setShowPlatformSelect] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  // Initialize form with draft data if available
+  // Initialize form with post data if available
   useEffect(() => {
-    if (route.params?.draft) {
-      const { caption: draftCaption, mediaUri: draftMediaUri, accountIds, scheduledDate: draftScheduledDate } = route.params.draft;
-      setCaption(draftCaption);
-      setMediaUri(draftMediaUri);
-      setSelectedAccountIds(accountIds);
-      setScheduledDate(new Date(draftScheduledDate));
+    if (route.params?.post && !hasInitialized) {
+      console.log('Initializing form with post:', route.params.post);
+      const { caption: postCaption, media, platforms, scheduledDate: postScheduledDate } = route.params.post;
+      setCaption(postCaption || '');
+      setMediaUri(media?.[0] || null);
+      setSelectedAccountIds(platforms || []);
+      setScheduledDate(new Date(postScheduledDate || Date.now()));
+      setHasInitialized(true);
     }
-  }, [route.params?.draft]);
+  }, [route.params?.post, hasInitialized]);
 
   const selectedAccounts = SOCIAL_ACCOUNTS.filter(account => 
     selectedAccountIds.includes(account.id)
@@ -300,40 +324,6 @@ export default function CreateScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Draft Selector */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Draft</Text>
-            <TouchableOpacity 
-              style={styles.platformSelector} 
-              onPress={() => setShowDrafts(true)}
-            >
-              <View style={styles.platformSelectorContent}>
-                <Ionicons name="document-text-outline" size={22} color="#666" />
-                <Text style={styles.platformSelectorText}>Select from drafts</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#666" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Share To Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Share to</Text>
-            <TouchableOpacity 
-              style={styles.platformSelector}
-              onPress={() => setShowPlatformSelect(true)}
-            >
-              {selectedAccountIds.length > 0 ? (
-                renderSelectedPlatforms()
-              ) : (
-                <View style={styles.platformSelectorContent}>
-                  <Ionicons name="share-social-outline" size={22} color="#666" />
-                  <Text style={styles.platformSelectorText}>Select platforms</Text>
-                </View>
-              )}
-              <Ionicons name="chevron-forward" size={20} color="#666" />
-            </TouchableOpacity>
-          </View>
-
           {/* Caption Input */}
           <View style={styles.section}>
             <View style={styles.captionHeader}>
@@ -350,6 +340,25 @@ export default function CreateScreen() {
               onChangeText={setCaption}
               placeholderTextColor="#999"
             />
+          </View>
+
+          {/* Platform Selection */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Share to</Text>
+            <TouchableOpacity 
+              style={styles.platformSelector}
+              onPress={() => setShowPlatformSelect(true)}
+            >
+              {selectedAccountIds.length > 0 ? (
+                renderSelectedPlatforms()
+              ) : (
+                <View style={styles.platformSelectorContent}>
+                  <Ionicons name="share-social-outline" size={22} color="#666" />
+                  <Text style={styles.platformSelectorText}>Select platforms</Text>
+                </View>
+              )}
+              <Ionicons name="chevron-forward" size={20} color="#666" />
+            </TouchableOpacity>
           </View>
 
           {/* Scheduling Section */}
