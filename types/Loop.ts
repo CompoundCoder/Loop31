@@ -13,8 +13,8 @@ export interface Post {
     event: 'posted' | 'remixed' | 'muted';
     loopName: string;
   }[];
-  syncedFromLoopId?: string;
-  syncedToLoopIds?: string[];
+  linkedLoopIds?: string[];
+  isMarkedForDeletion?: boolean;
 }
 
 export interface Loop {
@@ -32,4 +32,9 @@ export interface Loop {
   posts: Post[];
   tags?: string[];
   nextPostIndex: number;
+  mediaSettings?: {
+    shuffle?: boolean;
+    avoidRecent?: boolean;
+    preferImages?: boolean;
+  };
 } 

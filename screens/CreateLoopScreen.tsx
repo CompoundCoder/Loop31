@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
   Platform,
+  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -60,6 +61,11 @@ export default function CreateLoopScreen({ navigation, route }: Props) {
     return date;
   });
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [mediaSettings, setMediaSettings] = useState(editingLoop?.mediaSettings || {
+    shuffle: true,
+    avoidRecent: true,
+    preferImages: false,
+  });
 
   const handleTimeChange = (event: any, selectedDate?: Date) => {
     setShowTimePicker(Platform.OS === 'ios');
@@ -86,10 +92,7 @@ export default function CreateLoopScreen({ navigation, route }: Props) {
     }
 
     try {
-      const loopsJson = await AsyncStorage.getItem('loops');
-      const loops: Loop[] = loopsJson ? JSON.parse(loopsJson) : [];
-
-      const updatedLoop: Loop = {
+      const loopData: Loop = {
         id: editingLoop?.id || Date.now().toString(),
         name: name.trim(),
         color: selectedColor,
@@ -104,18 +107,22 @@ export default function CreateLoopScreen({ navigation, route }: Props) {
           postTime: format(postTime, 'HH:mm'),
         },
         posts: editingLoop?.posts || [],
+        nextPostIndex: editingLoop?.nextPostIndex || 0,
+        mediaSettings,
       };
 
-      let updatedLoops;
+      const loopsJson = await AsyncStorage.getItem('loops');
+      const loops: Loop[] = loopsJson ? JSON.parse(loopsJson) : [];
+      
       if (isEditing) {
-        updatedLoops = loops.map((loop: Loop) => 
-          loop.id === editingLoop.id ? updatedLoop : loop
+        const updatedLoops = loops.map(l => 
+          l.id === editingLoop.id ? loopData : l
         );
+        await AsyncStorage.setItem('loops', JSON.stringify(updatedLoops));
       } else {
-        updatedLoops = [updatedLoop, ...loops];
+        await AsyncStorage.setItem('loops', JSON.stringify([...loops, loopData]));
       }
 
-      await AsyncStorage.setItem('loops', JSON.stringify(updatedLoops));
       navigation.goBack();
     } catch (error) {
       console.error('Error saving loop:', error);
@@ -262,6 +269,54 @@ export default function CreateLoopScreen({ navigation, route }: Props) {
             onChange={handleTimeChange}
           />
         )}
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Media Preferences</Text>
+          
+          <View style={styles.settingItem}>
+            <View style={styles.settingLabel}>
+              <Text style={styles.settingText}>Shuffle Posts Randomly</Text>
+            </View>
+            <Switch
+              value={mediaSettings.shuffle}
+              onValueChange={(value) => setMediaSettings(prev => ({ ...prev, shuffle: value }))}
+              trackColor={{ false: '#E5E5EA', true: '#E8F2FF' }}
+              thumbColor={mediaSettings.shuffle ? '#007AFF' : '#FFF'}
+            />
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.settingItem}>
+            <View style={styles.settingLabel}>
+              <Text style={styles.settingText}>Avoid Repeating Recent Posts</Text>
+            </View>
+            <Switch
+              value={mediaSettings.avoidRecent}
+              onValueChange={(value) => setMediaSettings(prev => ({ ...prev, avoidRecent: value }))}
+              trackColor={{ false: '#E5E5EA', true: '#E8F2FF' }}
+              thumbColor={mediaSettings.avoidRecent ? '#007AFF' : '#FFF'}
+            />
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.settingItem}>
+            <View style={styles.settingLabel}>
+              <Text style={styles.settingText}>Prefer Posts with Images</Text>
+            </View>
+            <Switch
+              value={mediaSettings.preferImages}
+              onValueChange={(value) => setMediaSettings(prev => ({ ...prev, preferImages: value }))}
+              trackColor={{ false: '#E5E5EA', true: '#E8F2FF' }}
+              thumbColor={mediaSettings.preferImages ? '#007AFF' : '#FFF'}
+            />
+          </View>
+
+          <Text style={styles.settingDescription}>
+            Posts will rotate based on your preferences
+          </Text>
+        </View>
       </ScrollView>
 
       <View style={styles.footer}>
@@ -307,12 +362,15 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   section: {
-    marginBottom: 24,
+    marginTop: 24,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
   },
   sectionTitle: {
     fontSize: 17,
     fontWeight: '600',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   input: {
     height: 44,
@@ -413,5 +471,27 @@ const styles = StyleSheet.create({
   timeButtonText: {
     fontSize: 15,
     color: '#000',
+  },
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
+  settingLabel: {
+    flex: 1,
+    marginRight: 16,
+  },
+  settingText: {
+    fontSize: 15,
+  },
+  settingDescription: {
+    fontSize: 13,
+    color: '#666',
+    marginTop: 12,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E5EA',
   },
 }); 

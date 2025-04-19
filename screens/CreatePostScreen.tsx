@@ -16,21 +16,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import * as ImagePicker from 'expo-image-picker';
-
-interface Post {
-  id: string;
-  mediaUri: string;
-  caption: string;
-  createdAt: string;
-}
-
-interface Loop {
-  id: string;
-  name: string;
-  isActive: boolean;
-  color: string;
-  posts: Post[];
-}
+import { Loop, Post } from '../types/Loop';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CreatePostScreen'>;
 
@@ -56,6 +42,7 @@ export default function CreatePostScreen({ navigation, route }: Props) {
   );
   const [availableLoops, setAvailableLoops] = useState<Loop[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [linkedLoops, setLinkedLoops] = useState<Loop[]>([]);
 
   const isEditing = !!existingPost;
 
@@ -82,9 +69,29 @@ export default function CreatePostScreen({ navigation, route }: Props) {
     loadLoops();
   }, []);
 
+  // Load linked loops on mount
+  useEffect(() => {
+    if (isEditing && existingPost.linkedLoopIds) {
+      loadLinkedLoops();
+    }
+  }, []);
+
+  const loadLinkedLoops = async () => {
+    try {
+      const loopsJson = await AsyncStorage.getItem('loops');
+      const allLoops: Loop[] = loopsJson ? JSON.parse(loopsJson) : [];
+      const linked = allLoops.filter(loop => 
+        existingPost?.linkedLoopIds?.includes(loop.id)
+      );
+      setLinkedLoops(linked);
+    } catch (error) {
+      console.error('Error loading linked loops:', error);
+    }
+  };
+
   const handleSave = async () => {
-    if (!mediaUri) {
-      Alert.alert('Error', 'Please select a media file');
+    if (!caption.trim() && !mediaUri) {
+      Alert.alert('Error', 'Please add a caption or media');
       return;
     }
 
@@ -92,30 +99,63 @@ export default function CreatePostScreen({ navigation, route }: Props) {
       const loopsJson = await AsyncStorage.getItem('loops');
       const loops: Loop[] = loopsJson ? JSON.parse(loopsJson) : [];
       
-      const newPost = {
+      const currentLoop = loops.find(l => l.id === loopId);
+      if (!currentLoop) {
+        throw new Error('Loop not found');
+      }
+
+      const now = new Date().toISOString();
+      const postData: Post = {
         id: existingPost?.id || Date.now().toString(),
+        caption: caption.trim(),
         mediaUri,
-        caption,
-        createdAt: existingPost?.createdAt || new Date().toISOString(),
+        createdAt: existingPost?.createdAt || now,
+        timesUsed: existingPost?.timesUsed || 0,
+        linkedLoopIds: existingPost ? 
+          [...(existingPost.linkedLoopIds || []), loopId] :
+          [loopId],
       };
 
+      // If editing, update post in all linked loops
+      if (isEditing && existingPost.linkedLoopIds) {
+        if (existingPost.linkedLoopIds.length > 1) {
+          // Show confirmation for multi-loop edit
+          Alert.alert(
+            'Update All Linked Loops',
+            'This post is used in multiple loops. Changes will apply to all loops using this post.',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Update All',
+                onPress: async () => {
+                  const updatedLoops = loops.map(loop => {
+                    if (existingPost.linkedLoopIds?.includes(loop.id)) {
+                      return {
+                        ...loop,
+                        posts: loop.posts.map(p => 
+                          p.id === existingPost.id ? postData : p
+                        ),
+                      };
+                    }
+                    return loop;
+                  });
+                  await AsyncStorage.setItem('loops', JSON.stringify(updatedLoops));
+                  navigation.goBack();
+                },
+              },
+            ],
+          );
+          return;
+        }
+      }
+
+      // Regular save for new post or single-loop edit
       const updatedLoops = loops.map(loop => {
-        if (selectedLoopIds.includes(loop.id)) {
-          if (isEditing) {
-            // If editing, replace the existing post
-            return {
-              ...loop,
-              posts: loop.posts.map(post => 
-                post.id === existingPost.id ? newPost : post
-              ),
-            };
-          } else {
-            // If creating new, append to posts array
-            return {
-              ...loop,
-              posts: [...loop.posts, newPost],
-            };
-          }
+        if (loop.id === loopId) {
+          const posts = isEditing ?
+            loop.posts.map(p => p.id === existingPost.id ? postData : p) :
+            [...loop.posts, postData];
+          return { ...loop, posts };
         }
         return loop;
       });
@@ -208,6 +248,17 @@ export default function CreatePostScreen({ navigation, route }: Props) {
         </Text>
         <View style={styles.backButton} />
       </View>
+
+      {isEditing && linkedLoops.length > 1 && (
+        <View style={styles.linkedLoopsContainer}>
+          <View style={styles.linkedLoopsBadge}>
+            <Ionicons name="sync" size={16} color="#007AFF" />
+            <Text style={styles.linkedLoopsText}>
+              Used in {linkedLoops.length} loops
+            </Text>
+          </View>
+        </View>
+      )}
 
       <ScrollView style={styles.content}>
         <View style={styles.section}>
@@ -492,5 +543,26 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  linkedLoopsContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5EA',
+  },
+  linkedLoopsBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F2FF',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    alignSelf: 'flex-start',
+    gap: 6,
+  },
+  linkedLoopsText: {
+    fontSize: 13,
+    color: '#007AFF',
+    fontWeight: '500',
   },
 }); 
