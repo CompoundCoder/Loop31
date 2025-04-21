@@ -123,17 +123,13 @@ export default function ScheduledPostsScreen() {
       const postsJson = await AsyncStorage.getItem('scheduledPosts');
       console.log('Posts from storage:', postsJson);
       
-      if (postsJson) {
-        const loadedPosts = JSON.parse(postsJson);
-        console.log('Parsed posts:', loadedPosts);
-        setPosts(loadedPosts);
-      } else {
-        console.log('No posts found in storage');
-        setPosts([]);
-      }
+      const loadedPosts = postsJson ? JSON.parse(postsJson) || [] : [];
+      console.log('Parsed posts:', loadedPosts);
+      setPosts(Array.isArray(loadedPosts) ? loadedPosts : []);
     } catch (error) {
       console.error('Error loading scheduled posts:', error);
       setError('Failed to load posts');
+      setPosts([]);
     } finally {
       setIsLoading(false);
     }
@@ -149,9 +145,8 @@ export default function ScheduledPostsScreen() {
   const handleDelete = async (postId: string) => {
     try {
       console.log('Deleting post:', postId);
-      setPosts(currentPosts => currentPosts.filter(post => post.id !== postId));
-      
-      const updatedPosts = posts.filter(post => post.id !== postId);
+      const updatedPosts = (posts || []).filter(post => post.id !== postId);
+      setPosts(updatedPosts);
       await AsyncStorage.setItem('scheduledPosts', JSON.stringify(updatedPosts));
       console.log('Post deleted successfully');
     } catch (error) {
@@ -164,18 +159,17 @@ export default function ScheduledPostsScreen() {
     try {
       console.log('Publishing post:', postId);
       
-      // Find the post to publish
-      const postToPublish = posts.find(post => post.id === postId);
+      const postToPublish = (posts || []).find(post => post.id === postId);
       if (!postToPublish) {
         console.error('Post not found for publishing:', postId);
         return;
       }
 
-      // Publish the post using our utility
       await publishPost(postToPublish);
       
-      // Update local state to remove the published post
-      setPosts(currentPosts => currentPosts.filter(post => post.id !== postId));
+      const updatedPosts = (posts || []).filter(post => post.id !== postId);
+      setPosts(updatedPosts);
+      await AsyncStorage.setItem('scheduledPosts', JSON.stringify(updatedPosts));
       
       console.log('Post published successfully:', postId);
     } catch (error) {
@@ -185,17 +179,17 @@ export default function ScheduledPostsScreen() {
         'Failed to publish post. Please try again.',
         [{ text: 'OK' }]
       );
-      loadPosts(); // Reload posts in case of error
+      loadPosts();
     }
   };
 
   const renderPost = ({ item }: { item: ScheduledPost }) => {
     console.log('Rendering post:', item.id);
-    const platformObjects = item.platforms.map(getPlatformMeta);
+    const platformObjects = (item.platforms || []).map(getPlatformMeta);
 
     return (
       <PostCard
-        mediaUri={item.media[0] || ''}
+        mediaUri={item.media?.[0] || ''}
         caption={item.caption}
         platforms={platformObjects}
         date={new Date(item.scheduledDate)}
@@ -228,11 +222,11 @@ export default function ScheduledPostsScreen() {
       </View>
 
       <FlatList
-        data={posts}
+        data={posts || []}
         renderItem={renderPost}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
-        ListEmptyComponent={renderEmptyState()}
+        ListEmptyComponent={renderEmptyState}
       />
     </SafeAreaView>
   );

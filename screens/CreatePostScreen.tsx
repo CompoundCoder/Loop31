@@ -17,8 +17,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import * as ImagePicker from 'expo-image-picker';
 import { Loop, Post } from '../types/Loop';
+import { ScheduledPost } from '../types/Schedule';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CreatePostScreen'>;
+
+type RouteParams = {
+  mode: 'loop' | 'schedule';
+  loopId?: string;
+  existingPost?: Post | ScheduledPost;
+};
 
 // TODO: Replace with AI paraphrasing API (e.g., Sapling or OpenAI)
 const remixCaption = (caption: string): string => {
@@ -33,7 +40,10 @@ const remixCaption = (caption: string): string => {
 };
 
 export default function CreatePostScreen({ navigation, route }: Props) {
-  const { mode, loopId, existingPost } = route.params;
+  const { mode, loopId, existingPost } = route.params as RouteParams;
+  const isEditing = !!existingPost;
+  const isScheduleMode = mode === 'schedule';
+
   const [caption, setCaption] = useState(existingPost?.caption || '');
   const [originalCaption, setOriginalCaption] = useState<string | null>(null);
   const [mediaUri, setMediaUri] = useState(existingPost?.mediaUri || '');
@@ -43,8 +53,6 @@ export default function CreatePostScreen({ navigation, route }: Props) {
   const [availableLoops, setAvailableLoops] = useState<Loop[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [linkedLoops, setLinkedLoops] = useState<Loop[]>([]);
-
-  const isEditing = !!existingPost;
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -69,9 +77,9 @@ export default function CreatePostScreen({ navigation, route }: Props) {
     loadLoops();
   }, []);
 
-  // Load linked loops on mount
+  // Load linked loops only in loop mode
   useEffect(() => {
-    if (isEditing && existingPost.linkedLoopIds) {
+    if (!isScheduleMode && isEditing && (existingPost as Post).linkedLoopIds) {
       loadLinkedLoops();
     }
   }, []);
@@ -81,7 +89,7 @@ export default function CreatePostScreen({ navigation, route }: Props) {
       const loopsJson = await AsyncStorage.getItem('loops');
       const allLoops: Loop[] = loopsJson ? JSON.parse(loopsJson) : [];
       const linked = allLoops.filter(loop => 
-        existingPost?.linkedLoopIds?.includes(loop.id)
+        (existingPost as Post).linkedLoopIds?.includes(loop.id)
       );
       setLinkedLoops(linked);
     } catch (error) {
@@ -95,31 +103,57 @@ export default function CreatePostScreen({ navigation, route }: Props) {
       return;
     }
 
-    try {
-      const loopsJson = await AsyncStorage.getItem('loops');
-      const loops: Loop[] = loopsJson ? JSON.parse(loopsJson) : [];
-      
-      const currentLoop = loops.find(l => l.id === loopId);
-      if (!currentLoop) {
-        throw new Error('Loop not found');
-      }
-
-      const now = new Date().toISOString();
-      const postData: Post = {
+    if (isScheduleMode) {
+      // Handle scheduled post save
+      const postData: ScheduledPost = {
         id: existingPost?.id || Date.now().toString(),
         caption: caption.trim(),
         mediaUri,
-        createdAt: existingPost?.createdAt || now,
-        timesUsed: existingPost?.timesUsed || 0,
-        linkedLoopIds: existingPost ? 
-          [...(existingPost.linkedLoopIds || []), loopId] :
-          [loopId],
+        createdAt: existingPost?.createdAt || new Date().toISOString(),
       };
 
-      // If editing, update post in all linked loops
-      if (isEditing && existingPost.linkedLoopIds) {
-        if (existingPost.linkedLoopIds.length > 1) {
-          // Show confirmation for multi-loop edit
+      try {
+        const scheduledPostsJson = await AsyncStorage.getItem('scheduledPosts');
+        const scheduledPosts: ScheduledPost[] = scheduledPostsJson ? JSON.parse(scheduledPostsJson) : [];
+
+        if (isEditing) {
+          const updatedPosts = scheduledPosts.map(p => 
+            p.id === existingPost.id ? postData : p
+          );
+          await AsyncStorage.setItem('scheduledPosts', JSON.stringify(updatedPosts));
+        } else {
+          await AsyncStorage.setItem('scheduledPosts', JSON.stringify([...scheduledPosts, postData]));
+        }
+
+        navigation.goBack();
+      } catch (error) {
+        console.error('Error saving scheduled post:', error);
+        Alert.alert('Error', 'Failed to save post. Please try again.');
+      }
+    } else {
+      // Handle loop post save
+      try {
+        const loopsJson = await AsyncStorage.getItem('loops');
+        const loops: Loop[] = loopsJson ? JSON.parse(loopsJson) : [];
+        
+        const currentLoop = loops.find(l => l.id === loopId);
+        if (!currentLoop) {
+          throw new Error('Loop not found');
+        }
+
+        const now = new Date().toISOString();
+        const postData: Post = {
+          id: existingPost?.id || Date.now().toString(),
+          caption: caption.trim(),
+          mediaUri,
+          createdAt: existingPost?.createdAt || now,
+          timesUsed: (existingPost as Post)?.timesUsed || 0,
+          linkedLoopIds: ((existingPost as Post)?.linkedLoopIds?.filter(Boolean) as string[]) || [loopId],
+        };
+
+        // If editing, update post in all linked loops
+        const linkedIds = (existingPost as Post)?.linkedLoopIds;
+        if (isEditing && linkedIds && linkedIds.length > 1) {
           Alert.alert(
             'Update All Linked Loops',
             'This post is used in multiple loops. Changes will apply to all loops using this post.',
@@ -129,7 +163,7 @@ export default function CreatePostScreen({ navigation, route }: Props) {
                 text: 'Update All',
                 onPress: async () => {
                   const updatedLoops = loops.map(loop => {
-                    if (existingPost.linkedLoopIds?.includes(loop.id)) {
+                    if (linkedIds.includes(loop.id)) {
                       return {
                         ...loop,
                         posts: loop.posts.map(p => 
@@ -147,24 +181,61 @@ export default function CreatePostScreen({ navigation, route }: Props) {
           );
           return;
         }
+
+        // Regular save for new post or single-loop edit
+        const updatedLoops = loops.map(loop => {
+          if (loop.id === loopId) {
+            const posts = isEditing ?
+              loop.posts.map(p => p.id === existingPost.id ? postData : p) :
+              [...loop.posts, postData];
+            return { ...loop, posts };
+          }
+          return loop;
+        });
+
+        await AsyncStorage.setItem('loops', JSON.stringify(updatedLoops));
+        navigation.goBack();
+      } catch (error) {
+        console.error('Error saving post:', error);
+        Alert.alert('Error', 'Failed to save post. Please try again.');
+      }
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    if (!caption.trim() && !mediaUri) {
+      Alert.alert('Error', 'Please add a caption or media');
+      return;
+    }
+
+    try {
+      const draftData: ScheduledPost = {
+        id: existingPost?.id || Date.now().toString(),
+        caption: caption.trim(),
+        mediaUri,
+        createdAt: existingPost?.createdAt || new Date().toISOString(),
+      };
+
+      const draftsJson = await AsyncStorage.getItem('scheduledDrafts');
+      const drafts: ScheduledPost[] = draftsJson ? JSON.parse(draftsJson) : [];
+
+      if (existingPost) {
+        // Update existing draft
+        const updatedDrafts = drafts.map(d => 
+          d.id === existingPost.id ? draftData : d
+        );
+        await AsyncStorage.setItem('scheduledDrafts', JSON.stringify(updatedDrafts));
+      } else {
+        // Add new draft
+        await AsyncStorage.setItem('scheduledDrafts', JSON.stringify([...drafts, draftData]));
       }
 
-      // Regular save for new post or single-loop edit
-      const updatedLoops = loops.map(loop => {
-        if (loop.id === loopId) {
-          const posts = isEditing ?
-            loop.posts.map(p => p.id === existingPost.id ? postData : p) :
-            [...loop.posts, postData];
-          return { ...loop, posts };
-        }
-        return loop;
-      });
-
-      await AsyncStorage.setItem('loops', JSON.stringify(updatedLoops));
-      navigation.goBack();
+      Alert.alert('Success', 'Post saved as draft', [
+        { text: 'OK', onPress: () => navigation.goBack() }
+      ]);
     } catch (error) {
-      console.error('Error saving post:', error);
-      Alert.alert('Error', 'Failed to save post. Please try again.');
+      console.error('Error saving draft:', error);
+      Alert.alert('Error', 'Failed to save draft. Please try again.');
     }
   };
 
@@ -249,7 +320,7 @@ export default function CreatePostScreen({ navigation, route }: Props) {
         <View style={styles.backButton} />
       </View>
 
-      {isEditing && linkedLoops.length > 1 && (
+      {!isScheduleMode && isEditing && linkedLoops.length > 1 && (
         <View style={styles.linkedLoopsContainer}>
           <View style={styles.linkedLoopsBadge}>
             <Ionicons name="sync" size={16} color="#007AFF" />
@@ -359,15 +430,34 @@ export default function CreatePostScreen({ navigation, route }: Props) {
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={handleSave}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.saveButtonText}>
-            {isEditing ? 'Save Changes' : 'Create Post'}
-          </Text>
-        </TouchableOpacity>
+        {isScheduleMode ? (
+          <View style={styles.footerButtonRow}>
+            <TouchableOpacity
+              style={styles.draftButton}
+              onPress={handleSaveDraft}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.draftButtonText}>Save as Draft</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.scheduleButton}
+              onPress={handleSave}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.scheduleButtonText}>Schedule Post</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={handleSave}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.saveButtonText}>
+              {isEditing ? 'Save Changes' : 'Create Post'}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -475,6 +565,36 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#E5E5EA',
     backgroundColor: '#fff',
+  },
+  footerButtonRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  draftButton: {
+    flex: 1,
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: '#F2F2F7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  draftButtonText: {
+    color: '#000',
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  scheduleButton: {
+    flex: 1,
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: '#007AFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scheduleButtonText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '600',
   },
   saveButton: {
     backgroundColor: '#007AFF',
