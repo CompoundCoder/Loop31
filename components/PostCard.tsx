@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
+import { getPlatformIconName } from '../utils/platformIcons';
 
 export type PostStatus = 'scheduled' | 'draft' | 'deleted';
 
@@ -9,7 +10,7 @@ type Platform = {
   id: string;
   name: string;
   type: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon?: keyof typeof Ionicons.glyphMap;
 };
 
 interface PostAnalytics {
@@ -52,21 +53,38 @@ export default function PostCard({
     : caption;
 
   const renderPlatformIcons = () => {
-    return platforms.map((platform, index) => (
-      <View 
-        key={platform.id} 
-        style={[
-          styles.platformIcon,
-          index > 0 && styles.platformIconOffset
-        ]}
-      >
-        <Ionicons 
-          name={platform.icon}
-          size={16}
-          color="#666"
-        />
-      </View>
-    ));
+    const iconSizeMap: { [key: string]: number } = {
+      facebook: 16,
+      twitter: 17,
+      instagram: 17,
+      linkedin: 16,
+      tiktok: 14,
+      default: 16,
+    };
+
+    return platforms.map((platform, index) => {
+      const platformType = typeof platform === 'string' ? platform : platform.type;
+      const iconName = getPlatformIconName(platformType);
+      const iconSize = iconSizeMap[platformType.toLowerCase()] || iconSizeMap.default;
+
+      return (
+        <View 
+          key={typeof platform === 'string' ? platform : platform.id} 
+          style={[
+            styles.platformIcon,
+            index > 0 && styles.platformIconOffset
+          ]}
+        >
+          <View style={styles.iconWrapper}>
+            <Ionicons 
+              name={iconName}
+              size={iconSize}
+              color="#666"
+            />
+          </View>
+        </View>
+      );
+    });
   };
 
   const renderStatusText = () => {
@@ -207,15 +225,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   platformIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#f0f0f0',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
   platformIconOffset: {
     marginLeft: -8,
+  },
+  iconWrapper: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F2F2F7',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   date: {
     fontSize: 13,

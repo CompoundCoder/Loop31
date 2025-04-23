@@ -10,6 +10,7 @@ import { colors } from '../theme';
 import PostCard from '../components/PostCard';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { getPlatformIconName } from '../utils/platformIcons';
 
 interface PostMetrics {
   likes: number;
@@ -28,6 +29,8 @@ interface Post {
   platforms: string[];
   folder?: string;
   metrics: PostMetrics;
+  source?: 'schedule' | 'loop';
+  postedAt: string;
 }
 
 interface PostGroup {
@@ -199,6 +202,30 @@ function DropdownMenu({
   );
 }
 
+function PlatformIcons({ platforms }: { platforms: string[] }) {
+  const visiblePlatforms = platforms.slice(0, 3);
+  const remainingCount = platforms.length - 3;
+
+  return (
+    <View style={styles.platformIconsRow}>
+      {visiblePlatforms.map((platform) => (
+        <View key={platform} style={styles.platformIcon}>
+          <Ionicons 
+            name={getPlatformIconName(platform)}
+            size={20}
+            color="#666"
+          />
+        </View>
+      ))}
+      {remainingCount > 0 && (
+        <Text style={styles.remainingPlatformsText}>
+          +{remainingCount} more
+        </Text>
+      )}
+    </View>
+  );
+}
+
 function CompactPostCard({ post, onPress, viewMode, sortBy }: { 
   post: Post; 
   onPress: () => void;
@@ -331,6 +358,28 @@ function CompactPostCard({ post, onPress, viewMode, sortBy }: {
   );
 }
 
+// Safe date parsing utility
+const parsePostDate = (dateValue: any): string => {
+  if (!dateValue) return new Date().toISOString(); // Fallback to current date
+
+  try {
+    // Handle numeric timestamps
+    if (typeof dateValue === 'number' || !isNaN(Number(dateValue))) {
+      return new Date(Number(dateValue)).toISOString();
+    }
+    
+    // Handle ISO strings
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) {
+      throw new Error('Invalid date');
+    }
+    return date.toISOString();
+  } catch (error) {
+    console.warn('Invalid date value:', dateValue);
+    return new Date().toISOString(); // Fallback to current date
+  }
+};
+
 function WeekSection({ group, onPostPress, isLatestWeek, viewMode, sortBy }: { 
   group: PostGroup; 
   onPostPress: (post: Post) => void;
@@ -363,23 +412,10 @@ function WeekSection({ group, onPostPress, isLatestWeek, viewMode, sortBy }: {
         activeOpacity={0.7}
       >
         <View style={styles.weekHeaderLeft}>
-          <Text style={styles.weekTitle}>{group.title}</Text>
-          <View style={styles.weekPlatforms}>
-            {platforms.map((platform) => (
-              <View key={platform} style={styles.weekPlatformIcon}>
-                <Ionicons 
-                  name={platform === 'instagram' ? 'logo-instagram' :
-                        platform === 'facebook' ? 'logo-facebook' :
-                        platform === 'twitter' ? 'logo-twitter' :
-                        platform === 'linkedin' ? 'logo-linkedin' :
-                        platform === 'tiktok' ? 'logo-tiktok' :
-                        'share-social'} 
-                  size={12} 
-                  color="#666" 
-                />
-              </View>
-            ))}
-          </View>
+          <Text style={styles.weekTitle}>
+            {group.title || 'Unknown Date'}
+          </Text>
+          <PlatformIcons platforms={platforms} />
         </View>
         <Ionicons 
           name={isCollapsed ? 'chevron-down' : 'chevron-up'} 
@@ -473,22 +509,7 @@ function PostDetailModal({ post, visible, onClose }: {
             </View>
             
             <View style={styles.detailsContainer}>
-              <View style={styles.platformsContainer}>
-                {post.platforms.map((platform) => (
-                  <View key={platform} style={styles.platformBadge}>
-                    <Ionicons 
-                      name={platform === 'instagram' ? 'logo-instagram' :
-                            platform === 'facebook' ? 'logo-facebook' :
-                            platform === 'twitter' ? 'logo-twitter' :
-                            platform === 'linkedin' ? 'logo-linkedin' :
-                            platform === 'tiktok' ? 'logo-tiktok' :
-                            'share-social'} 
-                      size={16} 
-                      color="#666" 
-                    />
-                  </View>
-                ))}
-              </View>
+              <PlatformIcons platforms={post.platforms} />
 
               {post.folder && (
                 <View style={styles.folderContainer}>
@@ -597,7 +618,7 @@ export default function PublishedPostsScreen() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [dropdownPositions, setDropdownPositions] = useState<DropdownPositions>({});
   const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   const sortButtonRef = useRef<View>(null);
   const filterButtonRef = useRef<View>(null);
@@ -656,68 +677,138 @@ export default function PublishedPostsScreen() {
     const sortedPosts = sortPosts(filteredPosts, selectedSort);
 
     const grouped = sortedPosts.reduce((groups: { [key: string]: Post[] }, post) => {
-      const date = new Date(post.publishedAt);
-      const weekStart = startOfWeek(date);
-      const weekKey = weekStart.toISOString();
-      
-      if (!groups[weekKey]) {
-        groups[weekKey] = [];
+      try {
+        const date = new Date(post.publishedAt);
+        if (isNaN(date.getTime())) {
+          throw new Error('Invalid date');
+        }
+        const weekStart = startOfWeek(date);
+        const weekKey = weekStart.toISOString();
+        
+        if (!groups[weekKey]) {
+          groups[weekKey] = [];
+        }
+        groups[weekKey].push(post);
+      } catch (error) {
+        console.warn('Error grouping post by week:', error);
+        // Skip posts with invalid dates
       }
-      groups[weekKey].push(post);
       return groups;
     }, {});
 
     return Object.entries(grouped).map(([weekKey, posts]) => {
-      const weekStart = new Date(weekKey);
-      const weekEnd = endOfWeek(weekStart);
-      return {
-        title: `${format(weekStart, 'MMM d')}–${format(weekEnd, 'MMM d, yyyy')}`,
-        data: posts
-      };
-    }).sort((a, b) => 
-      new Date(b.data[0].publishedAt).getTime() - 
-      new Date(a.data[0].publishedAt).getTime()
-    );
+      try {
+        const weekStart = new Date(weekKey);
+        const weekEnd = endOfWeek(weekStart);
+        return {
+          title: `${format(weekStart, 'MMM d')}–${format(weekEnd, 'MMM d, yyyy')}`,
+          data: posts
+        };
+      } catch (error) {
+        console.warn('Error formatting week dates:', error);
+        return {
+          title: 'Unknown Week',
+          data: posts
+        };
+      }
+    }).sort((a, b) => {
+      try {
+        return new Date(b.data[0].publishedAt).getTime() - 
+               new Date(a.data[0].publishedAt).getTime();
+      } catch (error) {
+        console.warn('Error sorting weeks:', error);
+        return 0;
+      }
+    });
   };
 
-  // Load published posts from AsyncStorage
-  const loadPublishedPosts = useCallback(async () => {
+  const loadPosts = useCallback(async () => {
     try {
-      setIsLoading(true);
-      const publishedPostsJson = await AsyncStorage.getItem('publishedPosts');
-      if (publishedPostsJson) {
-        const loadedPosts = JSON.parse(publishedPostsJson);
-        // Transform loaded posts to match the Post interface
-        const transformedPosts: Post[] = loadedPosts.map((post: any) => ({
-          id: post.id,
+      setLoading(true);
+      
+      const [scheduledJson, loopJson, manualJson] = await Promise.all([
+        AsyncStorage.getItem('publishedScheduledPosts'),
+        AsyncStorage.getItem('publishedLoopPosts'),
+        AsyncStorage.getItem('publishedPosts')
+      ]);
+
+      console.log('🔁 Loading posts from all sources');
+
+      const scheduledPosts = scheduledJson ? JSON.parse(scheduledJson) : [];
+      const loopPosts = loopJson ? JSON.parse(loopJson) : [];
+      const manualPosts = manualJson ? JSON.parse(manualJson) : [];
+
+      // Combine and normalize posts from all sources
+      const combinedPosts = [
+        ...scheduledPosts.map((post: any) => ({
+          ...post,
           content: post.caption || '',
-          mediaUrl: post.media?.[0] || post.mediaUri || '',
-          publishedAt: post.publishedAt || new Date().toISOString(),
-          platforms: post.platforms || [],
-          folder: post.folder,
+          mediaUrl: post.mediaUri || '',
+          publishedAt: parsePostDate(post.postedAt),
+          source: 'schedule',
           metrics: {
-            likes: Math.floor(Math.random() * 5000),
-            views: Math.floor(Math.random() * 50000),
-            shares: Math.floor(Math.random() * 1000),
-            comments: Math.floor(Math.random() * 500),
-            impressions: Math.floor(Math.random() * 100000),
-            engagement: Math.floor(Math.random() * 10000)
+            likes: 0,
+            views: 0,
+            shares: 0,
+            comments: 0,
+            impressions: 0,
+            engagement: 0
           }
-        }));
-        setPosts(transformedPosts);
-      }
+        })),
+        ...loopPosts.map((post: any) => ({
+          ...post,
+          content: post.caption || '',
+          mediaUrl: post.mediaUri || '',
+          publishedAt: parsePostDate(post.postedAt),
+          source: 'loop',
+          metrics: {
+            likes: 0,
+            views: 0,
+            shares: 0,
+            comments: 0,
+            impressions: 0,
+            engagement: 0
+          }
+        })),
+        ...manualPosts.map((post: any) => ({
+          ...post,
+          content: post.caption || '',
+          mediaUrl: post.mediaUri || '',
+          publishedAt: parsePostDate(post.postedAt),
+          metrics: {
+            likes: 0,
+            views: 0,
+            shares: 0,
+            comments: 0,
+            impressions: 0,
+            engagement: 0
+          }
+        }))
+      ];
+
+      // Sort by postedAt descending, with safe date parsing
+      const sortedPosts = combinedPosts.sort((a, b) => {
+        try {
+          return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+        } catch (error) {
+          console.warn('Error sorting dates:', error);
+          return 0; // Keep original order if dates are invalid
+        }
+      });
+
+      setPosts(sortedPosts);
     } catch (error) {
       console.error('Error loading published posts:', error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   }, []);
 
-  // Load posts when screen comes into focus
+  // Refresh posts when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      loadPublishedPosts();
-    }, [loadPublishedPosts])
+      loadPosts();
+    }, [loadPosts])
   );
 
   const groupedPosts = groupPostsByWeek(posts);
@@ -899,7 +990,7 @@ export default function PublishedPostsScreen() {
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Text style={styles.emptyText}>
-              {isLoading ? 'Loading posts...' : 'No published posts yet'}
+              {loading ? 'Loading posts...' : 'No published posts yet'}
             </Text>
           </View>
         }
@@ -1345,5 +1436,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
+  },
+  platformIconsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingTop: 8,
+  },
+  platformIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  remainingPlatformsText: {
+    fontSize: 13,
+    color: '#666',
+    marginLeft: 4,
   },
 }); 
