@@ -14,10 +14,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { format } from 'date-fns';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import * as ImagePicker from 'expo-image-picker';
 import { Loop, Post } from '../types/Loop';
 import { ScheduledPost } from '../types/Schedule';
+
+interface ScheduledPostWithTarget extends ScheduledPost {
+  targetId: string;
+  targetType: 'brandGroup' | 'account';
+}
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CreatePostScreen'>;
 
@@ -25,6 +32,24 @@ type RouteParams = {
   mode: 'loop' | 'schedule';
   loopId?: string;
   existingPost?: Post | ScheduledPost;
+};
+
+interface BrandGroup {
+  id: string;
+  name: string;
+  accounts: string[];
+}
+
+interface Account {
+  id: string;
+  name: string;
+  type: string;
+  icon: string;
+}
+
+type Target = {
+  id: string;
+  type: 'brandGroup' | 'account';
 };
 
 // TODO: Replace with AI paraphrasing API (e.g., Sapling or OpenAI)
@@ -39,10 +64,24 @@ const remixCaption = (caption: string): string => {
   return reordered.join('. ').trim() + '.';
 };
 
+const TIME_PRESETS = [
+  { label: 'Morning', time: '09:00', period: 'AM' },
+  { label: 'Noon', time: '12:00', period: 'PM' },
+  { label: 'Evening', time: '06:00', period: 'PM' },
+];
+
 export default function CreatePostScreen({ navigation, route }: Props) {
   const { mode, loopId, existingPost } = route.params as RouteParams;
   const isEditing = !!existingPost;
   const isScheduleMode = mode === 'schedule';
+
+  // Get default date (tomorrow at noon)
+  const getDefaultDate = () => {
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+    date.setHours(12, 0, 0, 0);
+    return date;
+  };
 
   const [caption, setCaption] = useState(existingPost?.caption || '');
   const [originalCaption, setOriginalCaption] = useState<string | null>(null);
@@ -53,6 +92,25 @@ export default function CreatePostScreen({ navigation, route }: Props) {
   const [availableLoops, setAvailableLoops] = useState<Loop[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [linkedLoops, setLinkedLoops] = useState<Loop[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    if (isScheduleMode && existingPost && 'scheduledDate' in existingPost && typeof existingPost.scheduledDate === 'string') {
+      return new Date(existingPost.scheduledDate);
+    }
+    return getDefaultDate();
+  });
+  const [showAndroidPicker, setShowAndroidPicker] = useState(false);
+  const [showLoopSelector, setShowLoopSelector] = useState(!isScheduleMode);
+  const [brandGroups, setBrandGroups] = useState<BrandGroup[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [selectedTarget, setSelectedTarget] = useState<Target | null>(
+    existingPost && 'targetId' in existingPost && 'targetType' in existingPost
+      ? { 
+          id: String(existingPost.targetId), 
+          type: existingPost.targetType as 'brandGroup' | 'account'
+        }
+      : null
+  );
+  const [showTargetSelector, setShowTargetSelector] = useState(false);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -97,6 +155,49 @@ export default function CreatePostScreen({ navigation, route }: Props) {
     }
   };
 
+  const handleDateChange = (event: any, date?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowAndroidPicker(false);
+    }
+    if (date) {
+      const newDate = new Date(selectedDate);
+      newDate.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
+      setSelectedDate(newDate);
+    }
+  };
+
+  const handleTimePreset = (hours: number, minutes: number) => {
+    const newDate = new Date(selectedDate);
+    newDate.setHours(hours, minutes);
+    setSelectedDate(newDate);
+  };
+
+  // Load brand groups and accounts
+  useEffect(() => {
+    const loadTargets = async () => {
+      try {
+        const [groupsJson, accountsJson] = await Promise.all([
+          AsyncStorage.getItem('brandGroups'),
+          AsyncStorage.getItem('connectedAccounts')
+        ]);
+        
+        setBrandGroups(groupsJson ? JSON.parse(groupsJson) : []);
+        setAccounts(accountsJson ? JSON.parse(accountsJson) : []);
+      } catch (error) {
+        console.error('Error loading targets:', error);
+      }
+    };
+
+    if (isScheduleMode) {
+      loadTargets();
+    }
+  }, [isScheduleMode]);
+
+  const handleTargetSelect = (id: string, type: 'brandGroup' | 'account') => {
+    setSelectedTarget({ id, type });
+    setShowTargetSelector(false);
+  };
+
   const handleSave = async () => {
     if (!caption.trim() && !mediaUri) {
       Alert.alert('Error', 'Please add a caption or media');
@@ -104,19 +205,32 @@ export default function CreatePostScreen({ navigation, route }: Props) {
     }
 
     if (isScheduleMode) {
-      // Handle scheduled post save
-      const postData: ScheduledPost = {
+      if (!selectedTarget) {
+        Alert.alert('Error', 'Please select where to post');
+        return;
+      }
+
+      const now = new Date();
+      if (selectedDate <= now) {
+        Alert.alert('Error', 'Please select a future date and time');
+        return;
+      }
+
+      const postData: ScheduledPostWithTarget = {
         id: existingPost?.id || Date.now().toString(),
         caption: caption.trim(),
         mediaUri,
         createdAt: existingPost?.createdAt || new Date().toISOString(),
+        scheduledDate: selectedDate.toISOString(),
+        targetId: selectedTarget!.id,
+        targetType: selectedTarget!.type,
       };
 
       try {
         const scheduledPostsJson = await AsyncStorage.getItem('scheduledPosts');
         const scheduledPosts: ScheduledPost[] = scheduledPostsJson ? JSON.parse(scheduledPostsJson) : [];
 
-        if (isEditing) {
+        if (isEditing && existingPost && 'scheduledDate' in existingPost) {
           const updatedPosts = scheduledPosts.map(p => 
             p.id === existingPost.id ? postData : p
           );
@@ -209,18 +323,28 @@ export default function CreatePostScreen({ navigation, route }: Props) {
     }
 
     try {
+      // Check if this post is already scheduled
+      const scheduledPostsJson = await AsyncStorage.getItem('scheduledPosts');
+      const scheduledPosts: ScheduledPost[] = scheduledPostsJson ? JSON.parse(scheduledPostsJson) : [];
+      
+      if (existingPost && scheduledPosts.some(p => p.id === existingPost.id)) {
+        Alert.alert('Error', 'Cannot save a scheduled post as draft');
+        return;
+      }
+
       const draftData: ScheduledPost = {
         id: existingPost?.id || Date.now().toString(),
         caption: caption.trim(),
         mediaUri,
         createdAt: existingPost?.createdAt || new Date().toISOString(),
+        scheduledDate: isScheduleMode ? selectedDate.toISOString() : undefined,
       };
 
       const draftsJson = await AsyncStorage.getItem('scheduledDrafts');
       const drafts: ScheduledPost[] = draftsJson ? JSON.parse(draftsJson) : [];
 
-      if (existingPost) {
-        // Update existing draft
+      // Check if we're editing an existing draft
+      if (existingPost && drafts.some(d => d.id === existingPost.id)) {
         const updatedDrafts = drafts.map(d => 
           d.id === existingPost.id ? draftData : d
         );
@@ -230,9 +354,7 @@ export default function CreatePostScreen({ navigation, route }: Props) {
         await AsyncStorage.setItem('scheduledDrafts', JSON.stringify([...drafts, draftData]));
       }
 
-      Alert.alert('Success', 'Post saved as draft', [
-        { text: 'OK', onPress: () => navigation.goBack() }
-      ]);
+      navigation.goBack();
     } catch (error) {
       console.error('Error saving draft:', error);
       Alert.alert('Error', 'Failed to save draft. Please try again.');
@@ -331,7 +453,7 @@ export default function CreatePostScreen({ navigation, route }: Props) {
         </View>
       )}
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Media</Text>
           <TouchableOpacity 
@@ -393,39 +515,237 @@ export default function CreatePostScreen({ navigation, route }: Props) {
           />
         </View>
 
-        {!loopId && availableLoops.length > 0 && (
+        {isScheduleMode && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Select Loops</Text>
-            <View style={styles.loopsList}>
-              {availableLoops.map(loop => (
-                <TouchableOpacity
-                  key={loop.id}
-                  style={[
-                    styles.loopItem,
-                    selectedLoopIds.includes(loop.id) && styles.loopItemSelected
-                  ]}
-                  onPress={() => handleToggleLoop(loop.id)}
-                >
-                  <View style={styles.loopItemLeft}>
-                    <View style={[styles.loopColorDot, { backgroundColor: loop.color }]} />
-                    <Text
-                      style={[
-                        styles.loopName,
-                        selectedLoopIds.includes(loop.id) && styles.loopNameSelected
-                      ]}
-                    >
-                      {loop.name}
-                    </Text>
-                  </View>
-                  <Ionicons
-                    name={selectedLoopIds.includes(loop.id) ? "checkmark-circle" : "checkmark-circle-outline"}
-                    size={24}
-                    color={selectedLoopIds.includes(loop.id) ? "#007AFF" : "#666"}
+            <Text style={styles.sectionTitle}>Post As</Text>
+            <TouchableOpacity
+              style={[
+                styles.targetSelector,
+                showTargetSelector && styles.targetSelectorOpen
+              ]}
+              onPress={() => setShowTargetSelector(!showTargetSelector)}
+            >
+              {selectedTarget ? (
+                <View style={styles.selectedTarget}>
+                  <Ionicons 
+                    name={selectedTarget.type === 'brandGroup' ? 'people-outline' : 'person-outline'} 
+                    size={20} 
+                    color="#666" 
                   />
+                  <Text style={styles.selectedTargetText}>
+                    {selectedTarget.type === 'brandGroup'
+                      ? brandGroups.find(g => g.id === selectedTarget.id)?.name
+                      : accounts.find(a => a.id === selectedTarget.id)?.name}
+                  </Text>
+                </View>
+              ) : (
+                <Text style={styles.targetPlaceholder}>Select where to post</Text>
+              )}
+              <Ionicons 
+                name={showTargetSelector ? "chevron-up" : "chevron-down"} 
+                size={20} 
+                color="#666" 
+              />
+            </TouchableOpacity>
+
+            {showTargetSelector && (
+              <View style={styles.targetOptions}>
+                {brandGroups.length > 0 && (
+                  <>
+                    <Text style={styles.targetGroupLabel}>Brand Groups</Text>
+                    {brandGroups.map(group => (
+                      <TouchableOpacity
+                        key={group.id}
+                        style={[
+                          styles.targetOption,
+                          selectedTarget?.id === group.id && styles.targetOptionSelected
+                        ]}
+                        onPress={() => handleTargetSelect(group.id, 'brandGroup')}
+                      >
+                        <View style={styles.targetOptionContent}>
+                          <Ionicons name="people" size={20} color="#666" />
+                          <Text style={styles.targetOptionText}>{group.name}</Text>
+                        </View>
+                        {selectedTarget?.id === group.id && (
+                          <Ionicons name="checkmark" size={20} color="#007AFF" />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </>
+                )}
+
+                <Text style={styles.targetGroupLabel}>Connected Accounts</Text>
+                {accounts.map(account => (
+                  <TouchableOpacity
+                    key={account.id}
+                    style={[
+                      styles.targetOption,
+                      selectedTarget?.id === account.id && styles.targetOptionSelected
+                    ]}
+                    onPress={() => handleTargetSelect(account.id, 'account')}
+                  >
+                    <View style={styles.targetOptionContent}>
+                      <Ionicons 
+                        name={
+                          account.type === 'instagram' ? 'logo-instagram' :
+                          account.type === 'facebook' ? 'logo-facebook' :
+                          account.type === 'twitter' ? 'logo-twitter' :
+                          account.type === 'linkedin' ? 'logo-linkedin' :
+                          account.type === 'tiktok' ? 'logo-tiktok' :
+                          'share-social'
+                        } 
+                        size={20} 
+                        color="#666" 
+                      />
+                      <Text style={styles.targetOptionText}>{account.name}</Text>
+                    </View>
+                    {selectedTarget?.id === account.id && (
+                      <Ionicons name="checkmark" size={20} color="#007AFF" />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
+        {isScheduleMode && (
+          <View style={styles.scheduleSection}>
+            <View style={styles.scheduleContainer}>
+              <View style={styles.scheduleLabelRow}>
+                <Ionicons name="calendar-outline" size={24} color="#666" />
+                <Text style={styles.scheduleLabel}>Pick a Date</Text>
+              </View>
+
+              {Platform.OS === 'ios' ? (
+                <View style={styles.calendarWrapper}>
+                  <DateTimePicker
+                    value={selectedDate}
+                    mode="date"
+                    display="inline"
+                    onChange={handleDateChange}
+                    minimumDate={new Date()}
+                  />
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={styles.androidDateButton}
+                  onPress={() => setShowAndroidPicker(true)}
+                >
+                  <Text style={styles.dateDisplay}>
+                    {format(selectedDate, 'EEEE, MMMM d')}
+                  </Text>
                 </TouchableOpacity>
-              ))}
+              )}
+
+              {showAndroidPicker && (
+                <DateTimePicker
+                  value={selectedDate}
+                  mode="date"
+                  display="default"
+                  onChange={handleDateChange}
+                  minimumDate={new Date()}
+                />
+              )}
+
+              <View style={styles.timeRow}>
+                {TIME_PRESETS.map(({ label, time, period }) => {
+                  const [hours, minutes] = time.split(':').map(Number);
+                  const adjustedHours = period === 'PM' && hours !== 12 ? hours + 12 : hours;
+                  const isSelected = 
+                    format(selectedDate, 'HH:mm') === 
+                    `${adjustedHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+                  return (
+                    <TouchableOpacity
+                      key={label}
+                      style={[
+                        styles.timeButton,
+                        isSelected && styles.timeButtonSelected
+                      ]}
+                      onPress={() => handleTimePreset(adjustedHours, minutes)}
+                    >
+                      <Text style={[
+                        styles.timeButtonLabel,
+                        isSelected && styles.timeButtonLabelSelected
+                      ]}>
+                        {label}
+                      </Text>
+                      <Text style={[
+                        styles.timeButtonTime,
+                        isSelected && styles.timeButtonLabelSelected
+                      ]}>
+                        {`${time} ${period}`}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <View style={styles.selectedDateTime}>
+                <Text style={styles.selectedDateTimeLabel}>Selected Time:</Text>
+                <Text style={styles.selectedDateTimeValue}>
+                  {format(selectedDate, 'EEEE, MMMM d')} at {format(selectedDate, 'h:mm a')}
+                </Text>
+              </View>
             </View>
           </View>
+        )}
+
+        {!loopId && (
+          <>
+            <View style={styles.divider} />
+            <TouchableOpacity
+              style={styles.loopToggleBadge}
+              onPress={() => setShowLoopSelector(!showLoopSelector)}
+            >
+              <Ionicons 
+                name={showLoopSelector ? "remove-circle-outline" : "add-circle-outline"} 
+                size={18} 
+                color="#666" 
+              />
+              <Text style={styles.loopToggleText}>
+                {showLoopSelector ? 'Close Loop Options' : 'Add to Loop'}
+              </Text>
+            </TouchableOpacity>
+
+            {showLoopSelector && availableLoops.length > 0 && (
+              <>
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Select Loops</Text>
+                  <View style={styles.loopsList}>
+                    {availableLoops.map(loop => (
+                      <TouchableOpacity
+                        key={loop.id}
+                        style={[
+                          styles.loopItem,
+                          selectedLoopIds.includes(loop.id) && styles.loopItemSelected
+                        ]}
+                        onPress={() => handleToggleLoop(loop.id)}
+                      >
+                        <View style={styles.loopItemLeft}>
+                          <View style={[styles.loopColorDot, { backgroundColor: loop.color }]} />
+                          <Text
+                            style={[
+                              styles.loopName,
+                              selectedLoopIds.includes(loop.id) && styles.loopNameSelected
+                            ]}
+                          >
+                            {loop.name}
+                          </Text>
+                        </View>
+                        <Ionicons
+                          name={selectedLoopIds.includes(loop.id) ? "checkmark-circle" : "checkmark-circle-outline"}
+                          size={24}
+                          color={selectedLoopIds.includes(loop.id) ? "#007AFF" : "#666"}
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              </>
+            )}
+          </>
         )}
       </ScrollView>
 
@@ -490,6 +810,9 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
+  contentContainer: {
+    paddingBottom: 24,
+  },
   section: {
     padding: 16,
     borderBottomWidth: 1,
@@ -499,7 +822,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: '#666',
-    marginBottom: 12,
+    marginBottom: 16,
     textTransform: 'uppercase',
   },
   mediaUpload: {
@@ -684,5 +1007,163 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#007AFF',
     fontWeight: '500',
+  },
+  scheduleSection: {
+    padding: 16,
+  },
+  scheduleContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+  },
+  scheduleLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 8,
+  },
+  scheduleLabel: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#000',
+  },
+  calendarWrapper: {
+    backgroundColor: '#F8F8F8',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  androidDateButton: {
+    backgroundColor: '#F8F8F8',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  dateDisplay: {
+    fontSize: 17,
+    color: '#000',
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  timeRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  timeButton: {
+    flex: 1,
+    backgroundColor: '#F8F8F8',
+    padding: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  timeButtonSelected: {
+    backgroundColor: '#007AFF',
+  },
+  timeButtonLabel: {
+    fontSize: 15,
+    color: '#000',
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  timeButtonTime: {
+    fontSize: 13,
+    color: '#666',
+  },
+  timeButtonLabelSelected: {
+    color: '#fff',
+  },
+  selectedDateTime: {
+    backgroundColor: '#F8F8F8',
+    padding: 12,
+    borderRadius: 12,
+  },
+  selectedDateTimeLabel: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 4,
+  },
+  selectedDateTimeValue: {
+    fontSize: 15,
+    color: '#000',
+    fontWeight: '500',
+  },
+  loopToggleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F2F2F7',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginTop: 16,
+    marginLeft: 16,
+    gap: 6,
+  },
+  loopToggleText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E5EA',
+    marginVertical: 16,
+  },
+  targetSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F8F8F8',
+    padding: 16,
+    borderRadius: 12,
+  },
+  targetSelectorOpen: {
+    marginBottom: 12,
+  },
+  selectedTarget: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  selectedTargetText: {
+    fontSize: 15,
+    color: '#000',
+    fontWeight: '500',
+  },
+  targetPlaceholder: {
+    fontSize: 15,
+    color: '#666',
+  },
+  targetOptions: {
+    backgroundColor: '#F8F8F8',
+    borderRadius: 12,
+    padding: 8,
+  },
+  targetGroupLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#666',
+    marginVertical: 8,
+    paddingHorizontal: 8,
+  },
+  targetOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: 8,
+  },
+  targetOptionSelected: {
+    backgroundColor: '#E8F2FF',
+  },
+  targetOptionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  targetOptionText: {
+    fontSize: 15,
+    color: '#000',
   },
 }); 

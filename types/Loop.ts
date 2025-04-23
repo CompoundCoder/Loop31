@@ -37,4 +37,10 @@ export interface Loop {
     avoidRecent?: boolean;
     preferImages?: boolean;
   };
+}
+
+export interface PostAnalytics {
+  views: number;
+  likes: number;
+  comments: number;
 } 

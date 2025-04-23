@@ -4,6 +4,7 @@ export interface ScheduledPost {
   mediaUri: string;
   createdAt: string;
   scheduledDate?: string;  // Optional for drafts
+  loopId?: string;        // ID of the loop this post is scheduled for
 }
 
 export interface ScheduleSettings {

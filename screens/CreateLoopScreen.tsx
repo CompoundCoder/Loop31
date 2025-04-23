@@ -272,54 +272,29 @@ export default function CreateLoopScreen({ navigation, route }: Props) {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Media Preferences</Text>
-          
-          <View style={styles.settingItem}>
-            <View style={styles.settingLabel}>
-              <Text style={styles.settingText}>Shuffle Posts Randomly</Text>
-            </View>
+          <View style={styles.settingRow}>
+            <Text style={styles.settingLabel}>Shuffle Posts Randomly</Text>
             <Switch
               value={mediaSettings.shuffle}
               onValueChange={(value) => setMediaSettings(prev => ({ ...prev, shuffle: value }))}
-              trackColor={{ false: '#E5E5EA', true: '#E8F2FF' }}
-              thumbColor={mediaSettings.shuffle ? '#007AFF' : '#FFF'}
             />
           </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.settingItem}>
-            <View style={styles.settingLabel}>
-              <Text style={styles.settingText}>Avoid Repeating Recent Posts</Text>
-            </View>
+          <View style={styles.settingRow}>
+            <Text style={styles.settingLabel}>Avoid Repeating Recent Posts</Text>
             <Switch
               value={mediaSettings.avoidRecent}
               onValueChange={(value) => setMediaSettings(prev => ({ ...prev, avoidRecent: value }))}
-              trackColor={{ false: '#E5E5EA', true: '#E8F2FF' }}
-              thumbColor={mediaSettings.avoidRecent ? '#007AFF' : '#FFF'}
             />
           </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.settingItem}>
-            <View style={styles.settingLabel}>
-              <Text style={styles.settingText}>Prefer Posts with Images</Text>
-            </View>
+          <View style={styles.settingRow}>
+            <Text style={styles.settingLabel}>Prefer Posts with Images</Text>
             <Switch
               value={mediaSettings.preferImages}
               onValueChange={(value) => setMediaSettings(prev => ({ ...prev, preferImages: value }))}
-              trackColor={{ false: '#E5E5EA', true: '#E8F2FF' }}
-              thumbColor={mediaSettings.preferImages ? '#007AFF' : '#FFF'}
             />
           </View>
-
-          <Text style={styles.settingDescription}>
-            Posts will rotate based on your preferences
-          </Text>
         </View>
-      </ScrollView>
 
-      <View style={styles.footer}>
         <TouchableOpacity
           style={styles.saveButton}
           onPress={handleSave}
@@ -328,7 +303,7 @@ export default function CreateLoopScreen({ navigation, route }: Props) {
             {isEditing ? 'Save Changes' : 'Create Loop'}
           </Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -472,18 +447,19 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#000',
   },
-  settingItem: {
+  settingRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   settingLabel: {
+    fontSize: 16,
+    color: '#333',
     flex: 1,
     marginRight: 16,
-  },
-  settingText: {
-    fontSize: 15,
   },
   settingDescription: {
     fontSize: 13,

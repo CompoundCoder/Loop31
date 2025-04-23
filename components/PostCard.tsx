@@ -3,7 +3,7 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 
-export type PostStatus = 'draft' | 'scheduled' | 'sent';
+export type PostStatus = 'scheduled' | 'draft' | 'deleted';
 
 type Platform = {
   id: string;
@@ -13,25 +13,23 @@ type Platform = {
 };
 
 interface PostAnalytics {
+  views: number;
   likes: number;
   comments: number;
-  shares: number;
-  impressions: number;
-  engagement: number;
 }
 
 interface PostCardProps {
-  mediaUri: string;
+  mediaUri?: string;
   caption: string;
   platforms: Platform[];
   date: Date;
   status: PostStatus;
   analytics?: PostAnalytics;
+  onPost?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
-  onSchedule?: () => void;
-  onShare?: () => void;
-  onPost?: () => void;
+  onRestore?: () => void;
+  deletedAt?: Date;
 }
 
 const MAX_CAPTION_LENGTH = 100;
@@ -43,11 +41,11 @@ export default function PostCard({
   date, 
   status,
   analytics,
+  onPost,
   onEdit,
   onDelete,
-  onSchedule,
-  onShare,
-  onPost
+  onRestore,
+  deletedAt,
 }: PostCardProps) {
   const truncatedCaption = caption.length > MAX_CAPTION_LENGTH 
     ? `${caption.substring(0, MAX_CAPTION_LENGTH)}...` 
@@ -71,80 +69,38 @@ export default function PostCard({
     ));
   };
 
-  const renderActionButtons = () => {
-    switch (status) {
-      case 'draft':
-        return (
-          <View style={styles.actions}>
-            <TouchableOpacity style={styles.actionButton} onPress={onSchedule}>
-              <Ionicons name="calendar-outline" size={20} color="#007AFF" />
-              <Text style={styles.actionText}>Schedule</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
-              <Ionicons name="create-outline" size={20} color="#34C759" />
-              <Text style={styles.actionText}>Edit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton} onPress={onDelete}>
-              <Ionicons name="trash-outline" size={20} color="#FF3B30" />
-              <Text style={styles.actionText}>Delete</Text>
-            </TouchableOpacity>
-          </View>
-        );
-      case 'scheduled':
-        return (
-          <View style={styles.actions}>
-            <TouchableOpacity style={styles.actionButton} onPress={onPost}>
-              <Ionicons name="paper-plane-outline" size={20} color="#007AFF" />
-              <Text style={styles.actionText}>Post Now</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
-              <Ionicons name="create-outline" size={20} color="#34C759" />
-              <Text style={styles.actionText}>Edit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton} onPress={onDelete}>
-              <Ionicons name="trash-outline" size={20} color="#FF3B30" />
-              <Text style={styles.actionText}>Delete</Text>
-            </TouchableOpacity>
-          </View>
-        );
-      case 'sent':
-        return (
-          <View style={styles.actions}>
-            <TouchableOpacity style={styles.actionButton} onPress={onShare}>
-              <Ionicons name="share-outline" size={20} color="#007AFF" />
-              <Text style={styles.actionText}>Share</Text>
-            </TouchableOpacity>
-          </View>
-        );
+  const renderStatusText = () => {
+    if (status === 'deleted') {
+      return (
+        <Text style={styles.deletedText}>
+          Deleted {format(deletedAt || new Date(), 'MMM d')}
+        </Text>
+      );
     }
+
+    return (
+      <Text style={styles.date}>
+        {status === 'draft' ? 'Draft' : format(date, 'MMM d, h:mm a')}
+      </Text>
+    );
   };
 
   const renderAnalytics = () => {
-    if (!analytics || status !== 'sent') return null;
+    if (!analytics) return null;
 
     return (
       <View style={styles.analyticsContainer}>
-        <View style={styles.analyticsRow}>
-          <View style={styles.analyticsItem}>
-            <Text style={styles.analyticsValue}>{analytics.impressions.toLocaleString()}</Text>
-            <Text style={styles.analyticsLabel}>Impressions</Text>
-          </View>
-          <View style={styles.analyticsItem}>
-            <Text style={styles.analyticsValue}>{analytics.likes}</Text>
-            <Text style={styles.analyticsLabel}>Likes</Text>
-          </View>
-          <View style={styles.analyticsItem}>
-            <Text style={styles.analyticsValue}>{analytics.comments}</Text>
-            <Text style={styles.analyticsLabel}>Comments</Text>
-          </View>
-          <View style={styles.analyticsItem}>
-            <Text style={styles.analyticsValue}>{analytics.shares}</Text>
-            <Text style={styles.analyticsLabel}>Shares</Text>
-          </View>
-          <View style={styles.analyticsItem}>
-            <Text style={styles.analyticsValue}>{analytics.engagement}%</Text>
-            <Text style={styles.analyticsLabel}>Engagement</Text>
-          </View>
+        <View style={styles.analyticsItem}>
+          <Ionicons name="eye-outline" size={16} color="#666" />
+          <Text style={styles.analyticsText}>{analytics.views}</Text>
+        </View>
+        <View style={styles.analyticsItem}>
+          <Ionicons name="heart-outline" size={16} color="#666" />
+          <Text style={styles.analyticsText}>{analytics.likes}</Text>
+        </View>
+        <View style={styles.analyticsItem}>
+          <Ionicons name="chatbubble-outline" size={16} color="#666" />
+          <Text style={styles.analyticsText}>{analytics.comments}</Text>
         </View>
       </View>
     );
@@ -156,29 +112,63 @@ export default function PostCard({
         <View style={styles.platformIcons}>
           {renderPlatformIcons()}
         </View>
-        <Text style={styles.date}>
-          {status === 'sent' 
-            ? `Posted ${format(date, 'MMM d, yyyy')}`
-            : status === 'scheduled'
-              ? `Scheduled for ${format(date, 'MMM d, yyyy')} at ${format(date, 'h:mm a')}`
-              : `Last edited ${format(date, 'MMM d, yyyy')}`
-          }
-        </Text>
+        {renderStatusText()}
       </View>
 
       <View style={styles.mediaContainer}>
-        <Image 
-          source={{ uri: mediaUri }} 
-          style={styles.media}
-          resizeMode="cover"
-        />
+        {mediaUri ? (
+          <Image 
+            source={{ uri: mediaUri }} 
+            style={styles.media}
+            resizeMode="cover"
+            onError={() => console.warn(`Failed to load image: ${mediaUri}`)}
+            defaultSource={{ uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=' }}
+          />
+        ) : (
+          <View style={[styles.media, styles.mediaPlaceholder]}>
+            <Ionicons name="image-outline" size={32} color="#999" />
+            <Text style={styles.mediaPlaceholderText}>No Preview</Text>
+          </View>
+        )}
       </View>
 
       <Text style={styles.caption} numberOfLines={3}>
         {truncatedCaption}
       </Text>
 
-      {renderActionButtons()}
+      <View style={styles.actions}>
+        {status === 'deleted' ? (
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            onPress={onRestore}
+            accessibilityLabel="Restore Post"
+          >
+            <Ionicons name="arrow-undo-outline" size={18} color="#007AFF" />
+            <Text style={[styles.actionText, styles.restoreText]}>Restore</Text>
+          </TouchableOpacity>
+        ) : (
+          <>
+            {onPost && (
+              <TouchableOpacity style={styles.actionButton} onPress={onPost}>
+                <Ionicons name="paper-plane-outline" size={18} color="#666" />
+                <Text style={styles.actionText}>Post Now</Text>
+              </TouchableOpacity>
+            )}
+            {onEdit && (
+              <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
+                <Ionicons name="document-text-outline" size={18} color="#666" />
+                <Text style={styles.actionText}>Edit</Text>
+              </TouchableOpacity>
+            )}
+            {onDelete && (
+              <TouchableOpacity style={styles.actionButton} onPress={onDelete}>
+                <Ionicons name="trash-outline" size={18} color="#666" />
+                <Text style={styles.actionText}>Delete</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
+      </View>
       {renderAnalytics()}
     </View>
   );
@@ -241,6 +231,15 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: '#f9f9f9',
   },
+  mediaPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mediaPlaceholderText: {
+    marginTop: 8,
+    fontSize: 15,
+    color: '#999',
+  },
   caption: {
     fontSize: 15,
     color: '#333',
@@ -253,7 +252,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#f0f0f0',
     justifyContent: 'flex-end',
-    gap: 16,
+    gap: 8,
   },
   actionButton: {
     flexDirection: 'row',
@@ -266,27 +265,43 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   analyticsContainer: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  analyticsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 16,
   },
   analyticsItem: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
   },
-  analyticsValue: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#333',
-  },
-  analyticsLabel: {
-    fontSize: 12,
+  analyticsText: {
+    fontSize: 14,
     color: '#666',
-    marginTop: 2,
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  deletedText: {
+    fontSize: 13,
+    color: '#999',
+  },
+  restoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#F2F2F7',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+  },
+  restoreText: {
+    color: '#007AFF',
+  },
+  deleteButton: {
+    marginLeft: 'auto',
+    paddingLeft: 16,
   },
 });
