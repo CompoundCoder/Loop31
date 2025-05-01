@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { Animated, StyleSheet } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, StyleSheet, Text, Easing } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import type { ExtendedTheme } from '@/app/_layout';
@@ -186,7 +186,7 @@ const useWelcomeAnimation = () => {
       scale.setValue(1);
       pulseOpacity.setValue(1);
     };
-  }, []);
+  }, [opacity, scale, pulseOpacity]);
 
   return {
     opacity,
@@ -202,8 +202,32 @@ export default function WelcomeMessage({
   const theme = useTheme() as unknown as ExtendedTheme;
   const { spacing } = useThemeStyles();
   
+  // --- Add visibility state --- 
+  const [isVisible, setIsVisible] = useState(true);
+  
   // Use the combined animation hook
   const { opacity, scale, pulseOpacity } = useWelcomeAnimation();
+  
+  // --- Add timed fade-out logic --- 
+  useEffect(() => {
+    const fadeOutTimer = setTimeout(() => {
+      Animated.timing(opacity, {
+        toValue: 0, // Fade out
+        duration: 500, // Fade out duration
+        easing: Easing.in(Easing.ease), // Ease in for fade out
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        // Set invisible only after fade-out completes
+        if (finished) {
+          setIsVisible(false);
+        }
+      });
+    }, 6000); // 6 seconds delay
+
+    // Cleanup timer on unmount
+    return () => clearTimeout(fadeOutTimer);
+    
+  }, [opacity]); // Dependency on opacity Animated.Value
 
   const styles = StyleSheet.create({
     container: {
@@ -212,26 +236,33 @@ export default function WelcomeMessage({
       justifyContent: 'center',
     },
     text: {
-      fontSize: 28,
+      fontSize: 22,
       color: theme.colors.text,
       textAlign: 'center',
       fontWeight: '600',
     },
   });
 
+  // --- Conditional Rendering --- 
+  if (!isVisible) {
+    return null;
+  }
+
   return (
     <Animated.View 
       style={[
         styles.container,
         { 
-          opacity: Animated.multiply(opacity, pulseOpacity),
+          // Opacity is now controlled by both fade-in and timed fade-out
+          opacity: opacity, // Use opacity directly 
           transform: [{ scale }],
         },
       ]}
     >
-      <Animated.Text style={styles.text}>
+      {/* Text opacity is implicitly handled by parent opacity */}
+      <Text style={styles.text}>
         {getMessage(currentDate, specialMessage)}
-      </Animated.Text>
+      </Text>
     </Animated.View>
   );
 } 

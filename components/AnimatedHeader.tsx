@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { Animated, StyleSheet, View, Dimensions, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, View, Dimensions, Text } from 'react-native';
+import Reanimated, {
+  useSharedValue, 
+  useAnimatedStyle, 
+  interpolate, 
+  Extrapolation,
+} from 'react-native-reanimated';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DropdownMenu from '@/components/DropdownMenu';
@@ -16,7 +22,7 @@ export const HEADER_TOTAL_HEIGHT = MAIN_HEADER_HEIGHT + MINI_HEADER_HEIGHT;
 
 type AnimatedHeaderProps = {
   title: string;
-  scrollY: Animated.Value;
+  scrollY: Reanimated.SharedValue<number>;
   headerRightButton?: React.ReactNode;
   actionButton?: React.ReactNode;
   menuVisible?: boolean;
@@ -38,36 +44,45 @@ export default function AnimatedHeader({
   const headerBackgroundColor = colors.background;
 
   // Header background opacity animation
-  const headerBackgroundOpacity = scrollY.interpolate({
-    inputRange: [SCROLL_THRESHOLD, SCROLL_THRESHOLD + 40],
-    outputRange: [0, 1],
-    extrapolate: 'clamp',
+  const headerBackgroundAnimatedStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      scrollY.value,
+      [SCROLL_THRESHOLD, SCROLL_THRESHOLD + 40],
+      [0, 1],
+      Extrapolation.CLAMP
+    );
+    return { opacity };
   });
 
   // Main header content animations
-  const mainHeaderOpacity = scrollY.interpolate({
-    inputRange: [0, SCROLL_THRESHOLD],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
+  const mainHeaderContentAnimatedStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      scrollY.value,
+      [0, SCROLL_THRESHOLD],
+      [1, 0],
+      Extrapolation.CLAMP
+    );
+    const translateY = interpolate(
+      scrollY.value,
+      [0, SCROLL_THRESHOLD],
+      [0, -10],
+      Extrapolation.CLAMP
+    );
+    return { 
+      opacity,
+      transform: [{ translateY }],
+    };
   });
 
-  const mainHeaderTranslateY = scrollY.interpolate({
-    inputRange: [0, SCROLL_THRESHOLD],
-    outputRange: [0, -10],
-    extrapolate: 'clamp',
-  });
-
-  // Mini header content animations
-  const miniHeaderOpacity = scrollY.interpolate({
-    inputRange: [0, SCROLL_THRESHOLD],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
-  });
-
-  const miniHeaderTranslateY = scrollY.interpolate({
-    inputRange: [0, SCROLL_THRESHOLD],
-    outputRange: [0, -10],
-    extrapolate: 'clamp',
+  // Mini header content animations (Only opacity needed for container)
+  const miniHeaderContentAnimatedStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      scrollY.value,
+      [SCROLL_THRESHOLD, SCROLL_THRESHOLD + 40], // Matches background fade-in
+      [0, 1], // Fade in with background
+      Extrapolation.CLAMP
+    );
+    return { opacity };
   });
 
   const handleOptionSelect = (option: 'post' | 'loop') => {
@@ -83,41 +98,41 @@ export default function AnimatedHeader({
   return (
     <>
       {/* Extended Background Layer */}
-      <Animated.View
+      <Reanimated.View
         style={[
           styles.extendedBackground,
           {
             backgroundColor: headerBackgroundColor,
-            opacity: headerBackgroundOpacity,
             height: insets.top,
           },
+          headerBackgroundAnimatedStyle,
         ]}
       />
 
       {/* Header Background Layer */}
-      <Animated.View
+      <Reanimated.View
         style={[
           styles.headerBackground,
           {
             backgroundColor: headerBackgroundColor,
-            opacity: headerBackgroundOpacity,
             top: insets.top,
             height: MINI_HEADER_HEIGHT,
           },
+          headerBackgroundAnimatedStyle,
         ]}
       />
 
       {/* Mini Header Content Layer */}
-      <Animated.View
+      <Reanimated.View
         style={[
           styles.miniHeaderContent,
           {
-            opacity: headerBackgroundOpacity,
             top: insets.top,
           },
+          miniHeaderContentAnimatedStyle,
         ]}
       >
-        <Animated.Text
+        <Text 
           style={[
             styles.miniHeaderTitle,
             { color: colors.text },
@@ -125,8 +140,8 @@ export default function AnimatedHeader({
           numberOfLines={1}
         >
           {title}
-        </Animated.Text>
-      </Animated.View>
+        </Text>
+      </Reanimated.View>
 
       {/* Main Header */}
       <View
@@ -139,16 +154,13 @@ export default function AnimatedHeader({
           },
         ]}
       >
-        <Animated.View 
+        <Reanimated.View 
           style={[
             styles.mainHeaderContent,
-            { 
-              opacity: mainHeaderOpacity,
-              transform: [{ translateY: mainHeaderTranslateY }],
-            }
+            mainHeaderContentAnimatedStyle,
           ]}
         >
-          <Animated.Text
+          <Text 
             style={[
               styles.mainHeaderTitle,
               { color: colors.text },
@@ -156,8 +168,8 @@ export default function AnimatedHeader({
             numberOfLines={1}
           >
             {title}
-          </Animated.Text>
-        </Animated.View>
+          </Text>
+        </Reanimated.View>
         {headerRightButton && (
           <View
             style={{
@@ -173,18 +185,6 @@ export default function AnimatedHeader({
           </View>
         )}
       </View>
-
-      {/* Mini Header Background Layer */}
-      <Animated.View
-        style={[
-          styles.miniHeaderBackground,
-          {
-            opacity: miniHeaderOpacity,
-            backgroundColor: 'transparent',
-            transform: [{ translateY: miniHeaderTranslateY }],
-          },
-        ]}
-      />
 
       {actionButton && (
         <View
@@ -261,14 +261,5 @@ const styles = StyleSheet.create({
     fontSize: 34,
     fontWeight: '700',
     letterSpacing: 0.37,
-  },
-  miniHeaderBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: HEADER_TOTAL_HEIGHT,
-    backgroundColor: 'transparent',
-    zIndex: 2,
   },
 });

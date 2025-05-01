@@ -1,5 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Animated, View, StyleSheet, Easing, Text } from 'react-native';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
+import { Animated, View, StyleSheet, RefreshControl, ActivityIndicator, Text } from 'react-native';
+import Reanimated, {
+  FadeIn,
+  FadeOut,
+  Layout,
+  Easing,
+  useSharedValue,
+  useAnimatedScrollHandler,
+} from 'react-native-reanimated';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { useTheme } from '@react-navigation/native';
 import type { ExtendedTheme } from '@/app/_layout';
@@ -8,7 +16,6 @@ import AnimatedHeader, { MINI_HEADER_HEIGHT } from '@/components/AnimatedHeader'
 import SimpleButton from '@/components/SimpleButton';
 import SectionTitle from '@/components/SectionTitle';
 import MetricCard from '@/components/MetricCard';
-import ReminderCard from '@/components/ReminderCard';
 import WelcomeMessage from '@/components/WelcomeMessage';
 import FadeSlideInView from '@/components/FadeSlideInView';
 import TopPerformingPostsSection from '../components/home/TopPerformingPostsSection';
@@ -16,7 +23,6 @@ import { ScrollContainer } from '@/components/containers';
 import { SCREEN_LAYOUT } from '@/constants/layout';
 import { QUICK_INSIGHTS } from '@/data/mockInsights';
 import HeaderActionButton from '@/components/HeaderActionButton';
-import AnimatedCard from '@/components/AnimatedCard';
 import InsightsSection from '@/components/insights/InsightsSection';
 import InsightsCard from '@/components/insights/InsightsCard';
 import InsightMetric from '@/components/insights/InsightMetric';
@@ -26,79 +32,44 @@ import QuickInsightsSection from '@/components/QuickInsightsSection';
 import InsightStackSection from '@/components/InsightStackSection';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import SectionHeader from '@/components/SectionHeader';
+import { NotificationStackInline } from '@/components/notifications/NotificationStackInline';
+import { NotificationStackFeed } from '@/components/notifications/NotificationStackFeed';
+import { useNotifications } from '@/modules/notifications';
+import { AppleInsightsSection } from '@/components/insights_apple/AppleInsightsSection';
 
-const generateId = () => Math.random().toString(36).substring(2, 10);
-
-// Mock data for insights
-const INSIGHTS = [
-  {
-    label: 'Followers',
-    value: '1,234',
-    icon: <Ionicons name="people-outline" size={20} color="#008AFF" />,
-    trend: 'up' as 'up',
-    color: '#008AFF',
-  },
-  {
-    label: 'Engagement',
-    value: '567',
-    icon: <Ionicons name="chatbubble-ellipses-outline" size={20} color="#34C759" />,
-    trend: 'down' as 'down',
-    color: '#34C759',
-  },
-  {
-    label: 'Growth',
-    value: '+12%',
-    icon: <Ionicons name="trending-up-outline" size={20} color="#FF9500" />,
-    trend: 'up' as 'up',
-    color: '#FF9500',
-  },
-];
+// --- Define the type for FlatList items --- 
+interface HomeScreenItem {
+  id: string;
+  type: 
+    | 'welcome' 
+    | 'inlineNotifications' 
+    | 'topPostsHeader' 
+    | 'topPostsLoading'
+    | 'topPostsError'
+    | 'topPosts' 
+    | 'feedNotifications' 
+    | 'insightsHeader' 
+    | 'insightsLoading'
+    | 'insightsError'
+    | 'appleInsights';
+  // Optional props for headers/errors
+  title?: string; 
+  subtitle?: string;
+  error?: Error | null;
+}
 
 export default function HomeScreen() {
   const { colors, spacing, borderRadius } = useThemeStyles();
   const theme = useTheme() as unknown as ExtendedTheme;
-  const scrollY = useRef(new Animated.Value(0)).current;
+  const scrollY = useSharedValue(0);
   const [refreshing, setRefreshing] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
-  const [dismissing, setDismissing] = useState(false);
-  const [collapseLast, setCollapseLast] = useState(false);
 
-  // Centralized analytics data (mock, ready for API integration)
-  const analytics = {
-    growthPercent: 12.6,
-    newLikes: 142,
-    newFollowers: 89,
-    newComments: 24,
-    newDMs: 7,
-  };
+  const { notifications, dismissNotification } = useNotifications();
 
-  // Reminders array state
-  const [reminders, setReminders] = useState([
-    {
-      id: generateId(),
-      title: 'Time to Post!',
-      message: "You haven't posted in 3 days. Stay active for better reach.",
-      icon: 'clock-alert-outline',
-      accentColor: theme.colors.accent,
-      actionLabel: 'Schedule a post',
-    },
-    {
-      id: generateId(),
-      title: 'Try a New Loop',
-      message: 'Loops help you organize your content. Create one now!',
-      icon: 'repeat',
-      accentColor: '#4ECDC4',
-      actionLabel: 'Create Loop',
-    },
-    {
-      id: generateId(),
-      title: 'Check Your Analytics',
-      message: 'See how your posts are performing this week.',
-      icon: 'chart-bar',
-      accentColor: '#2196F3',
-      actionLabel: 'View Analytics',
-    },
-  ]);
+  const handleInlineDismiss = useCallback((id: string) => {
+    dismissNotification(id);
+  }, [dismissNotification]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -109,68 +80,140 @@ export default function HomeScreen() {
     setMenuVisible(prev => !prev);
   };
 
-  // Dismiss handler for each card
-  const handleDismissReminder = (id: string) => {
-    if (reminders.length === 1) {
-      setCollapseLast(true);
-    } else {
-      setDismissing(true);
+  // --- Generate data for FlatList --- 
+  const listData = useMemo(() => {
+    const items: HomeScreenItem[] = [];
+
+    // 1. Welcome Message
+    items.push({ id: 'welcome', type: 'welcome' });
+
+    // 2. Inline Notifications (Conditionally)
+    const inlineNotifications = notifications.filter(n => n.displayTarget === 'inline');
+    if (inlineNotifications.length > 0) {
+      items.push({ id: 'inlineNotifications', type: 'inlineNotifications' });
     }
-  };
 
-  const handleCardAnimationEnd = (id: string) => {
-    setReminders(reminders => reminders.filter(r => r.id !== id));
-    setDismissing(false);
-    setCollapseLast(false);
-  };
+    // 3. Top Posts Section (Header + Content/Loading/Error)
+    items.push({ 
+      id: 'topPostsHeader', 
+      type: 'topPostsHeader', 
+      title: 'Top Performing Posts', 
+      subtitle: 'Your best content this week' 
+    });
+    items.push({ id: 'topPosts', type: 'topPosts' });
 
-  const themeColors = lightTheme.colors;
+    // 4. Feed Notifications (Conditionally)
+    const feedNotificationsData = notifications.filter(n => n.displayTarget === 'mainFeed');
+    if (feedNotificationsData.length > 0) {
+      items.push({ id: 'feedNotifications', type: 'feedNotifications' });
+    }
 
-  // Modular insight cards data
-  const insightCards = [
-    {
-      icon: <MaterialCommunityIcons name="sprout" size={28} color="#34C759" />,
-      label: 'Growth',
-      value: '+12.6%',
-      trend: '+12.6%',
-      trendColor: themeColors.success || '#34C759',
-    },
-    {
-      icon: <MaterialCommunityIcons name="account-plus-outline" size={22} color="#008AFF" />,
-      label: 'New Followers',
-      value: '89',
-      trend: '+5.4%',
-      trendColor: themeColors.success || '#34C759',
-    },
-    {
-      icon: <MaterialCommunityIcons name="eye-outline" size={22} color="#FF6B6B" />,
-      label: 'Reach',
-      value: '12.8K',
-      trend: '+9.1%',
-      trendColor: themeColors.success || '#34C759',
-    },
-    {
-      icon: <MaterialCommunityIcons name="heart-outline" size={22} color="#FF69B4" />,
-      label: 'Likes',
-      value: '324',
-      trend: '+2.3%',
-      trendColor: themeColors.success || '#34C759',
-    },
-    {
-      icon: <MaterialCommunityIcons name="comment-outline" size={22} color="#3B82F6" />,
-      label: 'Comments',
-      value: '87',
-      trend: '-0.8%',
-      trendColor: colors.text + '99',
-    },
-    {
-      icon: <Feather name="send" size={22} color="#A259FF" />,
-      label: 'DMs',
-      value: '14',
-      trend: '+1.2%',
-      trendColor: themeColors.success || '#34C759',
-    },
-  ];
+    // 5. Insights Section (Header + Content/Loading/Error)
+    items.push({ 
+      id: 'insightsHeader', 
+      type: 'insightsHeader', 
+      title: 'Quick Insights', 
+      subtitle: 'Stay inspired, check out your latest results' 
+    });
+    items.push({ id: 'appleInsights', type: 'appleInsights' });
+
+    return items;
+  }, [notifications]); // Current dependency
+
+  // --- Define renderItem function for FlatList --- 
+  const renderItem = useCallback(({ item }: { item: HomeScreenItem }) => {
+    const itemStyle = [{ marginBottom: spacing.lg }];
+
+    switch (item.type) {
+      case 'welcome':
+        return (
+          <View style={itemStyle}>
+            <WelcomeMessage />
+          </View>
+        );
+      case 'inlineNotifications':
+        return (
+          <View style={itemStyle}>
+            <NotificationStackInline 
+              notifications={notifications} 
+              onDismiss={handleInlineDismiss} 
+            />
+          </View>
+        );
+      case 'topPostsHeader':
+        if (!item.title) return null;
+        return (
+          <View style={{ marginBottom: spacing.sm }}>
+            <SectionHeader title={item.title} subtitle={item.subtitle || ''} />
+          </View>
+        );
+      case 'topPostsLoading':
+        return (
+          <View style={[itemStyle, { alignItems: 'center', justifyContent: 'center', height: 100 }]}> 
+            <ActivityIndicator />
+          </View>
+        );
+      case 'topPostsError':
+        return (
+          <View style={itemStyle}>
+            <Text style={{ color: colors.text, textAlign: 'center' }}>
+              Error loading top posts. {item.error?.message}
+            </Text>
+            {/* TODO: Add retry button? */}
+          </View>
+        );
+      case 'topPosts':
+        return (
+          <View style={{ marginBottom: spacing.md }}>
+            <TopPerformingPostsSection />
+          </View>
+        );
+      case 'feedNotifications':
+        return (
+          <View style={itemStyle}>
+            <NotificationStackFeed 
+              notifications={notifications} 
+              onDismiss={handleInlineDismiss} 
+            />
+          </View>
+        );
+      case 'insightsHeader':
+        if (!item.title) return null;
+        return (
+          <View style={{ marginBottom: spacing.sm }}>
+            <SectionHeader title={item.title} subtitle={item.subtitle || ''} />
+          </View>
+        );
+      case 'insightsLoading':
+        return (
+          <View style={[itemStyle, { alignItems: 'center', justifyContent: 'center', height: 150 }]}> 
+            <ActivityIndicator />
+          </View>
+        );
+      case 'insightsError':
+        return (
+          <View style={itemStyle}>
+            <Text style={{ color: colors.text, textAlign: 'center' }}>
+              Error loading insights. {item.error?.message}
+            </Text>
+            {/* TODO: Add retry button? */}
+          </View>
+        );
+      case 'appleInsights':
+        return (
+          <View>
+            <AppleInsightsSection />
+          </View>
+        ); 
+      default:
+        return null;
+    }
+  }, [spacing, notifications, handleInlineDismiss, colors.text]);
+
+  // --- Create Reanimated scroll handler ---
+  const scrollHandler = useAnimatedScrollHandler((event) => {
+    scrollY.value = event.contentOffset.y;
+  });
 
   return (
     <ScreenContainer>
@@ -181,62 +224,29 @@ export default function HomeScreen() {
         onMenuVisibleChange={setMenuVisible}
         actionButton={<HeaderActionButton iconName="add-outline" onPress={handleHeaderActionPress} />}
       />
-      <ScrollContainer
-        scrollY={scrollY}
-        refreshing={refreshing}
-        onRefresh={handleRefresh}
+      <Reanimated.FlatList
+        data={listData}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        itemLayoutAnimation={Layout.duration(450).easing(Easing.inOut(Easing.cubic))}
+        onScroll={scrollHandler}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
         contentContainerStyle={{
           paddingTop: MINI_HEADER_HEIGHT + 16,
           paddingHorizontal: SCREEN_LAYOUT.content.horizontalPadding,
+          paddingBottom: spacing.lg,
         }}
-      >
-        {/* Welcome Message */}
-        <View style={{ marginBottom: SCREEN_LAYOUT.content.sectionSpacing }}>
-          <FadeSlideInView index={0}>
-            <WelcomeMessage />
-          </FadeSlideInView>
-        </View>
-
-        {/* Reminders (Single card, collapse only on last) */}
-        <View style={{ marginBottom: SCREEN_LAYOUT.content.sectionSpacing, minHeight: 1 }}>
-          <FadeSlideInView index={1}>
-            {reminders.length > 0 && (
-              <AnimatedCard
-                visible={!(dismissing || collapseLast)}
-                onDismiss={() => handleCardAnimationEnd(reminders[0].id)}
-                duration={400}
-                collapse={collapseLast}
-              >
-                <ReminderCard
-                  key={reminders[0].id}
-                  title={reminders[0].title}
-                  message={reminders[0].message}
-                  icon={reminders[0].icon as any}
-                  accentColor={reminders[0].accentColor}
-                  actionLabel={reminders[0].actionLabel}
-                  onPress={() => {/* Handle schedule action */}}
-                  onDismiss={() => handleDismissReminder(reminders[0].id)}
-                />
-              </AnimatedCard>
-            )}
-          </FadeSlideInView>
-        </View>
-
-        {/* Top Performing Posts */}
-        <SectionHeader title="Top Performing Posts" subtitle="Your best content this week" />
-        <TopPerformingPostsSection />
-
-        {/* Quick Insights (modular stack) */}
-        <SectionHeader title="Quick Insights" subtitle="Stay inspired, check out your latest results" />
-        <InsightStackSection cards={insightCards} />
-      </ScrollContainer>
+        extraData={{ notifications }}
+      />
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  topPostContainer: {
-    overflow: 'hidden',
-  },
+  // topPostContainer: {
+  //   overflow: 'hidden',
+  // },
 });
  

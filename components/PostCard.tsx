@@ -13,6 +13,7 @@ import {
   Easing,
 } from 'react-native';
 import { useTheme } from '@react-navigation/native';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -70,10 +71,6 @@ type PostCardProps = {
    */
   borderRadius?: number;
   /**
-   * Optional shadow intensity (0-1)
-   */
-  shadowIntensity?: number;
-  /**
    * Whether to show the loop badge (defaults to true)
    */
   showLoopBadge?: boolean;
@@ -89,10 +86,10 @@ function PostCard({
   dateStyle,
   backgroundColor,
   borderRadius,
-  shadowIntensity = 0.1,
   showLoopBadge = true,
 }: PostCardProps) {
   const theme = useTheme() as unknown as ExtendedTheme;
+  const { elevation } = useThemeStyles();
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -102,19 +99,6 @@ function PostCard({
       useNativeDriver: true,
     }).start();
   }, []);
-
-  // Get elevation/shadow based on platform
-  const getElevation = () => Platform.select({
-    ios: {
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.06,
-      shadowRadius: 4,
-    },
-    android: {
-      elevation: 2,
-    },
-  });
 
   const cardBorderRadius = borderRadius || theme.borderRadius.md || 16;
   const cardBackground = backgroundColor || (theme.dark ? '#1C1C1E' : '#FFFFFF');
@@ -214,71 +198,54 @@ function PostCard({
 
   return (
     <Animated.View style={{ opacity }}>
-      <Pressable
+      <Pressable 
+        onPress={onPress} 
         style={({ pressed }) => [
           styles.container,
           {
-            opacity: pressed ? 0.9 : 1,
-            backgroundColor: cardBackground,
             borderRadius: cardBorderRadius,
-            // Subtle Apple-style shadow
-            ...Platform.select({
-              ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.05,
-                shadowRadius: 2,
-              },
-              android: {
-                elevation: 2,
-              },
-            }),
+            backgroundColor: cardBackground,
+            opacity: pressed ? 0.85 : 1,
           },
+          elevation,
           containerStyle,
         ]}
-        onPress={onPress}
+        disabled={isLoading}
       >
-        {/* Full-bleed Media */}
-        <View style={{ overflow: 'hidden', borderTopLeftRadius: cardBorderRadius, borderTopRightRadius: cardBorderRadius }}>
-          {renderMedia()}
-        </View>
-        {/* Minimalist Text Section */}
-        <View style={{ paddingHorizontal: 20, paddingVertical: 18 }}>
-          <Text
-            style={{
-              color: theme.colors.text,
-              fontSize: 18,
-              fontWeight: '600',
-              marginBottom: 6,
-              letterSpacing: 0.1,
-            }}
+        {renderMedia()}
+
+        <View style={styles.contentArea}>
+          <Text 
+            style={[
+              styles.caption,
+              { color: theme.colors.text },
+              captionStyle
+            ]}
             numberOfLines={3}
+            ellipsizeMode="tail"
           >
             {post.caption}
           </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text
-              style={{
-                color: theme.colors.text,
-                fontSize: 14,
-                opacity: 0.65,
-                fontWeight: '400',
-              }}
-              numberOfLines={1}
-            >
+
+          <View style={styles.metadataRow}>
+            <Text style={[
+              styles.dateText,
+              {
+                color: theme.dark ? theme.colors.border : theme.colors.text + '99',
+              },
+              dateStyle
+            ]}>
               {formatDate(post.createdAt, post.status)}
             </Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              {post.accountTargets.map((platform, index) => (
+
+            <View style={styles.platformIconsContainer}>
+              {post.accountTargets?.map(platform => (
                 <MaterialCommunityIcons
                   key={platform}
-                  name={PLATFORM_ICONS[platform] as any}
-                  size={13}
-                  color={theme.colors.text}
-                  style={{
-                    marginLeft: index > 0 ? 8 : 0,
-                    opacity: 0.65,
-                  }}
+                  name={(PLATFORM_ICONS[platform] || 'help-circle') as any} 
+                  size={16}
+                  color={theme.dark ? theme.colors.border : theme.colors.text + '99'}
+                  style={{ marginLeft: theme.spacing.xs }}
                 />
               ))}
             </View>
@@ -357,5 +324,23 @@ const styles = StyleSheet.create({
   skeletonIcon: {
     height: 16,
     width: 16,
+  },
+  contentArea: {
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+  },
+  metadataRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dateText: {
+    fontSize: 14,
+    opacity: 0.65,
+    fontWeight: '400',
+  },
+  platformIconsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 }); 

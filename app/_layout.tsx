@@ -6,7 +6,7 @@ import type { Theme as NavigationTheme } from '@react-navigation/native';
 import TabNavigator from './tabs';
 import { lightTheme, darkTheme } from '../theme/theme';
 import { useColorScheme } from 'react-native';
-import { NotificationProvider } from '../components/NotificationStack';
+import { NotificationProvider } from '@/modules/notifications';
 
 // Extend the base theme type with our custom properties
 export interface ExtendedTheme extends NavigationTheme {

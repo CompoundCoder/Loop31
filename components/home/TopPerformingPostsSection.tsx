@@ -1,5 +1,14 @@
-import React, { useRef, useEffect } from 'react';
-import { View, ViewStyle, StyleProp, Dimensions, Animated, Platform } from 'react-native';
+import React, { useRef, useEffect, useCallback } from 'react';
+import { View, ViewStyle, StyleProp, Dimensions, Platform } from 'react-native';
+import Reanimated, {
+  useSharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  withSequence,
+  runOnJS,
+} from 'react-native-reanimated';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { useTheme } from '@react-navigation/native';
 import SectionTitle from '@/components/SectionTitle';
@@ -55,71 +64,79 @@ export default function TopPerformingPostsSection({
 }: TopPerformingPostsSectionProps) {
   const { spacing } = useThemeStyles();
   const theme = useTheme() as ExtendedTheme;
-  const scrollX = useRef(new Animated.Value(0)).current;
-  const scrollViewRef = useRef<Animated.FlatList>(null);
+
+  // Use Reanimated Shared Values
+  const scrollX = useSharedValue(0);
+  const scrollHintX = useSharedValue(0);
+  
+  // Ref for the FlatList (Update type)
+  const scrollViewRef = useRef<Reanimated.FlatList<Post>>(null);
   const hasScrolled = useRef(false);
-  const scrollHintX = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    // Wait 2 seconds, then show the scroll hint
-    const timer = setTimeout(() => {
-      if (!hasScrolled.current && scrollViewRef.current) {
-        // Swipe left hint animation
-        Animated.sequence([
-          // Swipe left
-          Animated.timing(scrollHintX, {
-            toValue: -30,
-            duration: 900,
-            useNativeDriver: true,
-          }),
-          // Bounce back
-          Animated.spring(scrollHintX, {
-            toValue: 0,
-            useNativeDriver: true,
-            friction: 10,
-            tension: 50,
-          }),
-        ]).start();
-      }
-    }, 2000);
-
-    return () => clearTimeout(timer);
+  // Function to set hasScrolled on JS thread
+  const setHasScrolled = useCallback(() => {
+    hasScrolled.current = true;
   }, []);
 
-  const handleScroll = Animated.event(
-    [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-    { 
-      useNativeDriver: true,
-      listener: () => {
-        hasScrolled.current = true;
-      },
-    }
-  );
+  // Reanimated Scroll Handler
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollX.value = event.contentOffset.x;
+      // Update ref on JS thread using runOnJS
+      runOnJS(setHasScrolled)();
+    },
+  });
 
-  const renderItem = ({ item, index }: { item: Post; index: number }) => {
-    return (
-      <FadeSlideInView index={index}>
-        <Animated.View style={{ 
-          width: cardWidth,
-          marginRight: cardSpacing,
-          transform: [{ translateX: scrollHintX }],
-        }}>
-          <PostCard
-            post={item}
-            onPress={() => {/* Handle post press */}}
-            showLoopBadge={false}
-            shadowIntensity={0.1}
-          />
-        </Animated.View>
-      </FadeSlideInView>
-    );
-  };
+  // Hint Animation Logic
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!hasScrolled.current && scrollViewRef.current) {
+        // Use Reanimated sequence
+        scrollHintX.value = withSequence(
+          withTiming(-30, { duration: 900 }),
+          // Use Reanimated v2/v3 spring config
+          withSpring(0, { 
+            damping: 15, // Adjust damping for desired bounce
+            stiffness: 120, // Adjust stiffness for speed
+            // mass: 1, // Default is 1, usually fine
+          })
+        );
+      }
+    }, 2000);
+    return () => clearTimeout(timer);
+  // Keep dependencies minimal, scrollHintX changes don't trigger effect
+  }, []);
 
   // Calculate dimensions for snap scrolling
   const screenWidth = Dimensions.get('window').width;
   const horizontalPadding = SCREEN_LAYOUT.content.horizontalPadding;
   const cardSpacing = spacing.md;
   const cardWidth = screenWidth - (2 * horizontalPadding);
+
+  // Animated style for the hint
+  const hintAnimatedStyle = useAnimatedStyle(() => {
+    return { transform: [{ translateX: scrollHintX.value }] };
+  });
+
+  const renderItem = ({ item, index }: { item: Post; index: number }) => {
+    return (
+      <FadeSlideInView index={index}>
+        <Reanimated.View style={[
+          hintAnimatedStyle,
+          { 
+            width: cardWidth,
+            marginRight: cardSpacing,
+          }
+        ]}>
+          <PostCard
+            post={item}
+            onPress={() => {/* Handle post press */}}
+            showLoopBadge={false}
+          />
+        </Reanimated.View>
+      </FadeSlideInView>
+    );
+  };
 
   return (
     <View style={[
@@ -129,7 +146,7 @@ export default function TopPerformingPostsSection({
       },
       style,
     ]}>
-      <Animated.FlatList
+      <Reanimated.FlatList
         ref={scrollViewRef}
         horizontal
         data={mockTopPosts}
@@ -137,8 +154,7 @@ export default function TopPerformingPostsSection({
         snapToInterval={cardWidth + cardSpacing}
         snapToAlignment="start"
         decelerationRate="fast"
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
+        onScroll={scrollHandler}
         contentContainerStyle={{
           paddingHorizontal: horizontalPadding,
           paddingRight: screenWidth - cardWidth - horizontalPadding,
