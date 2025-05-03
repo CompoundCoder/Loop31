@@ -15,13 +15,11 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { NotificationCard } from './NotificationCard';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
-import type { NotificationItem } from '@/modules/notifications';
+import { NotificationItem, useNotifications } from '@/modules/notifications';
 
 // Removed LayoutAnimation setup
 
 interface NotificationStackInlineProps {
-  notifications: NotificationItem[];
-  onDismiss?: (id: string) => void;
   style?: ViewStyle;
 }
 
@@ -34,12 +32,13 @@ const TIMING = {
 } as const;
 
 export const NotificationStackInline: React.FC<NotificationStackInlineProps> = ({
-  notifications,
-  onDismiss,
   style,
 }) => {
   const { borderRadius } = useThemeStyles();
   const [visibleNotification, setVisibleNotification] = useState<NotificationItem | null>(null);
+  
+  // --- Get notifications and dismiss function from context --- 
+  const { notifications, dismissNotification } = useNotifications();
 
   // Reanimated Shared Values
   const opacity = useSharedValue(0); // Start transparent for entry animation
@@ -47,9 +46,9 @@ export const NotificationStackInline: React.FC<NotificationStackInlineProps> = (
 
   // Update visible notification and trigger entry animation
   useEffect(() => {
-    // Filter for inline notifications first
+    // Filter for inline notifications first (using notifications from context)
     const inlineNotifications = notifications.filter(
-      (item) => item.displayTarget === 'inline'
+      (item: NotificationItem) => item.displayTarget === 'inline'
     );
     // Take the first item from the *filtered* list
     const nextNotification = inlineNotifications.length > 0 ? inlineNotifications[0] : null;
@@ -91,13 +90,14 @@ export const NotificationStackInline: React.FC<NotificationStackInlineProps> = (
       duration: TIMING.EXIT_DURATION,
       easing: Easing.in(Easing.ease),
     }, (finished) => {
-      if (finished && onDismiss) {
-        runOnJS(onDismiss)(dismissedId);
+      if (finished) {
+        // Use dismissNotification from context
+        runOnJS(dismissNotification)(dismissedId);
         // Opacity/Scale will be reset by useEffect when next notification appears
       }
     });
 
-  }, [visibleNotification, onDismiss, opacity, scale]);
+  }, [visibleNotification, dismissNotification, opacity, scale]);
 
   // Animated style for the container
   const animatedStyle = useAnimatedStyle(() => {

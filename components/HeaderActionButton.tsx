@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, ViewStyle, AccessibilityRole } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
+import * as Haptics from 'expo-haptics';
 
 export type HeaderActionButtonProps = {
   iconName: string;
@@ -17,9 +18,15 @@ const HeaderActionButton: React.FC<HeaderActionButtonProps> = ({
   style,
 }) => {
   const { colors, spacing } = useThemeStyles();
+
+  const handlePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    onPress();
+  };
+
   return (
     <Pressable
-      onPress={onPress}
+      onPress={handlePress}
       accessibilityRole={"button" as AccessibilityRole}
       accessibilityLabel={accessibilityLabel}
       style={({ pressed }) => [

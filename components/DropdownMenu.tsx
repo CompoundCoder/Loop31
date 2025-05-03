@@ -95,6 +95,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ visible, onClose, onSelect,
               },
             ]}
             onPress={() => { onSelect('post'); onClose(); }}
+            accessibilityLabel="Create new post"
           >
             <Text style={{ color: colors.text, fontWeight: '600', fontSize: 16 }}>Create Post</Text>
           </Pressable>
@@ -109,6 +110,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ visible, onClose, onSelect,
               },
             ]}
             onPress={() => { onSelect('loop'); onClose(); }}
+            accessibilityLabel="Create new loop"
           >
             <Text style={{ color: colors.text, fontWeight: '600', fontSize: 16 }}>New Loop</Text>
           </Pressable>

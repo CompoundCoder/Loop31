@@ -130,13 +130,19 @@ export const NotificationCard = ({
 
       {showDismissButton && onDismiss && (
         <TouchableOpacity
-          style={styles.dismissButton}
+          style={[
+            styles.dismissButton,
+            {
+              top: size === 'sm' ? 6 : size === 'lg' ? 12 : 10,
+              right: size === 'sm' ? 6 : size === 'lg' ? 12 : 10,
+            }
+          ]}
           onPress={onDismiss}
           hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
         >
           <MaterialCommunityIcons
             name="close"
-            size={sizeStyles.iconSize - 4}
+            size={20}
             color={colors.text + '66'}
           />
         </TouchableOpacity>
@@ -179,7 +185,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   dismissButton: {
-    marginLeft: 12,
-    marginTop: 2,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
   },
 }); 

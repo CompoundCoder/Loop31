@@ -21,7 +21,7 @@ export function dispatchInitialNotifications(
     icon: 'lightbulb-on-outline',
     accentColor: '#FFB800',
     actionLabel: 'View Best Times',
-    size: 'md',
+    size: 'sm',
     displayTarget: 'inline',
   });
 
@@ -45,26 +45,28 @@ export function dispatchInitialNotifications(
     displayTarget: 'inline',
   });
 
-  // --- Add Notifications for the Main Feed --- 
+  // --- Add Notifications for Different Targets --- 
 
-  addNotification({
-    title: 'Weekly Performance Summary',
-    message: 'Last week saw a 15% increase in Audience Reach and a 5% rise in Engagement. Consider boosting your top post from last week to capitalize on this momentum. Remember to check detailed analytics for insights.',
-    icon: 'chart-line',
-    accentColor: '#007AFF', // iOS Blue
-    actionLabel: 'View Weekly Report',
-    size: 'lg', // Larger size for feed
-    displayTarget: 'mainFeed', 
-  });
-
+  // Notification for above Top Posts (medium size)
   addNotification({
     title: 'Account Security Recommendation',
-    message: 'We recommend enabling two-factor authentication (2FA) to enhance your account security. Protecting your account is crucial, especially as your audience grows.',
+    message: 'We recommend enabling two-factor authentication (2FA) to enhance your account security. Protecting your account is crucial.',
     icon: 'shield-lock-outline',
     accentColor: '#FF9500', // iOS Orange
     actionLabel: 'Enable 2FA',
-    size: 'lg', 
+    displayTarget: 'inlinePre',
+    size: 'sm',
+  });
+
+  // Notification for below Top Posts (large size)
+  addNotification({
+    title: 'Weekly Performance Summary',
+    message: 'Last week saw a 15% increase in Audience Reach and a 5% rise in Engagement. Consider boosting your top post...',
+    icon: 'chart-line',
+    accentColor: '#007AFF', // iOS Blue
+    actionLabel: 'View Weekly Report',
     displayTarget: 'mainFeed',
+    size: 'lg',
   });
 
   // Add more initial notification logic here...

@@ -1,3 +1,4 @@
+import 'react-native-gesture-handler';
 import { Stack } from 'expo-router';
 import { ThemeProvider } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
@@ -6,7 +7,10 @@ import type { Theme as NavigationTheme } from '@react-navigation/native';
 import TabNavigator from './tabs';
 import { lightTheme, darkTheme } from '../theme/theme';
 import { useColorScheme } from 'react-native';
-import { NotificationProvider } from '@/modules/notifications';
+import { NotificationProvider } from '../modules/notifications';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ToastStack } from '../components/notifications/ToastStack';
 
 // Extend the base theme type with our custom properties
 export interface ExtendedTheme extends NavigationTheme {
@@ -130,11 +134,20 @@ export default function RootLayout() {
   };
 
   return (
-    <ThemeProvider value={navigationTheme}>
-      <NotificationProvider>
-        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-        <TabNavigator />
-      </NotificationProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <ThemeProvider value={navigationTheme}>
+          <NotificationProvider>
+            {/* --- Render Inline Notifications Globally --- */}
+            {/* <NotificationStackInline /> */}
+            <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+            <TabNavigator />
+            
+            {/* --- Render Toast Notifications Globally --- */}
+            <ToastStack />
+          </NotificationProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

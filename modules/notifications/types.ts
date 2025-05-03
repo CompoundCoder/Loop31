@@ -23,7 +23,7 @@ export interface NotificationItem {
   /** Size variant of the card. Affects padding, font size, and line limits. */
   size?: NotificationSize;
   /** Target area where this notification should be displayed. */
-  displayTarget: 'inline' | 'mainFeed';
+  displayTarget: 'inline' | 'mainFeed' | 'toast' | 'inlinePre';
 }
 
 /**

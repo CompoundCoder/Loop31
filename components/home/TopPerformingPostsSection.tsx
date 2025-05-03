@@ -15,42 +15,8 @@ import SectionTitle from '@/components/SectionTitle';
 import PostCard from '@/components/PostCard';
 import FadeSlideInView from '@/components/FadeSlideInView';
 import { SCREEN_LAYOUT } from '@/constants/layout';
-import { Post } from '@/data/Post';
+import { Post, MOCK_POSTS } from '@/data/mockPosts';
 import type { ExtendedTheme } from '@/app/_layout';
-
-// Mock data for top performing posts
-const mockTopPosts = [
-  new Post({
-    id: 'top-1',
-    caption: 'Our latest product update is getting amazing engagement! 🚀 The new features have been a huge hit with our users.',
-    media: ['https://picsum.photos/800/600?random=1'],
-    accountTargets: ['instagram-main', 'linkedin-company'],
-    loopFolders: ['product-updates'],
-  }),
-  new Post({
-    id: 'top-2',
-    caption: 'Meet Sarah, our incredible lead designer! 👩‍💻 She shares her journey and insights on building successful design teams.',
-    media: ['https://picsum.photos/800/600?random=2'],
-    accountTargets: ['linkedin-company'],
-    loopFolders: ['team-culture'],
-  }),
-  new Post({
-    id: 'top-3',
-    caption: 'How we helped TechCorp increase their social engagement by 300% in just 3 months! Check out the full case study 📈',
-    media: ['https://picsum.photos/800/600?random=3'],
-    accountTargets: ['instagram-main', 'linkedin-company', 'facebook-page'],
-    loopFolders: ['customer-stories'],
-  }),
-];
-
-// Initialize all posts as published with different dates
-mockTopPosts.forEach((post, index) => {
-  post.markAsPublished();
-  // Set published dates: 5 days ago, 1 week ago, 2 weeks ago
-  const date = new Date();
-  date.setDate(date.getDate() - (index === 0 ? 5 : index === 1 ? 7 : 14));
-  post.createdAt = date.toISOString();
-});
 
 type TopPerformingPostsSectionProps = {
   /**
@@ -119,6 +85,41 @@ export default function TopPerformingPostsSection({
   });
 
   const renderItem = ({ item, index }: { item: Post; index: number }) => {
+    const adaptedPostData: any = {
+      id: item.id,
+      caption: item.caption,
+      imageUrl: item.imageUrl, 
+      media: item.imageUrl ? [item.imageUrl] : [], 
+      platforms: item.platforms, 
+      scheduledDate: null,
+      scheduledTimeOfDay: null,
+      accountTargets: [],
+      loopFolders: [],
+      status: 'draft' as ('draft' | 'scheduled' | 'published' | 'deleted'),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      publishedAt: null,
+      stats: { views: 0, likes: 0, comments: 0 }, 
+      markAsPublished: () => { console.warn('Attempted to call dummy markAsPublished'); },
+      markAsDraft: () => { console.warn('Attempted to call dummy markAsDraft'); },
+      _updateTimestamp: () => { console.warn('Attempted to call DUMMY _updateTimestamp'); },
+      updateCaption: (_caption: string) => { console.warn('Attempted to call dummy updateCaption'); },
+      addMedia: (_mediaUri: string) => { console.warn('Attempted to call dummy addMedia'); },
+      removeMedia: (_mediaUri: string) => { console.warn('Attempted to call dummy removeMedia'); },
+      addAccountTarget: (_target: string) => { console.warn('Attempted to call dummy addAccountTarget'); },
+      removeAccountTarget: (_target: string) => { console.warn('Attempted to call dummy removeAccountTarget'); },
+      schedule: null,
+      toJSON: () => { 
+        console.warn('Attempted to call dummy toJSON'); 
+        return { 
+          id: item.id, 
+          caption: item.caption, 
+          imageUrl: item.imageUrl, 
+          platforms: item.platforms 
+        };
+      }, 
+    };
+
     return (
       <FadeSlideInView index={index}>
         <Reanimated.View style={[
@@ -128,8 +129,9 @@ export default function TopPerformingPostsSection({
             marginRight: cardSpacing,
           }
         ]}>
+          {/* Pass the adapted data structure to PostCard */}
           <PostCard
-            post={item}
+            post={adaptedPostData} // <-- Use adapted data
             onPress={() => {/* Handle post press */}}
             showLoopBadge={false}
           />
@@ -149,7 +151,7 @@ export default function TopPerformingPostsSection({
       <Reanimated.FlatList
         ref={scrollViewRef}
         horizontal
-        data={mockTopPosts}
+        data={MOCK_POSTS}
         showsHorizontalScrollIndicator={false}
         snapToInterval={cardWidth + cardSpacing}
         snapToAlignment="start"

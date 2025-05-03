@@ -6,9 +6,8 @@ import Reanimated, {
   interpolate, 
   Extrapolation,
 } from 'react-native-reanimated';
-import { useThemeStyles } from '@/hooks/useThemeStyles';
+import { useThemeStyles } from '../hooks/useThemeStyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import DropdownMenu from '@/components/DropdownMenu';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -25,8 +24,6 @@ type AnimatedHeaderProps = {
   scrollY: Reanimated.SharedValue<number>;
   headerRightButton?: React.ReactNode;
   actionButton?: React.ReactNode;
-  menuVisible?: boolean;
-  onMenuVisibleChange?: (visible: boolean) => void;
 };
 
 export default function AnimatedHeader({ 
@@ -34,8 +31,6 @@ export default function AnimatedHeader({
   scrollY, 
   headerRightButton, 
   actionButton,
-  menuVisible = false,
-  onMenuVisibleChange,
 }: AnimatedHeaderProps) {
   const { colors, spacing } = useThemeStyles();
   const insets = useSafeAreaInsets();
@@ -84,16 +79,6 @@ export default function AnimatedHeader({
     );
     return { opacity };
   });
-
-  const handleOptionSelect = (option: 'post' | 'loop') => {
-    onMenuVisibleChange?.(false);
-    // TODO: Implement navigation or logic for each option
-    if (option === 'post') {
-      // Navigate or trigger create post logic
-    } else if (option === 'loop') {
-      // Navigate or trigger create loop logic
-    }
-  };
 
   return (
     <>
@@ -191,27 +176,11 @@ export default function AnimatedHeader({
           style={{
             position: 'absolute',
             right: spacing.lg,
-            top: insets.top + spacing.md - 4,
-            zIndex: 1000,
-            flexDirection: 'column',
-            alignItems: 'flex-end',
+            top: insets.top + (MINI_HEADER_HEIGHT / 2) - 16,
+            zIndex: 10,
           }}
         >
-          {React.cloneElement(actionButton as React.ReactElement, {
-            onPress: () => onMenuVisibleChange?.(!menuVisible),
-          })}
-          <DropdownMenu
-            visible={menuVisible}
-            onClose={() => onMenuVisibleChange?.(false)}
-            onSelect={(option) => {
-              handleOptionSelect(option);
-            }}
-            style={{
-              position: 'absolute',
-              top: 36,
-              right: 0,
-            }}
-          />
+          {actionButton}
         </View>
       )}
     </>

@@ -32,7 +32,6 @@ import QuickInsightsSection from '@/components/QuickInsightsSection';
 import InsightStackSection from '@/components/InsightStackSection';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import SectionHeader from '@/components/SectionHeader';
-import { NotificationStackInline } from '@/components/notifications/NotificationStackInline';
 import { NotificationStackFeed } from '@/components/notifications/NotificationStackFeed';
 import { useNotifications } from '@/modules/notifications';
 import { AppleInsightsSection } from '@/components/insights_apple/AppleInsightsSection';
@@ -42,12 +41,12 @@ interface HomeScreenItem {
   id: string;
   type: 
     | 'welcome' 
-    | 'inlineNotifications' 
+    | 'inlinePreNotifications'
     | 'topPostsHeader' 
     | 'topPostsLoading'
     | 'topPostsError'
     | 'topPosts' 
-    | 'feedNotifications' 
+    | 'feedNotifications'
     | 'insightsHeader' 
     | 'insightsLoading'
     | 'insightsError'
@@ -63,7 +62,6 @@ export default function HomeScreen() {
   const theme = useTheme() as unknown as ExtendedTheme;
   const scrollY = useSharedValue(0);
   const [refreshing, setRefreshing] = useState(false);
-  const [menuVisible, setMenuVisible] = useState(false);
 
   const { notifications, dismissNotification } = useNotifications();
 
@@ -76,10 +74,6 @@ export default function HomeScreen() {
     setTimeout(() => setRefreshing(false), 1000); // Mock refresh
   };
 
-  const handleHeaderActionPress = () => {
-    setMenuVisible(prev => !prev);
-  };
-
   // --- Generate data for FlatList --- 
   const listData = useMemo(() => {
     const items: HomeScreenItem[] = [];
@@ -87,13 +81,12 @@ export default function HomeScreen() {
     // 1. Welcome Message
     items.push({ id: 'welcome', type: 'welcome' });
 
-    // 2. Inline Notifications (Conditionally)
-    const inlineNotifications = notifications.filter(n => n.displayTarget === 'inline');
-    if (inlineNotifications.length > 0) {
-      items.push({ id: 'inlineNotifications', type: 'inlineNotifications' });
+    // 2. Inline Pre Notifications
+    if (notifications.some(n => n.displayTarget === 'inlinePre')) {
+      items.push({ id: 'inlinePreNotifications', type: 'inlinePreNotifications' });
     }
 
-    // 3. Top Posts Section (Header + Content/Loading/Error)
+    // 3. Top Posts Section
     items.push({ 
       id: 'topPostsHeader', 
       type: 'topPostsHeader', 
@@ -102,13 +95,12 @@ export default function HomeScreen() {
     });
     items.push({ id: 'topPosts', type: 'topPosts' });
 
-    // 4. Feed Notifications (Conditionally)
-    const feedNotificationsData = notifications.filter(n => n.displayTarget === 'mainFeed');
-    if (feedNotificationsData.length > 0) {
+    // 4. Main Feed Notifications
+    if (notifications.some(n => n.displayTarget === 'mainFeed')) {
       items.push({ id: 'feedNotifications', type: 'feedNotifications' });
     }
 
-    // 5. Insights Section (Header + Content/Loading/Error)
+    // 5. Insights Section
     items.push({ 
       id: 'insightsHeader', 
       type: 'insightsHeader', 
@@ -118,7 +110,7 @@ export default function HomeScreen() {
     items.push({ id: 'appleInsights', type: 'appleInsights' });
 
     return items;
-  }, [notifications]); // Current dependency
+  }, [notifications]);
 
   // --- Define renderItem function for FlatList --- 
   const renderItem = useCallback(({ item }: { item: HomeScreenItem }) => {
@@ -129,15 +121,6 @@ export default function HomeScreen() {
         return (
           <View style={itemStyle}>
             <WelcomeMessage />
-          </View>
-        );
-      case 'inlineNotifications':
-        return (
-          <View style={itemStyle}>
-            <NotificationStackInline 
-              notifications={notifications} 
-              onDismiss={handleInlineDismiss} 
-            />
           </View>
         );
       case 'topPostsHeader':
@@ -168,12 +151,23 @@ export default function HomeScreen() {
             <TopPerformingPostsSection />
           </View>
         );
+      case 'inlinePreNotifications':
+        return (
+          <View style={itemStyle}> 
+            <NotificationStackFeed 
+              notifications={notifications} 
+              onDismiss={handleInlineDismiss} 
+              target="inlinePre"
+            />
+          </View>
+        );
       case 'feedNotifications':
         return (
           <View style={itemStyle}>
             <NotificationStackFeed 
               notifications={notifications} 
               onDismiss={handleInlineDismiss} 
+              target="mainFeed"
             />
           </View>
         );
@@ -220,9 +214,6 @@ export default function HomeScreen() {
       <AnimatedHeader
         title="Home"
         scrollY={scrollY}
-        menuVisible={menuVisible}
-        onMenuVisibleChange={setMenuVisible}
-        actionButton={<HeaderActionButton iconName="add-outline" onPress={handleHeaderActionPress} />}
       />
       <Reanimated.FlatList
         data={listData}

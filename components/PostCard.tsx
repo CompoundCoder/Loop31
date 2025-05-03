@@ -123,12 +123,21 @@ function PostCard({
     return `Draft • ${formattedDate}`;
   };
 
-  // Full-bleed image with 1.91:1 aspect ratio and rounded corners
   const renderMedia = () => {
     const hasValidMedia = post.media?.length > 0 && post.media[0];
+    // const mediaContainerHeight = 170; // Remove fixed height
+
     if (!hasValidMedia) {
       return (
-        <View style={[styles.placeholderMedia, { backgroundColor: theme.colors.border, borderTopLeftRadius: cardBorderRadius, borderTopRightRadius: cardBorderRadius, aspectRatio: 1.91 }]}> 
+        // Use aspectRatio for placeholder
+        <View style={[styles.placeholderMedia, { 
+            backgroundColor: theme.colors.border, 
+            borderTopLeftRadius: cardBorderRadius, 
+            borderTopRightRadius: cardBorderRadius, 
+            // height: mediaContainerHeight, // Removed fixed height
+            aspectRatio: 7 / 5, // <-- Set 7:5 aspect ratio
+            width: '100%', 
+        }]}> 
           <MaterialCommunityIcons
             name="image-outline"
             size={32}
@@ -149,12 +158,22 @@ function PostCard({
       );
     }
     return (
-      <View style={{ position: 'relative', aspectRatio: 1.91, width: '100%', overflow: 'hidden', borderTopLeftRadius: cardBorderRadius, borderTopRightRadius: cardBorderRadius }}>
+      // Re-add aspectRatio, remove fixed height
+      <View style={{ 
+          position: 'relative', 
+          aspectRatio: 7 / 5, // <-- Set 7:5 aspect ratio
+          // height: mediaContainerHeight, // Removed fixed height
+          width: '100%', 
+          overflow: 'hidden', 
+          borderTopLeftRadius: cardBorderRadius, 
+          borderTopRightRadius: cardBorderRadius 
+      }}>
         <Image
           source={{ uri: post.media[0] }}
           style={[
             styles.mediaImage,
             {
+              // Keep radii, width/height 100% to fill container
               borderTopLeftRadius: cardBorderRadius,
               borderTopRightRadius: cardBorderRadius,
               width: '100%',
@@ -197,15 +216,17 @@ function PostCard({
   };
 
   return (
-    <Animated.View style={{ opacity }}>
+    // Remove height constraints from Animated.View and Pressable
+    <Animated.View style={{ opacity }}> 
       <Pressable 
         onPress={onPress} 
         style={({ pressed }) => [
-          styles.container,
+          styles.container, // Ensure flexDirection: column is still set here if needed (default)
           {
             borderRadius: cardBorderRadius,
             backgroundColor: cardBackground,
             opacity: pressed ? 0.85 : 1,
+            // height: '100%', // Removed fixed height
           },
           elevation,
           containerStyle,
@@ -214,11 +235,16 @@ function PostCard({
       >
         {renderMedia()}
 
+        {/* Remove fixed height from content area */}
         <View style={styles.contentArea}>
+          {/* Apply fixed height to caption Text */}
           <Text 
             style={[
               styles.caption,
-              { color: theme.colors.text },
+              { 
+                color: theme.colors.text,
+                height: 66, // <-- Apply fixed height (lineHeight * 3)
+              },
               captionStyle
             ]}
             numberOfLines={3}
@@ -227,6 +253,7 @@ function PostCard({
             {post.caption}
           </Text>
 
+          {/* Metadata row will now sit naturally below caption */}
           <View style={styles.metadataRow}>
             <Text style={[
               styles.dateText,
@@ -260,9 +287,8 @@ export default PostCard;
 
 const styles = StyleSheet.create({
   container: {
-    borderWidth: 0,
-    width: '100%',
     overflow: 'hidden',
+    // flexDirection: 'column', // Keep if needed, or remove if default is fine
   },
   mediaContainer: {
     height: 280,
@@ -297,6 +323,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 22,
     fontWeight: '400',
+    marginBottom: 8, // Keep margin below caption area before metadata
   },
   footer: {
     flexDirection: 'row',
@@ -326,13 +353,15 @@ const styles = StyleSheet.create({
     width: 16,
   },
   contentArea: {
-    paddingHorizontal: 20,
-    paddingVertical: 18,
+    padding: 12, 
+    // Remove justifyContent, height is determined by content now
+    // justifyContent: 'space-between', 
   },
   metadataRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    // marginTop: 8, // This margin might now be handled by caption's marginBottom
   },
   dateText: {
     fontSize: 14,
