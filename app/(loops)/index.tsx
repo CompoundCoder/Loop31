@@ -1,4 +1,4 @@
-import React, { useRef, useState, useMemo, useCallback, useReducer } from 'react';
+import React, { useRef, useState, useMemo, useCallback, useContext } from 'react';
 import {
   StyleSheet,
   View,
@@ -17,7 +17,8 @@ import type { ExtendedTheme } from '@/app/_layout';
 import Reanimated, { useSharedValue } from 'react-native-reanimated';
 import { FlashList } from "@shopify/flash-list";
 import * as Haptics from 'expo-haptics';
-import { useRouter } from 'expo-router';
+import { useRouter, useNavigation } from 'expo-router';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import AnimatedHeader, { MINI_HEADER_HEIGHT } from '@/components/AnimatedHeader';
 import EmptyState from '@/components/EmptyState';
@@ -48,6 +49,9 @@ import { MOCK_POSTS } from '@/data/mockPosts';
 
 import Popover from 'react-native-popover-view';
 
+// --- Import Loops Context Hook ---
+import { useLoops } from '@/context/LoopsContext'; 
+
 type LoopsScreenProps = {
   /**
    * Whether the screen is in a loading state
@@ -55,131 +59,68 @@ type LoopsScreenProps = {
   isLoading?: boolean;
 };
 
-// --- Define the type for LoopsScreen FlatList items --- 
+// Interface for Loop data USED BY THIS SCREEN's list items
+// (The main Loop interface is now defined in the context)
 interface LoopsScreenItem {
-  id: string; // Unique key for the item
+  id: string; 
   type: 
     | 'headerButton' 
-    | 'autoListingLoopSetup' // This type is unused now, but kept for interface stability
+    | 'autoListingLoopSetup'
     | 'autoListingLoopActive'
     | 'pinnedLoopsHeader'
     | 'pinnedLoopItem'
     | 'frequentLoopsHeader'
     | 'frequentLoopItem'
-    | 'discoverPacksHeader' // Renamed from loopPacksHeader
-    | 'discoverPacksCarousel'; // New type for the horizontal list container
-  // Optional data fields (expand later)
+    | 'discoverPacksHeader' 
+    | 'discoverPacksCarousel'; 
   title?: string;
   subtitle?: string;
-  loopId?: string; // Example for loop items
-  packId?: string; // Example for pack items
-  pack?: LoopPack; // Store pack data directly
-  loopData?: Loop; 
+  loopId?: string; 
+  packId?: string; 
+  pack?: LoopPack;
+  loopData?: import('@/context/LoopsContext').Loop; // Import Loop type from context
 }
 
 interface LoopPack {
   id: string;
   title: string;
   benefitSummary: string;
-  priceLabel: string; // e.g., "Free", "$9.99", "Included"
-  isLocked: boolean; // To determine button state/label
-  icon?: keyof typeof MaterialCommunityIcons.glyphMap; // Optional icon
-}
-
-// Re-add the Loop interface definition
-interface Loop {
-  id: string;
-  title: string;
-  color: string; 
-  postCount: number;
-  schedule: string; 
-  isActive: boolean; 
-  status?: 'active' | 'paused' | 'draft' | 'error'; 
-  previewImageUrl?: string; // Add optional preview image URL
-}
-
-// --- Interface for Pack Data (for carousel) --- 
-interface DiscoverPack {
-  id: string;
-  title: string;
-  previewImageUrl?: string;
-  isLocked: boolean;
-  priceLabel?: string; // Only needed if locked and paid?
+  priceLabel: string; 
+  isLocked: boolean; 
+  icon?: keyof typeof MaterialCommunityIcons.glyphMap; 
 }
 
 // --- Type for Selected Loop Data State (for modal) ---
+// (Still needed for local state)
 interface SelectedLoopState {
   id: string;
   title: string;
   isPinned: boolean;
 }
 
-// --- Reducer State and Actions --- 
-
-// State Shape
-interface LoopsState {
-  loops: Loop[];
-  pinnedLoopIds: Set<string>;
+// --- Interface for Pack Data (for carousel) ---
+// (Still needed for inline mock data)
+interface DiscoverPack {
+  id: string;
+  title: string;
+  previewImageUrl?: string;
+  isLocked: boolean;
+  priceLabel?: string; 
 }
 
-// Action Types (Discriminated Union)
-type LoopsAction = 
-  | { type: 'TOGGLE_ACTIVE'; payload: { loopId: string; isActive: boolean } }
-  | { type: 'PIN'; payload: string } // loopId
-  | { type: 'UNPIN'; payload: string } // loopId
-  | { type: 'DELETE'; payload: string } // loopId
-  | { type: 'SET_INITIAL_LOOPS'; payload: LoopsState['loops'] };
+// Removed Loop interface definition (moved to context)
+// Removed DiscoverPack interface definition (only used inline now)
+// Removed SelectedLoopState (still local state)
+// Removed LoopsState interface definition (moved to context)
+// Removed LoopsAction type definition (moved to context)
+// Removed initialMockLoopsData definition (moved to context)
+// Removed loopsReducer function (moved to context)
 
-// Add back the initialMockLoopsData definition
-const initialMockLoopsData: LoopsState['loops'] = [
-  { id: 'auto-listing', title: 'Auto-Listing Loop', color: '#888888', postCount: 0, schedule: 'Auto', isActive: false, status: 'paused', previewImageUrl: MOCK_POSTS[0 % MOCK_POSTS.length].imageUrl },
-  { id: 'p1', title: 'Core Content Loop', color: '#FF6B6B', postCount: 25, schedule: 'Weekly', isActive: true, status: 'active', previewImageUrl: MOCK_POSTS[1 % MOCK_POSTS.length].imageUrl },
-  { id: 'p2', title: 'Community Engagement', color: '#45B7D1', postCount: 12, schedule: 'Mon, Wed, Fri', isActive: false, status: 'paused', previewImageUrl: MOCK_POSTS[2 % MOCK_POSTS.length].imageUrl },
-  { id: 'f1', title: 'Tuesday Tips', color: '#4ECDC4', postCount: 8, schedule: 'Every Tuesday', isActive: true, status: 'active', previewImageUrl: MOCK_POSTS[3 % MOCK_POSTS.length].imageUrl },
-  { id: 'f2', title: 'Market Updates', color: '#FFA07A', postCount: 18, schedule: 'Bi-Weekly', isActive: true, status: 'active', previewImageUrl: MOCK_POSTS[4 % MOCK_POSTS.length].imageUrl },
-  { id: 'f3', title: 'Testimonials', color: '#96CEB4', postCount: 5, schedule: 'Monthly', isActive: false, status: 'paused', previewImageUrl: MOCK_POSTS[0 % MOCK_POSTS.length].imageUrl }, // Cycle back
-];
-
-// Reducer Function
-const loopsReducer = (state: LoopsState, action: LoopsAction): LoopsState => {
-  switch (action.type) {
-    case 'TOGGLE_ACTIVE':
-      return {
-        ...state,
-        loops: state.loops.map(loop => 
-          loop.id === action.payload.loopId 
-            ? { ...loop, isActive: action.payload.isActive, status: action.payload.isActive ? 'active' : 'paused' } 
-            : loop
-        )
-      };
-    case 'PIN': {
-      const newPinnedIds = new Set(state.pinnedLoopIds);
-      newPinnedIds.add(action.payload);
-      return { ...state, pinnedLoopIds: newPinnedIds };
-    }
-    case 'UNPIN': {
-      const newPinnedIds = new Set(state.pinnedLoopIds);
-      newPinnedIds.delete(action.payload);
-      return { ...state, pinnedLoopIds: newPinnedIds };
-    }
-    case 'DELETE': {
-      const newLoops = state.loops.filter(loop => loop.id !== action.payload);
-      const newPinnedIds = new Set(state.pinnedLoopIds);
-      newPinnedIds.delete(action.payload); // Remove from pinned if it was there
-      return {
-        loops: newLoops,
-        pinnedLoopIds: newPinnedIds,
-      };
-    }
-    case 'SET_INITIAL_LOOPS': // For future use with API
-      return {
-        ...state,
-        loops: action.payload,
-        // Optionally reset pinned state based on new data if needed
-      };
-    default:
-      return state;
-  }
+// --- Define Param List for the Loops Stack ---
+export type LoopsStackParamList = {
+  index: undefined; // No params for index screen
+  '[loopId]': { loopId: string }; // loopId param for detail screen
+  create: undefined; // No params for create screen
 };
 
 function LoopPlaceholder({ color }: { color: string }) {
@@ -238,20 +179,16 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
   // --- State for Selected Loop for Modal --- 
   const [selectedLoopData, setSelectedLoopData] = useState<SelectedLoopState | null>(null);
 
-  // --- Initial State for Reducer --- 
-  const initialState: LoopsState = {
-    loops: initialMockLoopsData,
-    pinnedLoopIds: new Set(['p1']), // Default pinned loop
-  };
-
-  // --- Use Reducer --- 
-  const [state, dispatch] = useReducer(loopsReducer, initialState);
+  // --- Get State and Dispatch from Context ---
+  const { state, dispatch } = useLoops(); 
 
   // --- Get Notification Function ---
   const { addNotification } = useNotifications();
 
-  // --- Get Router instance --- 
-  const router = useRouter();
+  // --- Get Router and Typed Navigation Objects ---
+  const router = useRouter(); 
+  // Type the navigation object using the correct Stack prop type
+  const navigation = useNavigation<NativeStackNavigationProp<LoopsStackParamList>>(); 
 
   // --- Swipeable Row Refs ---
   const swipeableRowRefs = useRef<Map<string, SwipeableRowRef | null>>(new Map());
@@ -280,7 +217,7 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
     });
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     closeSwipeableRow(loopId); 
-  }, [addNotification, colors.accent, closeSwipeableRow]);
+  }, [addNotification, colors.accent, closeSwipeableRow, dispatch]);
 
   const handleUnpinLoop = useCallback((loopId: string) => {
     dispatch({ type: 'UNPIN', payload: loopId });
@@ -293,7 +230,7 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
     });
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     closeSwipeableRow(loopId); 
-  }, [addNotification, colors.border, closeSwipeableRow]);
+  }, [addNotification, colors.border, closeSwipeableRow, dispatch]);
 
   const handleDeleteLoop = useCallback((loopId: string) => {
     // Find loop title from current state for the message
@@ -319,7 +256,7 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
         }
       ]
     );
-  }, [state.loops, dispatch]); // Dependency: state.loops (for title) and dispatch
+  }, [state.loops, dispatch, modalizeRef]); // Dependency: state.loops (for title) and dispatch
 
   // --- Existing Handlers (Keep Refresh, HeaderAction) ---
   const handleRefresh = useCallback(() => { setRefreshing(true); setTimeout(() => setRefreshing(false), 1000); }, []);
@@ -336,16 +273,17 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
     }
   }, [router]);
 
-  // --- Define handleLoopPress ---
+  // --- Update handleLoopPress to use navigation.navigate ---
   const handleLoopPress = useCallback((loopId: string | undefined) => {
     if (!loopId) {
       console.warn('Attempted to navigate to loop without ID');
       return;
     }
-    console.log(`Navigating to loop: ${loopId}`);
-    // TODO: Create the actual Loop Detail screen
-    router.push(`/loops/${loopId}`);
-  }, [router]);
+    console.log(`Navigating to loop: ${loopId} using navigation.navigate`);
+    // Use navigation.navigate with route name and params
+    navigation.navigate('[loopId]', { loopId: loopId }); 
+    // router.push(`/loops/${loopId}`); // Old method
+  }, [navigation]); // Add navigation dependency
 
   // --- Generate DYNAMIC list structure based on reducer state ---
   const listData = useMemo(() => {
@@ -430,13 +368,13 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
     // Trigger haptic feedback before opening
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     modalizeRef.current?.open(); 
-  }, [setSelectedLoopData]); 
+  }, [setSelectedLoopData, modalizeRef]); 
 
   // --- Function to close modal (passed to content) ---
   const closeModal = useCallback(() => {
     modalizeRef.current?.close();
     // Note: onClosed prop will handle clearing the state
-  }, []);
+  }, [modalizeRef]);
 
   // --- Handler for actions selected within the LoopActionsModalContent ---
   const handleModalAction = useCallback((action: 'edit' | 'duplicate' | 'delete') => {
@@ -464,16 +402,22 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
 
   }, [selectedLoopData, closeModal, handleEditLoop, handleDuplicateLoop, handleDeleteLoop]);
 
-  // --- Handler for the '+' button action selection from AnimatedHeader
+  // --- Update handleCreateAction for mixed navigation ---
   const handleCreateAction = useCallback((action: 'post' | 'loop') => {
     setIsPopoverVisible(false);
     if (action === 'post') {
-      router.push('/posts/create');
+      console.log('Navigating to /posts/create using router.push');
+      // Use router.push for navigating outside the current stack
+      router.push('/posts/create'); 
+      // navigation.navigate('/posts/create'); // Invalid for current navigator context
     } else if (action === 'loop') {
-      router.push('/loops/create');
+      console.log('Navigating to create using navigation.navigate');
+      // Use navigation.navigate for navigating within the current stack
+      navigation.navigate('create'); 
+      // router.push('/loops/create'); // Old method
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  }, [router]);
+  }, [navigation, router, setIsPopoverVisible]); // Add router dependency back
 
   // --- Render Item Function ---
   const renderItem = useCallback(({ item }: { item: LoopsScreenItem }) => {
@@ -540,7 +484,7 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
           />
         );
       case 'discoverPacksCarousel': {
-          // Mock data for the horizontal carousel
+          // Use the re-added DiscoverPack type here
           const discoverPacksData: DiscoverPack[] = [
             { id: 'dp1', title: 'New Agent Essentials', isLocked: false, previewImageUrl: 'https://picsum.photos/seed/essentials/300/200' },
             { id: 'dp2', title: 'Luxury Market', isLocked: true, priceLabel: '$19.99', previewImageUrl: 'https://picsum.photos/seed/luxury/300/200' },
@@ -549,7 +493,7 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
             { id: 'dp5', title: 'Pro Agent Toolkit', isLocked: true, priceLabel: 'Premium', previewImageUrl: 'https://picsum.photos/seed/pro/300/200' },
           ];
 
-          // Render function for each item in the horizontal list
+          // Use the re-added DiscoverPack type here
           const renderPackItem = ({ item: packItem }: { item: DiscoverPack }) => (
             // Use the redesigned LoopPackCard
             <LoopPackCard
@@ -585,7 +529,7 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
       default:
         return null;
     }
-  }, [colors.border, handleLoopPress, handleLongPressLoop, handlePinLoop, handleUnpinLoop, handlePackPress, spacing, colors, theme, borderRadius]);
+  }, [colors.border, handleLoopPress, handleLongPressLoop, handlePinLoop, handleUnpinLoop, handlePackPress, spacing, colors, theme, borderRadius, dispatch, navigation, router]); // Add router dependency back to renderItem dependencies
 
   // --- Loading State Render --- 
   if (isLoading) {
