@@ -4,11 +4,13 @@ import { ThemeProvider, useTheme, type Theme as NavigationTheme } from '@react-n
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform, useColorScheme } from 'react-native';
+import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { NotificationProvider } from '../modules/notifications';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ToastStack } from '../components/notifications/ToastStack';
 import { lightTheme, darkTheme } from '../theme/theme';
+import { useThemeStyles } from '../hooks/useThemeStyles';
 
 // Define ExtendedTheme based on NavigationTheme and our custom theme structure
 interface ExtendedTheme extends NavigationTheme {
@@ -27,34 +29,16 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const baseTheme = colorScheme === 'dark' ? darkTheme : lightTheme;
   const insets = useSafeAreaInsets();
+  const themeStyles = useThemeStyles();
 
   // Construct the full navigation theme conforming to ExtendedTheme
   const navigationTheme: ExtendedTheme = {
     dark: colorScheme === 'dark',
-    colors: {
-      // Spread standard navigation colors (React Navigation might provide defaults)
-      // We overwrite them with our theme colors where defined
-      primary: baseTheme.colors.primary,
-      background: baseTheme.colors.background,
-      card: baseTheme.colors.card,
-      text: baseTheme.colors.text,
-      border: baseTheme.colors.border,
-      notification: baseTheme.colors.notification,
-      // Add our custom colors
-      accent: baseTheme.colors.accent,
-      // Add missing required colors from baseTheme.colors
-      backgroundDefault: baseTheme.colors.backgroundDefault,
-      backgroundHeader: baseTheme.colors.backgroundHeader,
-      success: baseTheme.colors.success,
-      warning: baseTheme.colors.warning,
-      error: baseTheme.colors.error,
-    },
-    // Add the other custom properties
+    colors: baseTheme.colors,
     spacing: baseTheme.spacing,
     borderRadius: baseTheme.borderRadius,
     opacity: baseTheme.opacity,
     elevation: baseTheme.elevation,
-    // Provide default fonts if necessary for NavigationTheme conformance
     fonts: Platform.select({ 
         // ... (Copy default font definitions from previous version) ...
       web: {
@@ -78,6 +62,21 @@ export default function RootLayout() {
     }) as NavigationTheme['fonts'],
   };
 
+  // Common Tab Icon component with animation
+  const AnimatedTabIcon = ({ focused, iconName, color, size }: { focused: boolean; iconName: keyof typeof Ionicons.glyphMap; color: string; size: number }) => {
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        transform: [{ scale: withTiming(focused ? 1.2 : 1.0, { duration: 150 }) }],
+      };
+    });
+
+    return (
+      <Animated.View style={animatedStyle}>
+        <Ionicons name={iconName} size={size} color={color} />
+      </Animated.View>
+    );
+  };
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
@@ -86,7 +85,8 @@ export default function RootLayout() {
             <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
             <Tabs
               screenOptions={{                
-                tabBarActiveTintColor: navigationTheme.colors.primary,
+                tabBarActiveTintColor: navigationTheme.colors.accent,
+                tabBarInactiveTintColor: navigationTheme.colors.tabInactive,
                 headerShown: false,
                 tabBarStyle: {
                   borderTopWidth: 0,
@@ -100,23 +100,36 @@ export default function RootLayout() {
               }}
             >
               <Tabs.Screen
-                name="index"
+                name="(loops)"
                 options={{
-                  title: 'Home',
-                  tabBarIcon: ({ color, size }) => (
-                    <Ionicons name="home-outline" size={size} color={color} />
+                  title: 'Loops',
+                  tabBarIcon: ({ focused, color, size }) => (
+                    <AnimatedTabIcon focused={focused} iconName="repeat" color={color} size={size} />
                   ),
                 }}
               />
               <Tabs.Screen
-                name="(loops)"
+                name="index"
                 options={{
-                  title: 'Loops',
-                  tabBarIcon: ({ color, size }) => (
-                    <Ionicons name="repeat" size={size} color={color} />
+                  title: 'Home',
+                  tabBarIcon: ({ focused, color, size }) => (
+                    <AnimatedTabIcon focused={focused} iconName="home-outline" color={color} size={size} />
                   ),
                 }}
               />
+              <Tabs.Screen
+                name="you" // This will look for app/you.tsx
+                options={{
+                  title: 'You',
+                  tabBarIcon: ({ focused, color, size }) => (
+                    <AnimatedTabIcon focused={focused} iconName="person-outline" color={color} size={size} />
+                  ),
+                }}
+              />
+              {/* Screens to hide from the tab bar */}
+              <Tabs.Screen name="posts/create" options={{ href: null }} />
+              <Tabs.Screen name="shop/pack/[packId]" options={{ href: null }} />
+              <Tabs.Screen name="+not-found" options={{ href: null }} />
             </Tabs>
             <ToastStack />
           </NotificationProvider>

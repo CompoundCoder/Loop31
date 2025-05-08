@@ -120,6 +120,7 @@ type ColorPalette = {
   success: string;
   warning: string;
   error: string;
+  tabInactive: string;
 };
 
 const lightColors: ColorPalette = {
@@ -135,6 +136,7 @@ const lightColors: ColorPalette = {
   success: '#34C759',
   warning: '#FF9500',
   error: '#FF3B30',
+  tabInactive: '#8E8E93',
 };
 
 const darkColors: ColorPalette = {
@@ -150,6 +152,7 @@ const darkColors: ColorPalette = {
   success: '#30D158',
   warning: '#FF9F0A',
   error: '#FF453A',
+  tabInactive: '#8E8E93',
 };
 
 // Opacity levels
