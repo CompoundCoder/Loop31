@@ -18,6 +18,7 @@ interface ExtendedTheme extends NavigationTheme {
   borderRadius: typeof lightTheme.borderRadius;
   opacity: typeof lightTheme.opacity;
   elevation: typeof lightTheme.elevation;
+  typography: typeof lightTheme.typography;
   // Colors already includes NavigationTheme colors via intersection
   colors: NavigationTheme['colors'] & typeof lightTheme.colors;
 }
@@ -39,6 +40,7 @@ export default function RootLayout() {
     borderRadius: baseTheme.borderRadius,
     opacity: baseTheme.opacity,
     elevation: baseTheme.elevation,
+    typography: baseTheme.typography,
     fonts: Platform.select({ 
         // ... (Copy default font definitions from previous version) ...
       web: {
