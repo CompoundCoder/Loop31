@@ -250,8 +250,11 @@ export const LoopCard = forwardRef<SwipeableRowRef, LoopCardProps>((
               <MaterialCommunityIcons name="calendar-sync-outline" size={14} color={colors.text + '99'} />
               <Text style={[
                 styles.statsText, 
-                { color: colors.text + '99', marginLeft: spacing.xs }
-              ]}>
+                { color: colors.text + '99', marginLeft: spacing.xs, flexShrink: 1 }
+              ]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 {loop.schedule}
               </Text>
                {/* Status Icon (Conditional) */}

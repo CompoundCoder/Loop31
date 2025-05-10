@@ -113,7 +113,11 @@ const createStyles = (theme: ThemeStyles) => {
     metadataText: {
       fontSize: 14,
       color: colors.text + '99', 
-      marginRight: spacing.sm, 
+    },
+    scheduleTextContainer: {
+      position: 'relative',
+      marginRight: spacing.sm,
+      flexShrink: 1,
     },
     switch: {
       transform: Platform.OS === 'ios' ? [] : [],
@@ -198,13 +202,16 @@ export default function LoopDetailScreen() {
 
   // ADDED: Handler to close the edit menu
   const handleCloseEditMenu = () => {
+    console.log('[LoopDetailScreen] handleCloseEditMenu triggered.');
     setIsEditMenuVisible(false);
   };
 
   // MODIFIED: Handler for saving changes from the edit menu
   const handleSaveEditMenu = (updatedData: { id: string; title?: string; color?: string; schedule?: string }) => {
+    console.log('[LoopDetailScreen] handleSaveEditMenu triggered with data:', updatedData);
     if (!loop) return; 
     const { id: _, ...otherUpdates } = updatedData; 
+    console.log('[LoopDetailScreen] Dispatching UPDATE_LOOP with payload:', { id: loop.id, ...otherUpdates });
     dispatch({ 
       type: 'UPDATE_LOOP', 
       payload: { 
@@ -223,6 +230,9 @@ export default function LoopDetailScreen() {
     typographyExists: !!typography, // Check typography from themeStyles
     isEditMenuVisible 
   });
+
+  // Add a log to see the loop title just before rendering
+  console.log(`[LoopDetailScreen] Rendering with loop title: ${loop?.title}`);
 
   return (
     <ScrollView 
@@ -258,7 +268,11 @@ export default function LoopDetailScreen() {
             {loop.title}
           </Text>
           <View style={styles.metadataRow}>
-            <Text style={styles.metadataText} numberOfLines={1} ellipsizeMode="tail">{formatScheduleText(loop.schedule)}</Text>
+            <View style={styles.scheduleTextContainer}>
+              <Text style={styles.metadataText} numberOfLines={1} ellipsizeMode="tail">
+                {formatScheduleText(loop.schedule)}
+              </Text>
+            </View>
             <View style={{ flex: 1 }} />
             <Switch
               value={loop.isActive}

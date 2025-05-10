@@ -201,9 +201,12 @@ const LoopEditMenu: React.FC<LoopEditMenuProps> = ({ isVisible, onClose, loop, o
   };
 
   const handleDismiss = () => {
+    console.log('[LoopEditMenu] handleDismiss triggered.');
     if (isDismissingRef.current) {
+      console.log('[LoopEditMenu] handleDismiss: Already dismissing, returning.');
       return; // Already dismissing, do nothing
     }
+    console.log('[LoopEditMenu] handleDismiss: Proceeding with dismiss.');
     isDismissingRef.current = true;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onClose(); // Call onClose directly
@@ -226,14 +229,24 @@ const LoopEditMenu: React.FC<LoopEditMenuProps> = ({ isVisible, onClose, loop, o
   }, [loop, editedSchedule, customDays, onSave]);
 
   const handleTitleEndEditing = () => {
+    console.log('[LoopEditMenu] handleTitleEndEditing triggered.');
+    console.log('[LoopEditMenu] Current loop ID:', loop?.id);
+    console.log('[LoopEditMenu] Edited Title:', editedTitle);
+    console.log('[LoopEditMenu] Original Title:', originalTitle);
+
     if (loop && editedTitle.trim() !== originalTitle) {
       const newTitle = editedTitle.trim();
+      console.log('[LoopEditMenu] Title has changed. newTitle:', newTitle);
       if(newTitle){
+        console.log('[LoopEditMenu] Calling onSave with payload:', { id: loop.id, title: newTitle });
         onSave({ id: loop.id, title: newTitle });
-        setOriginalTitle(newTitle);
+        setOriginalTitle(newTitle); // Keep originalTitle in sync after a successful save
       } else {
+        console.log('[LoopEditMenu] New title is empty, reverting to originalTitle.');
         setEditedTitle(originalTitle);
       }
+    } else {
+      console.log('[LoopEditMenu] Title has NOT changed or loop is null. No save action taken.');
     }
   };
 

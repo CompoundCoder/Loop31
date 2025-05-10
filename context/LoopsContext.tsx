@@ -92,7 +92,16 @@ const loopsReducer = (state: LoopsState, action: LoopsAction): LoopsState => {
         loops: action.payload,
         // Optionally reset pinned state based on new data if needed
       };
-    // Add future cases for UPDATE_LOOP, ADD_LOOP
+    case 'UPDATE_LOOP':
+      return {
+        ...state,
+        loops: state.loops.map(loop =>
+          loop.id === action.payload.id
+            ? { ...loop, ...action.payload } // Merge updates into the found loop
+            : loop
+        ),
+      };
+    // Add future cases for ADD_LOOP
     default:
       // Ensure exhaustive check if needed, or return state
       return state;
