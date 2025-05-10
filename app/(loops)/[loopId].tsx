@@ -201,10 +201,9 @@ export default function LoopDetailScreen() {
     setIsEditMenuVisible(false);
   };
 
-  // ADDED: Handler to save changes from the edit menu
+  // MODIFIED: Handler for saving changes from the edit menu
   const handleSaveEditMenu = (updatedData: { id: string; title?: string; color?: string; schedule?: string }) => {
     if (!loop) return; 
-    // Destructure to separate id from other updates, use loop.id from screen as source of truth for id.
     const { id: _, ...otherUpdates } = updatedData; 
     dispatch({ 
       type: 'UPDATE_LOOP', 
@@ -213,7 +212,8 @@ export default function LoopDetailScreen() {
         ...otherUpdates // Spread only the other properties
       } 
     });
-    setIsEditMenuVisible(false);
+    // REMOVED: setIsEditMenuVisible(false); 
+    // The modal should not close on save; only on explicit close actions (swipe, backdrop, etc.)
   };
 
   // Log state values before rendering
@@ -314,13 +314,13 @@ export default function LoopDetailScreen() {
       )}
 
       {/* MODIFIED: Conditional render uses typography from themeStyles */}
-      {loop && typography && isEditMenuVisible && (
+      {loop && (
         <LoopEditMenu
           isVisible={isEditMenuVisible}
           onClose={handleCloseEditMenu}
           loop={loop} 
           onSave={handleSaveEditMenu}
-          typography={typography} // PASS typography from themeStyles
+          typography={typography}
         />
       )}
     </ScrollView>

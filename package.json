@@ -17,6 +17,7 @@
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
     "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-native-community/blur": "^4.4.1",
     "@react-native-masked-view/masked-view": "0.3.2",
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
@@ -41,6 +42,7 @@
     "react-native-animatable": "^1.4.0",
     "react-native-context-menu-view": "^1.19.0",
     "react-native-gesture-handler": "~2.20.2",
+    "react-native-modal": "^14.0.0-rc.1",
     "react-native-modalize": "^2.1.1",
     "react-native-pager-view": "6.5.1",
     "react-native-popover-view": "^6.1.0",

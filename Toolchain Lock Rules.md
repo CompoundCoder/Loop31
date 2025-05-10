@@ -1,31 +1,78 @@
-## Toolchain Lock Rules
+# Toolchain Lock Rules for Loop31
 
-- 🚫 Do NOT upgrade or change the following versions unless explicitly asked:
-  - Expo SDK: `52.0.46`
-  - React Native: `0.76.9`
-  - React: `18.3.1`
-  - Node.js: `20.19.1` (set via `.nvmrc`)
-  - Yarn: `1.22.22`
+## Purpose:
+Ensure Gemini (and any AI) respects the locked toolchain and avoids introducing breaking versions or incompatible libraries when editing files.
 
-- ✅ All dependencies must remain compatible with the versions above.
-  - Use `expo install` when possible to ensure Expo-safe versions.
-  - Avoid packages that require newer versions of React Native or Expo.
+---
 
-- ⚠️ Do NOT suggest:
-  - `npx expo upgrade`
-  - Upgrading React Native
-  - Switching Node versions
-  - Modifying `.nvmrc` or `yarn.lock`
-  - Installing React 19 or RN 0.7x+ libraries
+## ✅ Node & Package Managers
 
-- ✅ Assume `yarn.lock` is frozen unless explicitly told to update it.
+- Use **Node.js v20.19.1** only
+  - Defined in `.nvmrc`
+  - Do NOT update Node or switch to v22+
+- Use **Yarn 1.22.22**
+  - Do NOT convert to npm or pnpm
 
-- 🔒 Stability > bleeding edge. Avoid latest package suggestions unless explicitly asked.
+---
 
-## Protected Files
+## ✅ React Native Stack
 
-Do NOT refactor, delete, or alter logic in the following files unless explicitly instructed:
+| Package                     | Locked Version   |
+|-----------------------------|------------------|
+| react-native                | 0.76.9           |
+| react                       | 18.3.1           |
+| react-native-reanimated     | ~3.6.2           |
+| react-native-gesture-handler | ~2.20.2         |
+| expo                        | ~52.0.46         |
+| expo-router                 | ~4.0.20          |
 
-- `captionGenerator.ts`
-- `LoopCard.tsx`
-- `Post.ts`
+- **DO NOT change these versions**
+- Avoid updates that break Expo SDK 52 compatibility
+
+---
+
+## ✅ Config Enforcement
+
+- Ensure `babel.config.js` includes:
+  ```js
+  plugins: ['react-native-reanimated/plugin']
+
+	•	tsconfig.json must include:
+"baseUrl": ".",
+"paths": {
+  "@/*": ["./*"]
+}
+
+
+✅ Animation & Modal Rules
+	•	Do NOT use Reanimated for animating entrance/exit of full modals
+	•	Use native Modal animationType instead (e.g., slide)
+	•	Reanimated is allowed inside visible modals only (buttons, views)
+	•	Avoid react-native-modal or third-party modal libraries unless scoped
+
+✅ Layout Rules
+	•	Use SafeAreaView and KeyboardAvoidingView for all main screens
+	•	Prefer FlatList over ScrollView for dynamic lists
+	•	Reanimated + Gesture Handler must wrap scrollable views properly
+
+✅ When Adding New Packages
+	•	Must be compatible with:
+	•	React Native 0.76.9
+	•	Expo SDK 52
+	•	Node v20
+	•	Always verify no peer dependency mismatches
+	•	No large dependencies unless approved (e.g., Lottie, Skia)
+
+❌ Forbidden
+	•	Do NOT install incompatible packages like:
+	•	react-native-modal (breaks animations)
+	•	react-native-navigation (conflicts with expo-router)
+	•	styled-components (unless specifically scoped for one screen)
+
+Summary
+
+Keep the stack lightweight, Expo-compatible, and focused on:
+	•	Fast local dev
+	•	Clean animations
+	•	Future AI-powered content automation
+
