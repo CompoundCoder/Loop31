@@ -9,9 +9,14 @@ import FeaturedPostCard from '@/components/loops/FeaturedPostCard';
 import MiniPostCard from '@/components/loops/MiniPostCard';
 import LoopEditMenu from '@/components/loops/LoopEditMenu';
 import { SCREEN_LAYOUT, LAYOUT } from '@/constants/layout';
+import PostCardS from '@/components/loops/PostCardS';
+import { PostEditMenu as NewPostEditMenu } from '../../components/posts/PostEditMenu';
 
-// Define a placeholder Post type - using previewImageUrl
-interface Post {
+// Import mock data source
+// import { MOCK_POST_DATA } from '@/data/mockPosts';
+
+// Define and EXPORT placeholder Post type - using previewImageUrl
+export interface Post {
   id: string;
   previewImageUrl?: string; // Changed from imageUrl
   caption: string;
@@ -61,7 +66,7 @@ const formatScheduleText = (schedule?: string): string => {
   return `Posts: ${schedule}`; 
 };
 
-// TEMPORARY MOCK POSTS FOR VISUALIZATION - Using previewImageUrl key AND exact working URLs/dimensions
+// Re-add inline MOCK_POST_DATA definition
 const MOCK_POST_DATA: Post[] = [
   { id: 'p1', previewImageUrl: 'https://picsum.photos/seed/tech/400/300', caption: 'Tech Insights: A very deep dive into the latest technological advancements and how they are reshaping our daily lives across various sectors globally.', postCount: 12 },
   { id: 'p2', previewImageUrl: 'https://picsum.photos/seed/science/400/300', caption: 'Science Wonders: Exploring the most fascinating discoveries in the world of science this week, from outer space to microscopic organisms.', postCount: 5 },
@@ -128,7 +133,11 @@ const createStyles = (theme: ThemeStyles) => {
     },
     sectionPlaceholder: {
       // Basic styling for placeholder sections
-    }
+    },
+    gridItemStyle: {
+      width: '48%', // For 2 columns with ~1% margin on each side
+      marginBottom: spacing.md, // ADD marginBottom here
+    },
   });
 };
 
@@ -140,7 +149,15 @@ export default function LoopDetailScreen() {
   const router = useRouter();
   
   const [isEditMenuVisible, setIsEditMenuVisible] = useState(false);
-  
+  const [isLoopEditMenuVisible, setIsLoopEditMenuVisible] = useState(false);
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
+  console.log('Current editingPost state:', editingPost);
+  const [loopPosts, setLoopPosts] = useState<Post[]>(MOCK_POST_DATA);
+
+  // State for the NEW PostEditMenu (from components/posts/)
+  const [selectedPostForNewModal, setSelectedPostForNewModal] = useState<Post | null>(null);
+  const [isPostEditMenuVisible, setIsPostEditMenuVisible] = useState(false);
+
   const styles = useMemo(() => createStyles(themeStyles), [themeStyles]);
 
   // Log relevant theme values for debugging shadows and typography
@@ -166,8 +183,9 @@ export default function LoopDetailScreen() {
   // Cast to LoopWithPosts to use the posts array - replace with actual Loop structure
   const loop = loopFromContext as LoopWithPosts; 
 
-  const postsForDisplay = MOCK_POST_DATA; 
-  console.log('[LoopDetailScreen] postsForDisplay (MOCK_POST_DATA count):', postsForDisplay.length);
+  // Use the loopPosts state variable for displaying posts
+  const postsForDisplay = loopPosts; 
+  console.log('[LoopDetailScreen] postsForDisplay (from loopPosts state count):', postsForDisplay.length);
 
   const featuredPost = postsForDisplay.length > 0 ? postsForDisplay[0] : null;
   console.log('[LoopDetailScreen] featuredPost (ID and previewImageUrl):', featuredPost ? `${featuredPost.id} - ${featuredPost.previewImageUrl}` : 'null');
@@ -175,15 +193,12 @@ export default function LoopDetailScreen() {
   const gridPosts = postsForDisplay.length > 1 ? postsForDisplay.slice(1) : [];
   console.log('[LoopDetailScreen] gridPosts count:', gridPosts.length);
 
-  const numColumns = 2;
-  const screenHorizontalPadding = SCREEN_LAYOUT.content.horizontalPadding;
-  // Define the desired gap between columns
-  const gapBetweenColumns = LAYOUT.content.cardSpacing; // Use standard card spacing (e.g., 16)
-  
-  // Calculate the total width available for the FlatList content (screen width - side paddings)
-  const effectiveScreenWidth = screenWidth - (2 * screenHorizontalPadding);
-  // Calculate the width of each card (total available width - gaps) / number of columns
-  const cardWidth = (effectiveScreenWidth - (numColumns - 1) * gapBetweenColumns) / numColumns;
+  // Post Edit Handlers (New)
+  const handleEditPost = (post: Post) => {
+    console.log('Opening edit menu for post:', post.id);
+    console.log('Post selected:', post);
+    setEditingPost(post);
+  };
 
   // Handler for the toggle switch
   const handleToggleActive = (newValue: boolean) => {
@@ -234,11 +249,39 @@ export default function LoopDetailScreen() {
   // Add a log to see the loop title just before rendering
   console.log(`[LoopDetailScreen] Rendering with loop title: ${loop?.title}`);
 
+  // Handler for the NEW PostEditMenu (from components/posts/)
+  const handleOpenPostEditMenu = (post: Post) => {
+    console.log('Opening NEW PostEditMenu for post:', post.id);
+    setSelectedPostForNewModal(post);
+    setIsPostEditMenuVisible(true);
+  };
+
+  // *** NEW: Handler for live caption updates from PostEditMenu ***
+  const handlePostCaptionChange = (postId: string, newCaption: string) => {
+    console.log(`[LoopDetailScreen] Updating caption for post ${postId}: "${newCaption.substring(0, 30)}..."`);
+    setLoopPosts(currentPosts =>
+      currentPosts.map(p =>
+        p.id === postId ? { ...p, caption: newCaption } : p
+      )
+    );
+  };
+
+  // Define renderItem for the FlatList grid
+  const renderGridItem = ({ item }: { item: Post }) => (
+    <View style={styles.gridItemStyle}>
+      <PostCardS
+        post={item}
+        variant="mini"
+        onPress={() => handleOpenPostEditMenu(item)} // Use NEW handler
+      />
+    </View>
+  );
+
   return (
     <ScrollView 
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={[styles.contentContainer, { 
-        paddingHorizontal: screenHorizontalPadding, 
+        paddingHorizontal: SCREEN_LAYOUT.content.horizontalPadding, 
         paddingTop: spacing.lg,
         paddingBottom: spacing.xxl + spacing.md
       }]}
@@ -289,54 +332,75 @@ export default function LoopDetailScreen() {
         </View>
       </View>
 
-      {/* Wrapper for FeaturedPostCard */}
-      <View style={{ marginBottom: spacing.sm }}>
-        {featuredPost ? (
-          <FeaturedPostCard post={featuredPost} />
-        ) : (
-          <View style={[styles.sectionPlaceholder, { backgroundColor: colors.card, padding: spacing.md, borderRadius: borderRadius.md }]}>
-            <Text style={{ color: colors.text }}>No posts in this loop for preview.</Text>
+      {/* Conditional Rendering: Posts or Empty State */} 
+      {postsForDisplay.length > 0 ? (
+        <>
+          {/* Featured Post ("Next Up") */} 
+          <Text style={{ color: colors.text, fontSize: 16, fontWeight: 'bold', marginBottom: spacing.sm }}>Next Up</Text> 
+          <View style={{ marginBottom: spacing.lg }}> 
+            {/* Remove outer TouchableOpacity, pass onPress to PostCardS */}
+            <PostCardS 
+              post={featuredPost!} 
+              variant="featured" 
+              onPress={() => handleOpenPostEditMenu(featuredPost!)} // Pass onPress here
+            /> 
           </View>
-        )}
-      </View>
 
-      <Text style={{ color: colors.text, fontSize: 16, fontWeight: 'bold', marginBottom: spacing.sm }}>In This Loop ({gridPosts.length})</Text>
-      
-      {gridPosts.length > 0 ? (
-        <FlatList
-          data={gridPosts}
-          renderItem={({ item }) => (
-            <MiniPostCard post={item} cardWidth={cardWidth} />
+          {/* Grid Section */} 
+          {gridPosts.length > 0 && (
+            <>
+              <Text style={{ color: colors.text, fontSize: 16, fontWeight: 'bold', marginBottom: spacing.sm }}>In This Loop ({gridPosts.length})</Text> 
+              {/* Replace manual grid mapping with FlatList */}
+              <FlatList
+                data={gridPosts}
+                renderItem={renderGridItem} // Use a renderItem function
+                keyExtractor={(item) => item.id}
+                numColumns={2}
+                scrollEnabled={false} // Disable inner scrolling
+                columnWrapperStyle={{
+                  justifyContent: 'space-between', // Space out columns
+                }}
+                // Ensure FlatList takes necessary height within ScrollView
+                // (Usually automatic with scrollEnabled={false})
+              />
+            </>
           )}
-          keyExtractor={(item) => item.id}
-          numColumns={numColumns}
-          scrollEnabled={false} 
-          columnWrapperStyle={{ 
-             justifyContent: 'space-between', 
-             marginBottom: spacing.lg, 
-             overflow: 'visible',
-          }} 
-          style={{ overflow: 'visible' }} 
-          contentContainerStyle={{ overflow: 'visible' }} 
-          initialNumToRender={4}
-          windowSize={5}
-        />
+        </>
       ) : (
-        <View style={[styles.sectionPlaceholder, { backgroundColor: colors.card, padding: spacing.md, borderRadius: borderRadius.md }]}>
-            <Text style={{ color: colors.text }}>No other posts in this loop.</Text>
+        // Empty State when no posts exist at all 
+        <View style={[styles.sectionPlaceholder, { backgroundColor: colors.card, padding: spacing.md, borderRadius: borderRadius.md, alignItems: 'center' }]}> 
+          <Text style={{ color: colors.text }}>No posts in this loop yet.</Text> 
         </View>
       )}
 
-      {/* MODIFIED: Conditional render uses typography from themeStyles */}
-      {loop && (
-        <LoopEditMenu
-          isVisible={isEditMenuVisible}
-          onClose={handleCloseEditMenu}
-          loop={loop} 
-          onSave={handleSaveEditMenu}
-          typography={typography}
-        />
-      )}
+      {/* --- Add Test Button --- */}
+      <TouchableOpacity 
+        style={{ marginTop: spacing.lg, padding: spacing.md, backgroundColor: colors.primary, borderRadius: borderRadius.sm }} 
+        onPress={() => setEditingPost(MOCK_POST_DATA[0])} // Use first mock post for testing
+      >
+        <Text style={{ color: 'white', textAlign: 'center' }}>Open Edit Menu Manually</Text>
+      </TouchableOpacity>
+
+      {/* --- Modals --- */}
+
+      {/* Loop Edit Menu (Existing) */}
+      {/* Always render Modal wrapper if isEditMenuVisible is true, allow LoopEditMenu to handle potentially null loop prop internally */}
+      <LoopEditMenu
+        isVisible={isEditMenuVisible}
+        onClose={handleCloseEditMenu} 
+        loop={loop} // Pass loop directly, LoopEditMenu should handle if it's initially null/undefined
+        onSave={handleSaveEditMenu} 
+        typography={typography}
+      />
+
+      {/* NEW Post Edit Menu (from components/posts/PostEditMenu.tsx) */}
+      <NewPostEditMenu
+        isVisible={isPostEditMenuVisible}
+        post={selectedPostForNewModal}
+        onClose={() => setIsPostEditMenuVisible(false)}
+        onCaptionChange={handlePostCaptionChange}
+      />
+
     </ScrollView>
   );
 } 
