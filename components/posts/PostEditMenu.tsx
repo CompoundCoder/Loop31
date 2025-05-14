@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Modal from 'react-native-modal';
 import { View, StyleSheet, Text, ScrollView, Image, TextInput, TouchableOpacity, Dimensions, Platform, TouchableWithoutFeedback } from 'react-native';
 import Animated, {
@@ -16,6 +16,8 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeStyles, type ThemeStyles } from '@/hooks/useThemeStyles';
 import { Ionicons } from '@expo/vector-icons';
+import useUndo from 'use-undo';
+import debounce from 'lodash.debounce'; // Import debounce
 
 // Basic Post type, assuming it would be shared or imported from a common types file
 interface Post {
@@ -63,10 +65,31 @@ export const PostEditMenu: React.FC<PostEditMenuProps> = ({
   const insets = useSafeAreaInsets();
   const themeStyles = useThemeStyles();
   const styles = createStyles(themeStyles);
-  const [editableCaption, setEditableCaption] = useState(post?.caption || '');
   const [imageAspectRatio, setImageAspectRatio] = useState<number>(1.91);
   const [hasRemixed, setHasRemixed] = useState(false);
-  const isDismissingRef = useRef(false); // Added for dismiss logic
+  const isDismissingRef = useRef(false);
+
+  // --- useUndo State ---
+  const [
+    editableCaptionState,
+    {
+      set: setEditableCaption,
+      undo: handleUndo,
+      redo: handleRedo,
+      reset: resetCaption,
+      canUndo,
+      canRedo,
+    },
+  ] = useUndo(post?.caption || '');
+
+  // --- Add liveCaption state and debounced commit ---
+  const [liveCaption, setLiveCaption] = useState(post?.caption || '');
+
+  const debouncedCommitUndo = useMemo(
+    () => debounce((text: string) => setEditableCaption(text), 1200),
+    [setEditableCaption]
+  );
+  // --- End liveCaption and debounce setup ---
 
   const { colors, spacing } = themeStyles;
   const { width: screenWidth } = Dimensions.get('window');
@@ -121,22 +144,26 @@ export const PostEditMenu: React.FC<PostEditMenuProps> = ({
 
   // --- End Reanimated Setup ---
 
+  // const editableCaption = editableCaptionState.present; // No longer needed here, liveCaption is primary for display
+
   useEffect(() => {
     // Reset all values when post changes
-    setEditableCaption(post?.caption || '');
+    const initialCaption = post?.caption || '';
+    resetCaption(initialCaption); // Reset use-undo state
+    setLiveCaption(initialCaption); // Reset live caption state
     setHasRemixed(false);
-    isMorphing.value = false; // Reset morphing flag here
+    isMorphing.value = false;
 
     buttonOpacity.value = 0;
     buttonTranslateY.value = 20;
     buttonScale.value = 1;
-    remixButtonTextWidth.value = 0; // Reset measured text width
-    buttonWidth.value = 160; // Reset to 160
-    buttonBorderRadius.value = INITIAL_BUTTON_BORDER_RADIUS; // Reset radius
-    animatedPaddingHorizontal.value = 0; // Changed from spacing.md to 0
-    textOpacity.value = 1; // Reset text opacity
-    iconOpacity.value = 0; // Reset icon opacity
-    buttonColorProgress.value = 0; // Reset color progress
+    remixButtonTextWidth.value = 0;
+    buttonWidth.value = 160;
+    buttonBorderRadius.value = INITIAL_BUTTON_BORDER_RADIUS;
+    animatedPaddingHorizontal.value = 0;
+    textOpacity.value = 1;
+    iconOpacity.value = 0;
+    buttonColorProgress.value = 0;
 
     if (post?.previewImageUrl) {
       Image.getSize(
@@ -153,10 +180,10 @@ export const PostEditMenu: React.FC<PostEditMenuProps> = ({
     } else {
       setImageAspectRatio(1.91);
     }
-  }, [post]); // Removed initialButtonWidth from dependencies
+  }, [post, resetCaption]); // resetCaption is stable from useUndo, so mainly [post]
 
   useEffect(() => {
-    if (debounceTimerRef.current) {
+    if (debounceTimerRef.current) { // This is for the remix button visibility debounce
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
     }
@@ -166,40 +193,40 @@ export const PostEditMenu: React.FC<PostEditMenuProps> = ({
       buttonOpacity.value = 0;
       buttonTranslateY.value = 20;
       buttonScale.value = 1;
-      remixButtonTextWidth.value = 0; // Reset measured text width
-      buttonWidth.value = 160; // Reset to 160
-      buttonBorderRadius.value = INITIAL_BUTTON_BORDER_RADIUS; // Reset radius
-      animatedPaddingHorizontal.value = 0; // Changed from spacing.md to 0
-      textOpacity.value = 1; // Reset text opacity
-      iconOpacity.value = 0; // Reset icon opacity
-      buttonColorProgress.value = 0; // Reset color progress
+      remixButtonTextWidth.value = 0;
+      buttonWidth.value = 160;
+      buttonBorderRadius.value = INITIAL_BUTTON_BORDER_RADIUS;
+      animatedPaddingHorizontal.value = 0;
+      textOpacity.value = 1;
+      iconOpacity.value = 0;
+      buttonColorProgress.value = 0;
       setHasRemixed(false);
-      isMorphing.value = false; // Reset morphing flag here
+      isMorphing.value = false;
+      
+      const initialModalCloseCaption = post?.caption || '';
+      resetCaption(initialModalCloseCaption); // Reset use-undo state
+      setLiveCaption(initialModalCloseCaption); // Reset live caption state
       return;
     }
 
-    const captionLength = editableCaption.trim().length;
+    const captionLength = liveCaption.trim().length; // Use liveCaption for button visibility
 
-    // Debounce logic for showing/hiding the initial button state
+    // Debounce logic for showing/hiding the initial button state (Remix Button)
     if (captionLength > 10) {
       const timeoutId = setTimeout(() => {
-        if (!hasRemixed) { // Only animate if not already remixed
+        if (!hasRemixed) {
           buttonOpacity.value = withTiming(1, { duration: ANIMATION_DURATION, easing: EASING });
           buttonTranslateY.value = withTiming(0, { duration: ANIMATION_DURATION, easing: EASING });
-          // Ensure text is visible if button appears
           textOpacity.value = withTiming(1, { duration: FADE_DURATION });
-          // Width and Radius are NOT animated here, they remain initial
         }
         debounceTimerRef.current = null;
       }, DEBOUNCE_DELAY);
       debounceTimerRef.current = timeoutId;
     } else {
-      if (!hasRemixed) { // Only animate if not already remixed
+      if (!hasRemixed) {
         buttonOpacity.value = withTiming(0, { duration: ANIMATION_DURATION / 2, easing: EASING });
         buttonTranslateY.value = withTiming(20, { duration: ANIMATION_DURATION / 2, easing: EASING });
-        // Fade out text if button hides
         textOpacity.value = withTiming(0, { duration: FADE_DURATION / 2 });
-        // Width and Radius are NOT animated here
       }
     }
 
@@ -210,16 +237,13 @@ export const PostEditMenu: React.FC<PostEditMenuProps> = ({
       }
     };
   }, [
-    editableCaption,
+    liveCaption, // NOW depends on liveCaption
     isVisible,
     buttonOpacity,
     buttonTranslateY,
     hasRemixed,
     textOpacity,
-    iconOpacity,
-    buttonWidth,        // Keep buttonWidth
-    animatedPaddingHorizontal, // Use new animated padding SV
-    buttonBorderRadius,
+    // Removed other shared values not directly driving this effect
   ]);
 
   // Reaction to update buttonWidth based on measured text width
@@ -246,9 +270,31 @@ export const PostEditMenu: React.FC<PostEditMenuProps> = ({
     [spacing.md] // Dependencies for the reaction (theme spacing)
   );
 
+  // Effect to update liveCaption when use-undo state changes (e.g. after undo/redo)
+  useEffect(() => {
+    setLiveCaption(editableCaptionState.present);
+  }, [editableCaptionState.present]);
+
+  // Cleanup effect for debouncedCommitUndo
+  useEffect(() => {
+    return () => {
+      debouncedCommitUndo.cancel();
+    };
+  }, [debouncedCommitUndo]); // Added debouncedCommitUndo to dependency array as it's an external variable
+
   const handleCaptionInputChange = (text: string) => {
-    setEditableCaption(text);
-    if (post) onCaptionChange(post.id, text);
+    setLiveCaption(text);
+    if (post) onCaptionChange(post.id, text); // Propagate live changes to parent
+
+    const lastChar = text.slice(-1);
+    const commitNow = lastChar === ' ' || /[.,!?]/.test(lastChar);
+
+    if (commitNow) {
+      debouncedCommitUndo.cancel();
+      setEditableCaption(text); // Commit to use-undo history
+    } else {
+      debouncedCommitUndo(text); // Debounce commit to use-undo history
+    }
   };
 
   // Custom dismiss handler to prevent double calls
@@ -346,12 +392,52 @@ export const PostEditMenu: React.FC<PostEditMenuProps> = ({
           {/* Header with Label and Button */}
           <View style={styles.captionHeaderContainer}>
             <Text style={styles.captionLabel}>Edit Caption</Text>
+            <View style={styles.undoRedoContainer}>
+              <TouchableOpacity
+                onPress={handleUndo}
+                style={styles.undoRedoButton}
+                disabled={!canUndo}
+              >
+                <Ionicons
+                  name="arrow-undo"
+                  size={18}
+                  color={!canUndo ? colors.text + '60' : colors.text}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleRedo}
+                style={styles.undoRedoButton}
+                disabled={!canRedo}
+              >
+                <Ionicons
+                  name="arrow-redo"
+                  size={18}
+                  color={!canRedo ? colors.text + '60' : colors.text}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
 
-            {/* Button Animated Container: Now a direct child of captionHeaderContainer */}
+          {/* Input below the header */}
+          <View>
+            <TextInput
+              style={styles.captionInput}
+              value={liveCaption} // Use liveCaption for TextInput value
+              onChangeText={handleCaptionInputChange}
+              placeholder="Enter caption..."
+              placeholderTextColor={themeStyles.colors.text + '99'}
+              multiline={true}
+              scrollEnabled={false}
+              textAlignVertical="top"
+            />
+          </View>
+
+          {/* New Wrapper for the Remix Button */}
+          <View style={styles.remixButtonWrapper}>
             <Animated.View
               style={[
-                styles.remixButtonAnimatedContainer,
-                animatedButtonStyle,
+                styles.remixButtonAnimatedContainer, // Base styles
+                animatedButtonStyle, // Dynamic animated styles
               ]}
             >
               <TouchableOpacity
@@ -378,20 +464,6 @@ export const PostEditMenu: React.FC<PostEditMenuProps> = ({
                 </Animated.View>
               </TouchableOpacity>
             </Animated.View>
-          </View>
-
-          {/* Input below the header */}
-          <View> 
-            <TextInput
-              style={styles.captionInput}
-              value={editableCaption}
-              onChangeText={handleCaptionInputChange}
-              placeholder="Enter caption..."
-              placeholderTextColor={themeStyles.colors.text + '99'}
-              multiline={true}
-              scrollEnabled={false}
-              textAlignVertical="top"
-            />
           </View>
         </ScrollView>
         <Text style={styles.footerText}>All changes are saved automatically</Text>
@@ -475,21 +547,37 @@ const createStyles = (theme: ThemeStyles) => {
     captionHeaderContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      //marginBottom: spacing.sm, // Add space below header before input
-      alignItems: 'flex-end',
-      paddingBottom: spacing.sm,
-      width: '100%', // Ensure full-width
-      justifyContent: 'space-between', // Add this to push items apart
-      paddingHorizontal: spacing.sm, // Keep padding for the row
-      //backgroundColor: 'rgba(255, 0, 0, 0.1)', // Temporary debug color
+      justifyContent: 'space-between', // Added to position label and undo/redo
+      marginBottom: spacing.sm, 
+      width: '100%', 
+      paddingHorizontal: spacing.md, 
+      backgroundColor: 'rgba(255, 0, 0, 0.1)', 
+    },
+    undoRedoContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    undoRedoButton: {
+      backgroundColor: '#f0f0f0', // Light gray background
+      borderRadius: 20, // Circular
+      padding: 6, // Padding around icon
     },
     remixButtonAnimatedContainer: {
       height: BUTTON_HEIGHT, // Use new constant for height
       justifyContent: 'center',
       alignItems: 'center',
       overflow: 'hidden',
-      backgroundColor: 'rgba(0, 0, 255, 0.1)', // Temporary debug color
-      //marginBottom: spacing.sm,
+      backgroundColor: 'rgba(0, 0, 255, 0.2)', // Light blue debug color for the button itself
+      // alignSelf: 'center', // Removed - wrapper will handle alignment
+      // marginTop: spacing.md, // Removed - wrapper will handle top margin
+    },
+    remixButtonWrapper: { // New style for the wrapper
+      width: '100%',
+      alignItems: 'flex-end', // Pushes child (button) to the right
+      //backgroundColor: 'rgba(0, 255, 0, 0.2)', // Light green debug color for the wrapper
+      paddingHorizontal: spacing.md, // Padding for the wrapper content
+      marginTop: spacing.sm, // Space above the wrapper
     },
     remixButtonTouchable: {
       width: '100%',

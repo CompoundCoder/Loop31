@@ -161,16 +161,16 @@ export default function LoopDetailScreen() {
   const styles = useMemo(() => createStyles(themeStyles), [themeStyles]);
 
   // Log relevant theme values for debugging shadows and typography
-  console.log('[LoopDetailScreen] Debug Theme:');
-  console.log('  colors.card:', colors.card);
-  console.log('  colors.background:', colors.background);
-  console.log('  elevation style object:', JSON.stringify(themeStyles.elevation));
-  console.log('  typography exists:', !!typography); // Check if typography is now available
+  // console.log('[LoopDetailScreen] Debug Theme:');
+  // console.log('  colors.card:', colors.card);
+  // console.log('  colors.background:', colors.background);
+  // console.log('  elevation style object:', JSON.stringify(themeStyles.elevation));
+  // console.log('  typography exists:', !!typography); // Check if typography is now available
 
-  console.log(`[LoopDetailScreen] Received loopId: ${loopId}`);
+  // console.log(`[LoopDetailScreen] Received loopId: ${loopId}`);
 
   const loopFromContext = state.loops.find((l) => l.id === loopId);
-  console.log('[LoopDetailScreen] loopFromContext:', loopFromContext ? loopFromContext.id : 'Not Found');
+  // console.log('[LoopDetailScreen] loopFromContext:', loopFromContext ? loopFromContext.id : 'Not Found');
 
   if (!loopFromContext) {
     return (
@@ -185,13 +185,13 @@ export default function LoopDetailScreen() {
 
   // Use the loopPosts state variable for displaying posts
   const postsForDisplay = loopPosts; 
-  console.log('[LoopDetailScreen] postsForDisplay (from loopPosts state count):', postsForDisplay.length);
+  // console.log('[LoopDetailScreen] postsForDisplay (from loopPosts state count):', postsForDisplay.length);
 
   const featuredPost = postsForDisplay.length > 0 ? postsForDisplay[0] : null;
-  console.log('[LoopDetailScreen] featuredPost (ID and previewImageUrl):', featuredPost ? `${featuredPost.id} - ${featuredPost.previewImageUrl}` : 'null');
+  // console.log('[LoopDetailScreen] featuredPost (ID and previewImageUrl):', featuredPost ? `${featuredPost.id} - ${featuredPost.previewImageUrl}` : 'null');
   
   const gridPosts = postsForDisplay.length > 1 ? postsForDisplay.slice(1) : [];
-  console.log('[LoopDetailScreen] gridPosts count:', gridPosts.length);
+  // console.log('[LoopDetailScreen] gridPosts count:', gridPosts.length);
 
   // Post Edit Handlers (New)
   const handleEditPost = (post: Post) => {
@@ -239,15 +239,15 @@ export default function LoopDetailScreen() {
   };
 
   // Log state values before rendering
-  console.log('[LoopDetailScreen] Render check:', { 
-    loopId,
-    loopExists: !!loop, 
-    typographyExists: !!typography, // Check typography from themeStyles
-    isEditMenuVisible 
-  });
+  // console.log('[LoopDetailScreen] Render check:', { 
+  //   loopId,
+  //   loopExists: !!loop, 
+  //   typographyExists: !!typography, // Check typography from themeStyles
+  //   isEditMenuVisible 
+  // });
 
   // Add a log to see the loop title just before rendering
-  console.log(`[LoopDetailScreen] Rendering with loop title: ${loop?.title}`);
+  // console.log(`[LoopDetailScreen] Rendering with loop title: ${loop?.title}`);
 
   // Handler for the NEW PostEditMenu (from components/posts/)
   const handleOpenPostEditMenu = (post: Post) => {
