@@ -8,6 +8,7 @@ import { type Loop } from '@/context/LoopsContext';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useAnimatedStyle, withTiming, Easing, useSharedValue, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 
 // --- Define a list of selectable colors ---
 const PREDEFINED_COLORS = [
@@ -331,8 +332,17 @@ const LoopEditMenu: React.FC<LoopEditMenuProps> = ({ isVisible, onClose, loop, o
         <View style={StyleSheet.absoluteFillObject} />
       </TouchableWithoutFeedback>
 
+      {/* Shadow Gradient Overlay */}
+      <LinearGradient
+        colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.85)']}
+        locations={[0.05, 0.85]} // Top 5% transparent, fades to dark over next 80%, bottom 15% fully dark
+        style={styles.shadowGradientOverlay}
+        pointerEvents="none" // Make sure it doesn't block interactions
+      />
+
       {hasMounted && loop && (
         <View style={[styles.contentView, { paddingBottom: insets.bottom || themeStyles.spacing.lg }]}>
+          <View style={styles.grabber} />
           <View style={styles.headerContainer}>
             <Text style={styles.menuTitle}>Edit Loop</Text>
           </View>
@@ -436,6 +446,13 @@ const createStyles = (theme: ThemeStyles, typography: AppTheme['typography']) =>
       justifyContent: 'flex-end',
       margin: 0,
     },
+    shadowGradientOverlay: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0,
+    },
     contentView: {
       backgroundColor: colors.card,
       borderTopLeftRadius: borderRadius.lg,
@@ -449,6 +466,14 @@ const createStyles = (theme: ThemeStyles, typography: AppTheme['typography']) =>
       shadowOpacity: 0.25,
       shadowRadius: 20,
       elevation: 15,
+    },
+    grabber: {
+      width: 48,
+      height: 5,
+      borderRadius: 2.5,
+      backgroundColor: colors.border,
+      alignSelf: 'center',
+      marginBottom: spacing.md,
     },
     headerContainer: {
       flexDirection: 'row',

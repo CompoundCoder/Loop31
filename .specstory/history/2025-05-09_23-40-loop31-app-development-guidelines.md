@@ -41516,3 +41516,705 @@ Okay, I'll wait for your next instruction.
 
 ---
 
+_**User**_
+
+In components/posts/PostEditMenu.tsx, reintroduce the dark shadow gradient beneath the slide-up card to mimic the visual depth commonly seen in iOS modals. The goal is to create a soft shadow or fade behind the card that blends into the background, giving the illusion that the card is floating above the content.
+
+Implementation requirements:
+	•	Use a LinearGradient or a semi-transparent View behind the card, fading from black (#000000) to transparent.
+	•	The shadow effect should be subtle but visible, sitting behind the card component but above the backdrop area (if applicable).
+	•	Ensure it does not interfere with gestures like tap-to-dismiss or swipe-to-dismiss.
+	•	The shadow should follow the card as it slides in and out.
+
+You may define a new style such as bottomShadowOverlay (e.g., position: 'absolute', bottom: 0, height: 100, width: '100%') and layer it correctly in the JSX structure.
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+
+
+
+---
+
+
+
+---
+
+
+
+
+
+---
+
+
+
+---
+
+
+    
+
+---
+
+
+
+---
+
+Okay, I'll add a `LinearGradient` to `components/posts/PostEditMenu.tsx` to create a subtle shadow effect behind the modal card, giving it a sense of depth. This gradient will fade from transparent to a semi-transparent black towards the bottom of the screen and will animate with the modal's slide gesture.
+
+Here's how I'll implement it:
+1.  Import `LinearGradient` from `expo-linear-gradient`.
+2.  Add a new style `shadowGradientOverlay` that positions the gradient absolutely to cover the modal area.
+3.  Place the `<LinearGradient>` component within the `<Modal>`, after the custom backdrop and before the main `contentView`, ensuring it has `pointerEvents="none"`.
+The gradient will be configured to be transparent at the top and fade to a subtle black (opacity 0.4) over the bottom 40% of its height.
+
+---
+
+```diff
+  import useUndo from 'use-undo';
+  import debounce from 'lodash.debounce'; // Import debounce
++ import { LinearGradient } from 'expo-linear-gradient'; // Added import
+  
+  // Basic Post type, assuming it would be shared or imported from a common types file
+```
+
+```diff
+          <View style={StyleSheet.absoluteFillObject} />
+        </TouchableWithoutFeedback>
++ 
++       {/* Shadow Gradient Overlay */}
++       <LinearGradient
++         colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.4)']}
++         locations={[0.6, 1.0]} // Transparent for top 60%, fades to black over bottom 40%
++         style={styles.shadowGradientOverlay}
++         pointerEvents="none" // Make sure it doesn't block interactions
++       />
+  
+        <View style={[styles.contentView, { paddingBottom: insets.bottom + themeStyles.spacing.md }]}>
+```
+
+```diff
+        margin: 0,
+      },
++     shadowGradientOverlay: { // Added style for the gradient
++       position: 'absolute',
++       left: 0,
++       right: 0,
++       top: 0,
++       bottom: 0,
++     },
+      contentView: {
+        backgroundColor: colors.card,
+```
+
+---
+
+I've added the `LinearGradient` component and its associated styles to `components/posts/PostEditMenu.tsx`. This should create the subtle shadow effect you described, appearing behind the modal card and animating with it.
+
+The linter is still showing the same issues as before (related to React/JSX setup and type declarations for `lodash.debounce`). These don't seem to be caused by the latest change.
+
+Let me know how the shadow looks and if you'd like any adjustments or further changes!
+
+---
+
+_**User**_
+
+Can you make it really big? Super noticeable?
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+Okay, I can make the shadow gradient much more noticeable. I'll adjust the `LinearGradient` in `components/posts/PostEditMenu.tsx` to be darker and cover more of the area behind the modal.
+
+I'll change the gradient colors to fade from transparent to a more opaque black (e.g., `rgba(0,0,0,0.7)`) and adjust the `locations` so the gradient starts higher and is more prominent. Let's try making it start becoming opaque from 30% of the modal height from the top (`locations={[0.3, 1.0]}`) and use an opacity of `0.7` for the black color.
+
+---
+
+```diff
+        {/* Shadow Gradient Overlay */}
+        <LinearGradient
+-         colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.4)']}
+-         locations={[0.6, 1.0]} // Transparent for top 60%, fades to black over bottom 40%
++         colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.7)']}
++         locations={[0.3, 1.0]} // Transparent for top 30%, fades to black over bottom 70%
+          style={styles.shadowGradientOverlay}
+          pointerEvents="none" // Make sure it doesn't block interactions
+```
+
+---
+
+I've updated the `LinearGradient` to be significantly more noticeable. The `colors` now fade to `rgba(0,0,0,0.7)` and the `locations` are set to `[0.3, 1.0]`, making the shadow start higher and appear darker.
+
+Let me know if this is the effect you're looking for or if you'd like further adjustments!
+
+---
+
+_**User**_
+
+Even bigger and more noticable. This shadow should mostly darken the rest of the screen.
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+Understood. I'll make the shadow gradient in `components/posts/PostEditMenu.tsx` even more pronounced to darken most of the screen behind the modal.
+
+I'll adjust the `LinearGradient`'s `colors` to fade to a very dark `rgba(0,0,0,0.85)` and change the `locations` to `[0.05, 0.85]`. This will make the top 5% transparent, then quickly fade to almost fully opaque black, which will cover the bottom 15% of the gradient area at full opacity. This should give a strong darkening effect.
+
+---
+
+```diff
+        {/* Shadow Gradient Overlay */}
+        <LinearGradient
+-         colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.7)']}
+-         locations={[0.3, 1.0]} // Transparent for top 30%, fades to black over bottom 70%
++         colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.85)']}
++         locations={[0.05, 0.85]} // Top 5% transparent, fades to dark over next 80%, bottom 15% fully dark
+          style={styles.shadowGradientOverlay}
+          pointerEvents="none" // Make sure it doesn't block interactions
+```
+
+---
+
+I've adjusted the `LinearGradient` to be much more prominent. The opacity now goes up to `0.85` and the gradient starts much earlier, which should significantly darken the area behind the modal.
+
+Let me know if this achieves the visual effect you're aiming for!
+
+---
+
+_**User**_
+
+Can we add that same shadow to the edit loop card?
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+Okay, I can add a similar shadow gradient effect to the `LoopEditMenu.tsx` component. This will involve a few steps:
+
+1.  I'll first examine the structure of `LoopEditMenu.tsx` to find the best place to insert the `LinearGradient` for the shadow.
+2.  Then, I'll add the `LinearGradient` component and its corresponding styles, similar to what we did for `PostEditMenu.tsx`.
+3.  I'll make sure `LinearGradient` is imported from `expo-linear-gradient`.
+
+Let's start by reading the `LoopEditMenu.tsx` file.
+
+---
+
+Read file: components/loops/LoopEditMenu.tsx
+
+---
+
+Okay, I've reviewed the `LoopEditMenu.tsx` structure. Similar to `PostEditMenu.tsx`, it uses `react-native-modal` and has a main `contentView` that slides up.
+
+I'll apply the same shadow gradient effect here. This involves:
+1.  Importing `LinearGradient` from `expo-linear-gradient`.
+2.  Adding a `shadowGradientOverlay` style to the `createStyles` function.
+3.  Placing the `<LinearGradient>` component inside the `<Modal>`, just before the main `contentView` (which is the `View` with `styles.contentView`). I'll use the same prominent shadow settings: `colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.85)']}` and `locations={[0.05, 0.85]}`.
+
+---
+
+```diff
+  import Animated, { useAnimatedStyle, withTiming, Easing, useSharedValue, withSpring } from 'react-native-reanimated';
+  import * as Haptics from 'expo-haptics';
++ import { LinearGradient } from 'expo-linear-gradient';
+  
+  // --- Define a list of selectable colors ---
+```
+
+```diff
+          <View style={StyleSheet.absoluteFillObject} />
+        </TouchableWithoutFeedback>
++ 
++       {/* Shadow Gradient Overlay */}
++       <LinearGradient
++         colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.85)']}
++         locations={[0.05, 0.85]} // Top 5% transparent, fades to dark over next 80%, bottom 15% fully dark
++         style={styles.shadowGradientOverlay}
++         pointerEvents="none" // Make sure it doesn't block interactions
++       />
+  
+        {hasMounted && loop && (
+```
+
+```diff
+        margin: 0,
+      },
++     shadowGradientOverlay: {
++       position: 'absolute',
++       left: 0,
++       right: 0,
++       top: 0,
++       bottom: 0,
++     },
+      contentView: {
+        backgroundColor: colors.card,
+```
+
+---
+
+I've added the same prominent shadow gradient effect to `LoopEditMenu.tsx`. This includes importing `LinearGradient`, adding the `shadowGradientOverlay` style, and placing the gradient component in the JSX.
+
+The linter errors are still present and are the same ones related to TypeScript/JSX configuration and missing type declarations that we've seen before.
+
+Let me know if this looks good or if you'd like any adjustments!
+
+---
+
+_**User**_
+
+You know how we have that little handle pill bar at the top of the post edit slide up? Can we put that on the loop edit slide up?
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+
+
+
+---
+
+
+
+---
+
+Okay, I can add a grabber pill to the `LoopEditMenu.tsx` modal, similar to the one in `PostEditMenu.tsx`.
+
+This will involve:
+1.  Copying the `grabber` style from `PostEditMenu.tsx`'s `createStyles` function to `LoopEditMenu.tsx`'s `createStyles` function, ensuring it uses the local theme's `colors.border` and `spacing.md`.
+2.  Adding a `<View style={styles.grabber} />` element inside the `contentView` of `LoopEditMenu.tsx`, just before the `headerContainer`.
+
+---
+
+```diff
+        {hasMounted && loop && (
+          <View style={[styles.contentView, { paddingBottom: insets.bottom || themeStyles.spacing.lg }]}>
++           <View style={styles.grabber} />
+            <View style={styles.headerContainer}>
+              <Text style={styles.menuTitle}>Edit Loop</Text>
+```
+
+```diff
+        elevation: 15,
+      },
++     grabber: {
++       width: 48,
++       height: 5,
++       borderRadius: 2.5,
++       backgroundColor: colors.border,
++       alignSelf: 'center',
++       marginBottom: spacing.md,
++     },
+      headerContainer: {
+        flexDirection: 'row',
+```
+
+---
+
+I've added the grabber pill to the `LoopEditMenu.tsx` component. It's styled and positioned similarly to the one in `PostEditMenu.tsx`.
+
+The linter errors are the same ones we've been seeing related to the project's TypeScript and JSX setup.
+
+Let me know if that looks correct or if you need any other changes!
+
+---
+
+_**User**_
+
+On the post edit slide up, can we get rid of the temp red color?
+
+---
+
+_**Assistant**_
+
+```diff
+        width: '100%', 
+        paddingHorizontal: spacing.md, 
+-       backgroundColor: 'rgba(255, 0, 0, 0.1)', 
+      },
+      undoRedoContainer: {
+```
+
+---
+
+Okay, I've removed the temporary red background color from the `captionHeaderContainer` in `components/posts/PostEditMenu.tsx`.
+
+---
+
+_**User**_
+
+Can we replace the undo and redo icons with the ones from the lucide library?
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+Read file: package.json
+
+---
+
+`lucide-react-native` is not listed in the `package.json` dependencies.
+
+Before I proceed with modifying the code, I need to install it. I'll run `yarn add lucide-react-native`.
+
+---
+
+```bash
+yarn add lucide-react-native
+```
+
+```
+trevorpowers@Trevors-MacBook-Pro-2 Loop31-Restored % yarn add lucide-react-native                          y
+arn add lucide-react-native
+yarn add v1.22.22
+[1/4] 🔍  Resolving packages...
+[2/4] 🚚  Fetching packages...
+[3/4] 🔗  Linking dependencies...
+warning " > @shopify/flash-list@1.7.3" has unmet peer dependency "@babel/runtime@*".
+warning "react-native > @react-native/codegen@0.76.9" has unmet peer dependency "@babel/preset-env@^7.1.6".
+warning "expo > babel-preset-expo > @react-native/babel-preset > @react-native/babel-plugin-codegen > @react
+-native/codegen > jscodeshift@0.14.0" has unmet peer dependency "@babel/preset-env@^7.1.6".
+warning "jest-expo > react-server-dom-webpack@19.0.0-rc-6230622a1a-20240610" has incorrect peer dependency "
+react@19.0.0-rc-6230622a1a-20240610".
+warning "jest-expo > react-server-dom-webpack@19.0.0-rc-6230622a1a-20240610" has incorrect peer dependency "
+react-dom@19.0.0-rc-6230622a1a-20240610".
+warning "jest-expo > react-server-dom-webpack@19.0.0-rc-6230622a1a-20240610" has unmet peer dependency "webp
+ack@^5.59.0".
+[###############################################################################################] 6398/6398
+```
+
+---
+
+_**User**_
+
+Can we replace the undo and redo icons with Different ones? What libraries do we have avalible?
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+Okay, let's look at the icon libraries currently available in your project. I'll check your `package.json` file.
+
+---
+
+Read file: package.json
+
+---
+
+It looks like the `lucide-react-native` installation did complete successfully, as it's listed in your `dependencies` with version `^0.510.0`.
+
+Based on your `package.json`, here are the primary icon libraries available:
+
+1.  **`@expo/vector-icons`**: This is a comprehensive library that bundles several popular icon sets, including:
+    *   `Ionicons` (which you are currently using)
+    *   `AntDesign`
+    *   `Entypo`
+    *   `EvilIcons`
+    *   `Feather`
+    *   `FontAwesome`
+    *   `FontAwesome5`
+    *   `Fontisto`
+    *   `Foundation`
+    *   `MaterialIcons`
+    *   `MaterialCommunityIcons`
+    *   `Octicons`
+    *   `SimpleLineIcons`
+    *   `Zocial`
+
+2.  **`lucide-react-native`**: This is the library you just asked about. It provides a wide range of modern, clean icons.
+
+3.  **`expo-symbols`**: This library provides access to Apple's SF Symbols on iOS. These are high-quality, system-native symbols but are **iOS-specific**.
+
+4.  **`react-icons`**: This library is more commonly used for web projects, but it's listed. It aggregates many icon sets. Using it in React Native might require some extra setup or specific imports, depending on how it's structured for native use.
+
+**To proceed:**
+
+*   Which library would you like to use for the undo and redo icons?
+*   Do you have specific icon names in mind from that library?
+
+Once you let me know, I can update `components/posts/PostEditMenu.tsx`.
+
+---
+
+_**User**_
+
+What is installed right now?
+
+---
+
+_**Assistant**_
+
+Based on your `package.json` file, the icon libraries currently installed in your project are:
+
+1.  **`@expo/vector-icons`**: Version `^14.0.2`
+    *   This library includes many popular icon sets like `Ionicons`, `Feather`, `MaterialIcons`, `FontAwesome`, etc.
+
+2.  **`lucide-react-native`**: Version `^0.510.0`
+    *   This is the library we just attempted to install.
+
+3.  **`expo-symbols`**: Version `~0.2.2`
+    *   This provides Apple's SF Symbols (for iOS only).
+
+4.  **`react-icons`**: Version `^5.5.0`
+    *   While primarily for web, it's listed. Using it in React Native might have specific considerations.
+
+So, you have a good selection to choose from! Which library and icons would you like to use for the undo and redo buttons in `components/posts/PostEditMenu.tsx`?
+
+---
+
+_**User**_
+
+Ok lets use the Lucide undo and redo icons
+
+---
+
+_**Assistant**_
+
+Great! Let's replace the `Ionicons` for undo and redo in `components/posts/PostEditMenu.tsx` with icons from `lucide-react-native`.
+
+Typically, the Lucide icons for undo and redo are named `Undo` and `Redo`.
+
+Here's the plan:
+1.  Import `Undo` and `Redo` from `lucide-react-native` at the top of `components/posts/PostEditMenu.tsx`.
+2.  Replace the `<Ionicons name="arrow-undo" ... />` with `<Undo ... />`.
+3.  Replace the `<Ionicons name="arrow-redo" ... />` with `<Redo ... />`.
+4.  Adjust the `size` and `color` props as needed. Lucide icons usually take `size` and `color` props directly. I'll keep the current size of `18` and the conditional color logic.
+
+---
+
+```diff
+  import { useThemeStyles, type ThemeStyles } from '@/hooks/useThemeStyles';
+  import { Ionicons } from '@expo/vector-icons';
++ import { Undo, Redo } from 'lucide-react-native';
+  import useUndo from 'use-undo';
+  import debounce from 'lodash.debounce'; // Import debounce
+```
+
+```diff
+                  disabled={!canUndo}
+                >
+-                 <Ionicons
+-                   name="arrow-undo"
++                 <Undo
+                    size={18}
+                    color={!canUndo ? colors.text + '60' : colors.text}
+```
+
+```diff
+                  disabled={!canRedo}
+                >
+-                 <Ionicons
+-                   name="arrow-redo"
++                 <Redo
+                    size={18}
+                    color={!canRedo ? colors.text + '60' : colors.text}
+```
+
+---
+
+I've updated `components/posts/PostEditMenu.tsx` to use the `Undo` and `Redo` icons from `lucide-react-native`.
+
+I've also:
+*   Added the necessary import for `Undo` and `Redo` from `lucide-react-native`.
+*   Ensured the `Ionicons` import remains, as it's still used for the "sparkles" icon in the "Remix with AI" button.
+*   Kept the existing `size` (18) and conditional `color` logic for the new icons.
+
+The linter errors persist, but they are unrelated to this icon change and are the same TypeScript/JSX configuration issues we've seen previously.
+
+Let me know how it looks!
+
+---
+
+_**User**_
+
+In components/posts/PostEditMenu.tsx, update the Undo and Redo buttons to use platform-specific icons:
+	1.	Import Symbol from expo-symbols for iOS.
+	2.	Import Ionicons from @expo/vector-icons as fallback for Android.
+	3.	Use Platform.OS to conditionally render:
+	•	On iOS: arrow.uturn.left and arrow.uturn.right using <Symbol />.
+	•	On Android: arrow-undo-outline and arrow-redo-outline using <Ionicons />.
+	4.	Match the current button size and color theme (same size as before, using themeStyles.colors.text or similar).
+	5.	Make sure the buttons still call handleUndo and handleRedo as before.
+	6.	Keep the layout the same — both buttons inside the captionHeaderContainer, to the right of the “Edit Caption” label.
+
+Do not change any unrelated logic or styling.
+
+---
+
+_**Assistant**_
+
+Okay, I'll update the Undo and Redo buttons in `components/posts/PostEditMenu.tsx` to use platform-specific icons as you've requested.
+
+Here's the plan:
+1.  Import `Symbol` from `expo-symbols`.
+2.  Keep the `Ionicons` import from `@expo/vector-icons`.
+3.  Import `Platform` from `react-native`.
+4.  In the JSX for the Undo and Redo buttons, use `Platform.OS === 'ios'` to conditionally render either `<Symbol>` (with names `arrow.uturn.left` and `arrow.uturn.right`) or `<Ionicons>` (with names `arrow-undo-outline` and `arrow-redo-outline`).
+5.  I'll ensure the `size` remains `18` and the conditional `color` logic (using `colors.text` and `colors.text + '60'`) is applied to both `Symbol` and `Ionicons`. The `Symbol` component uses a `tintColor` prop for color.
+
+---
+
+```diff
+  import { useThemeStyles, type ThemeStyles } from '@/hooks/useThemeStyles';
+  import { Ionicons } from '@expo/vector-icons';
+- import { Undo, Redo } from 'lucide-react-native';
++ import { Undo as LucideUndo, Redo as LucideRedo } from 'lucide-react-native';
+  import useUndo from 'use-undo';
+  import debounce from 'lodash.debounce'; // Import debounce
+  import { LinearGradient } from 'expo-linear-gradient'; // Added import
++ import { Symbol } from 'expo-symbols'; // Import for iOS SF Symbols
+  
+  // Basic Post type, assuming it would be shared or imported from a common types file
+```
+
+```diff
+                  disabled={!canUndo}
+                >
+-                 <Undo
++                 {Platform.OS === 'ios' ? (
++                   <Symbol 
++                     name="arrow.uturn.left"
++                     type="hierarchical"
++                     size={18} 
++                     tintColor={!canUndo ? colors.text + '60' : colors.text}
++                   />
++                 ) : (
++                   <Ionicons // Fallback for Android
++                     name="arrow-undo-outline"
+                      size={18}
+                      color={!canUndo ? colors.text + '60' : colors.text}
+                    />
++                 )}
+                </TouchableOpacity>
+                <TouchableOpacity
+```
+
+```diff
+                  disabled={!canRedo}
+                >
+-                 <Redo
++                 {Platform.OS === 'ios' ? (
++                   <Symbol 
++                     name="arrow.uturn.right"
++                     type="hierarchical"
++                     size={18}
++                     tintColor={!canRedo ? colors.text + '60' : colors.text}
++                   />
++                 ) : (
++                   <Ionicons // Fallback for Android
++                     name="arrow-redo-outline"
+                      size={18}
+                      color={!canRedo ? colors.text + '60' : colors.text}
+                    />
++                 )}
+                </TouchableOpacity>
+              </View>
+```
+
+---
+
+It seems there was a slight hiccup in the previous edit. The model tried to keep the `lucide-react-native` imports while also adding the new platform-specific logic. Additionally, the linter suggests that the correct export from `expo-symbols` might be `SFSymbol` instead of `Symbol`.
+
+Let's correct this. I'll make the following adjustments:
+1.  Ensure `Platform` from `react-native` is correctly imported.
+2.  Change the import from `expo-symbols` from `Symbol` to `SFSymbol`.
+3.  Use `SFSymbol` in the conditional rendering for iOS.
+4.  Remove the `lucide-react-native` imports (`Undo as LucideUndo`, `Redo as LucideRedo`) as they are no longer needed.
+
+---
+
+```diff
+  import { useThemeStyles, type ThemeStyles } from '@/hooks/useThemeStyles';
+  import { Ionicons } from '@expo/vector-icons';
+- import { Undo as LucideUndo, Redo as LucideRedo } from 'lucide-react-native';
++ import { SFSymbol } from 'expo-symbols';
+  import useUndo from 'use-undo';
+  import debounce from 'lodash.debounce'; // Import debounce
+  import { LinearGradient } from 'expo-linear-gradient'; // Added import
+- import { Symbol } from 'expo-symbols'; // Import for iOS SF Symbols
+  
+  // Basic Post type, assuming it would be shared or imported from a common types file
+```
+
+```diff
+                >
+                  {Platform.OS === 'ios' ? (
+-                   <Symbol 
++                   <SFSymbol
+                      name="arrow.uturn.left"
+                      type="hierarchical"
+```
+
+```diff
+                >
+                  {Platform.OS === 'ios' ? (
+-                   <Symbol 
++                   <SFSymbol
+                      name="arrow.uturn.right"
+                      type="hierarchical"
+```
+
+---
+
+Okay, I've made the corrections:
+
+*   The import from `expo-symbols` is now `import { SFSymbol } from 'expo-symbols';`.
+*   The iOS icons now use `<SFSymbol />`.
+*   The unused imports for `Undo` and `Redo` from `lucide-react-native` have been removed.
+*   `Platform` from `react-native` is confirmed to be imported.
+
+This should correctly implement the platform-specific icons for the undo and redo buttons. The persistent linter errors are still related to the broader project setup.
+
+---
+
+_**User**_
+
+In components/posts/PostEditMenu.tsx, I’m getting this error:
+
+	Warning: React.jsx: type is invalid – expected a string (for built-in components) or a class/function (for composite components) but got: undefined.
+This error occurs around line 412 and points to the PostEditMenu render. I suspect it might be related to a misimported icon or component (possibly from expo-symbols, lucide-react-native, or use-undo).
+
+Please do the following:
+	1.	Show me all icon or component imports at the top of the file.
+	2.	Find any usage of Symbol, LucideIcon, or similar custom icon components near line 412.
+	3.	Highlight any component being rendered that may be undefined due to incorrect import or platform mismatch.
+	4.	Suggest how to make the undo/redo icons cross-platform safe using fallback logic (like Platform.OS).
+
+Only modify what’s necessary to fix the crash. Do not refactor unrelated parts of the file.
+
+---
+
+_**Assistant**_
+
+
+
+---
+

@@ -18,6 +18,7 @@ import { useThemeStyles, type ThemeStyles } from '@/hooks/useThemeStyles';
 import { Ionicons } from '@expo/vector-icons';
 import useUndo from 'use-undo';
 import debounce from 'lodash.debounce'; // Import debounce
+import { LinearGradient } from 'expo-linear-gradient'; // Added import
 
 // Basic Post type, assuming it would be shared or imported from a common types file
 interface Post {
@@ -372,6 +373,14 @@ export const PostEditMenu: React.FC<PostEditMenuProps> = ({
         <View style={StyleSheet.absoluteFillObject} />
       </TouchableWithoutFeedback>
 
+      {/* Shadow Gradient Overlay */}
+      <LinearGradient
+        colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.85)']}
+        locations={[0.05, 0.85]} // Top 5% transparent, fades to dark over next 80%, bottom 15% fully dark
+        style={styles.shadowGradientOverlay}
+        pointerEvents="none" // Make sure it doesn't block interactions
+      />
+
       <View style={[styles.contentView, { paddingBottom: insets.bottom + themeStyles.spacing.md }]}>
         <View style={styles.grabber} />
         <Text style={styles.modalTitle}>Edit Post</Text>
@@ -398,8 +407,8 @@ export const PostEditMenu: React.FC<PostEditMenuProps> = ({
                 style={styles.undoRedoButton}
                 disabled={!canUndo}
               >
-                <Ionicons
-                  name="arrow-undo"
+                <Ionicons // Use Ionicons for both platforms
+                  name="arrow-undo-outline"
                   size={18}
                   color={!canUndo ? colors.text + '60' : colors.text}
                 />
@@ -409,8 +418,8 @@ export const PostEditMenu: React.FC<PostEditMenuProps> = ({
                 style={styles.undoRedoButton}
                 disabled={!canRedo}
               >
-                <Ionicons
-                  name="arrow-redo"
+                <Ionicons // Use Ionicons for both platforms
+                  name="arrow-redo-outline"
                   size={18}
                   color={!canRedo ? colors.text + '60' : colors.text}
                 />
@@ -488,6 +497,13 @@ const createStyles = (theme: ThemeStyles) => {
       justifyContent: 'flex-end',
       margin: 0,
     },
+    shadowGradientOverlay: { // Added style for the gradient
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0,
+    },
     contentView: {
       backgroundColor: colors.card,
       paddingHorizontal: spacing.lg,
@@ -551,7 +567,6 @@ const createStyles = (theme: ThemeStyles) => {
       marginBottom: spacing.sm, 
       width: '100%', 
       paddingHorizontal: spacing.md, 
-      backgroundColor: 'rgba(255, 0, 0, 0.1)', 
     },
     undoRedoContainer: {
       flexDirection: 'row',
