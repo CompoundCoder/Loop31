@@ -132,6 +132,16 @@ export default function RootLayout() {
               <Tabs.Screen name="posts/create" options={{ href: null }} />
               <Tabs.Screen name="shop/pack/[packId]" options={{ href: null }} />
               <Tabs.Screen name="+not-found" options={{ href: null }} />
+              {/* <Tabs.Screen 
+                name="test-loop-header" 
+                options={{ 
+                  title: 'Test Header',
+                  tabBarIcon: ({ focused, color, size }) => (
+                    <AnimatedTabIcon focused={focused} iconName="construct-outline" color={color} size={size} />
+                  ),
+                  tabBarStyle: { display: 'none' } 
+                }}
+              /> */}
             </Tabs>
             <ToastStack />
           </NotificationProvider>

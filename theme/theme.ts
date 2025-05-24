@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 
 // Spacing system
-const spacing = {
+export const spacing = {
   none: 0,
   xs: 4,
   sm: 8,

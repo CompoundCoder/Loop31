@@ -42,6 +42,7 @@
     "react-native": "0.76.9",
     "react-native-animatable": "^1.4.0",
     "react-native-context-menu-view": "^1.19.0",
+    "react-native-draggable-flatlist": "4.0.3",
     "react-native-gesture-handler": "~2.20.2",
     "react-native-modal": "^14.0.0-rc.1",
     "react-native-modalize": "^2.1.1",

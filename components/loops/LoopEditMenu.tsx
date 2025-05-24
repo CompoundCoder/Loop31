@@ -159,8 +159,6 @@ const LoopEditMenu: React.FC<LoopEditMenuProps> = ({ isVisible, onClose, loop, o
   const [hasMounted, setHasMounted] = useState(false);
   const [isScheduleInitialized, setIsScheduleInitialized] = useState(false);
 
-  const isDismissingRef = useRef(false);
-
   useEffect(() => {
     let mountTimer: NodeJS.Timeout;
     if (isVisible) {
@@ -198,17 +196,9 @@ const LoopEditMenu: React.FC<LoopEditMenuProps> = ({ isVisible, onClose, loop, o
   const handleModalHide = () => {
     setHasMounted(false);
     setIsScheduleInitialized(false);
-    isDismissingRef.current = false; // Reset dismiss flag
   };
 
   const handleDismiss = () => {
-    console.log('[LoopEditMenu] handleDismiss triggered.');
-    if (isDismissingRef.current) {
-      console.log('[LoopEditMenu] handleDismiss: Already dismissing, returning.');
-      return; // Already dismissing, do nothing
-    }
-    console.log('[LoopEditMenu] handleDismiss: Proceeding with dismiss.');
-    isDismissingRef.current = true;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onClose(); // Call onClose directly
   };
@@ -221,46 +211,40 @@ const LoopEditMenu: React.FC<LoopEditMenuProps> = ({ isVisible, onClose, loop, o
         const sortedDays = [...customDays].sort((a, b) => DAYS_FULL.indexOf(a) - DAYS_FULL.indexOf(b));
         scheduleToSave = sortedDays.join(',');
       } else {
-        scheduleToSave = 'Weekly'; 
+        if (customDays.length === 0) {
+            console.log("[LoopEditMenu] Custom schedule selected but no days chosen. Not saving schedule change from commitScheduleChange.");
+            return; // Don't save if custom is chosen but no days are selected.
+        }
       }
     }
     if (scheduleToSave !== loop.schedule) {
+        console.log(`[LoopEditMenu] commitScheduleChange: Saving schedule: ${scheduleToSave}`);
         onSave({ id: loop.id, schedule: scheduleToSave });
     }
   }, [loop, editedSchedule, customDays, onSave]);
 
   const handleTitleEndEditing = () => {
-    console.log('[LoopEditMenu] handleTitleEndEditing triggered.');
-    console.log('[LoopEditMenu] Current loop ID:', loop?.id);
-    console.log('[LoopEditMenu] Edited Title:', editedTitle);
-    console.log('[LoopEditMenu] Original Title:', originalTitle);
-
-    if (loop && editedTitle.trim() !== originalTitle) {
-      const newTitle = editedTitle.trim();
-      console.log('[LoopEditMenu] Title has changed. newTitle:', newTitle);
-      if(newTitle){
-        console.log('[LoopEditMenu] Calling onSave with payload:', { id: loop.id, title: newTitle });
-        onSave({ id: loop.id, title: newTitle });
-        setOriginalTitle(newTitle); // Keep originalTitle in sync after a successful save
-      } else {
-        console.log('[LoopEditMenu] New title is empty, reverting to originalTitle.');
-        setEditedTitle(originalTitle);
-      }
-    } else {
-      console.log('[LoopEditMenu] Title has NOT changed or loop is null. No save action taken.');
-    }
+    // This function is no longer responsible for saving. It can be used for other onBlur logic if needed.
   };
 
   const handleColorPress = (color: string) => {
+    console.log('[LoopEditMenu] Color pressed:', color);
     setEditedColor(color);
-    if (loop && color !== loop.color) {
-      onSave({ id: loop.id, color: color });
+    if (loop) {
+      onSave({ id: loop.id, color: color }); // Save immediately
     }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   const handleScheduleOptionPress = (optionValue: string) => {
-    console.log('[LoopEditMenu] handleScheduleOptionPress called with:', optionValue);
+    console.log('[LoopEditMenu] Schedule option pressed:', optionValue);
     setEditedSchedule(optionValue);
+    if (loop && optionValue !== 'Custom') {
+      onSave({ id: loop.id, schedule: optionValue }); // Save immediately if not custom
+    }
+    // If 'Custom' is selected, user will interact with day picker, 
+    // and commitScheduleChange will be called separately (e.g., when modal for day picking closes or a dedicated save for custom is pressed)
+    // For now, if they switch TO custom, we don't save immediately. If they switch FROM custom to something else, it saves.
   };
   
   const toggleCustomDayModified = (day: string) => {
@@ -357,11 +341,22 @@ const LoopEditMenu: React.FC<LoopEditMenuProps> = ({ isVisible, onClose, loop, o
               <Text style={styles.label}>Loop Name</Text>
               <TextInput 
                 style={styles.input}
+                placeholder="Enter Loop Name"
+                placeholderTextColor={themeStyles.colors.tabInactive}
                 value={editedTitle}
-                onChangeText={setEditedTitle}
-                onEndEditing={handleTitleEndEditing}
-                placeholder="Enter loop name"
-                placeholderTextColor={themeStyles.colors.text + '80'}
+                onChangeText={(text) => {
+                  setEditedTitle(text);
+                  if (loop) {
+                    // Live update for title
+                    if (text.trim() !== originalTitle) {
+                        onSave({ id: loop.id, title: text.trim() });
+                        // We might want to update originalTitle here too, or let the parent re-render handle it.
+                        // For true live update, the parent re-render with new loop data is key.
+                    }
+                  }
+                }}
+                onEndEditing={handleTitleEndEditing} // Can still be used for blur effects, just not saving
+                maxLength={100}
               />
             </View>
             

@@ -1,4 +1,5 @@
 import React, { createContext, useReducer, useContext, type ReactNode, type Dispatch } from 'react';
+import { ImageSourcePropType } from 'react-native';
 import { MOCK_POSTS } from '@/data/mockPosts'; // Import dependency for initial data
 
 // --- Define Loop Interface ---
@@ -12,10 +13,18 @@ export interface Loop {
   isActive: boolean;
   status?: 'active' | 'paused' | 'draft' | 'error';
   previewImageUrl?: string; // Optional preview image URL
+  posts: PostDisplayData[]; // Updated to use PostDisplayData
   // Placeholder settings fields (for future phases)
   frequency?: string; 
   randomize?: boolean;
   linkedAccounts?: string[]; 
+}
+
+// Define PostDisplayData interface for LoopDetailsScreen consumption
+export interface PostDisplayData {
+  id: string;
+  caption: string;
+  imageSource: ImageSourcePropType; // For TestPostCardMini
 }
 
 // --- Reducer State ---
@@ -34,17 +43,18 @@ export type LoopsAction =
   | { type: 'DELETE'; payload: string } // loopId
   | { type: 'SET_INITIAL_LOOPS'; payload: Loop[] }
   | { type: 'UPDATE_LOOP'; payload: Partial<Loop> & { id: string } } // For future editing
-  | { type: 'ADD_LOOP'; payload: Loop }; // For future creation
+  | { type: 'ADD_LOOP'; payload: Loop } // For future creation
+  | { type: 'UPDATE_LOOP_POSTS'; payload: { loopId: string; newPosts: PostDisplayData[] } }; // New action
 
 // --- Initial Mock Data ---
 // (Moved from app/loops/index.tsx)
 const initialMockLoopsData: LoopsState['loops'] = [
-  { id: 'auto-listing', title: 'Auto-Listing Loop', color: '#888888', postCount: 0, schedule: 'Auto', isActive: false, status: 'paused', previewImageUrl: MOCK_POSTS[0 % MOCK_POSTS.length].imageUrl, frequency: 'Auto', randomize: false, linkedAccounts: [] },
-  { id: 'p1', title: 'Core Content Loop', color: '#FF6B6B', postCount: 25, schedule: 'Weekly', isActive: true, status: 'active', previewImageUrl: MOCK_POSTS[1 % MOCK_POSTS.length].imageUrl, frequency: 'Weekly', randomize: true, linkedAccounts: ['twitter', 'linkedin'] },
-  { id: 'p2', title: 'Community Engagement', color: '#45B7D1', postCount: 12, schedule: 'Mon, Wed, Fri', isActive: false, status: 'paused', previewImageUrl: MOCK_POSTS[2 % MOCK_POSTS.length].imageUrl, frequency: 'Custom', randomize: false, linkedAccounts: ['facebook'] },
-  { id: 'f1', title: 'Tuesday Tips', color: '#4ECDC4', postCount: 8, schedule: 'Every Tuesday', isActive: true, status: 'active', previewImageUrl: MOCK_POSTS[3 % MOCK_POSTS.length].imageUrl, frequency: 'Weekly', randomize: false, linkedAccounts: ['instagram'] },
-  { id: 'f2', title: 'Market Updates', color: '#FFA07A', postCount: 18, schedule: 'Bi-Weekly', isActive: true, status: 'active', previewImageUrl: MOCK_POSTS[4 % MOCK_POSTS.length].imageUrl, frequency: 'Bi-Weekly', randomize: true, linkedAccounts: ['linkedin'] },
-  { id: 'f3', title: 'Testimonials', color: '#96CEB4', postCount: 5, schedule: 'Monthly', isActive: false, status: 'paused', previewImageUrl: MOCK_POSTS[0 % MOCK_POSTS.length].imageUrl, frequency: 'Monthly', randomize: false, linkedAccounts: ['facebook', 'instagram'] }, 
+  { id: 'auto-listing', title: 'Auto-Listing Loop', color: '#888888', postCount: 0, schedule: 'Auto', isActive: false, status: 'paused', previewImageUrl: MOCK_POSTS[0 % MOCK_POSTS.length].imageUrl, posts: [], frequency: 'Auto', randomize: false, linkedAccounts: [] },
+  { id: 'p1', title: 'Core Content Loop', color: '#FF6B6B', postCount: 3, schedule: 'Weekly', isActive: true, status: 'active', previewImageUrl: MOCK_POSTS[1 % MOCK_POSTS.length].imageUrl, posts: MOCK_POSTS.slice(0,3).map(p => ({id: p.id, caption: p.caption, imageSource: require('@/assets/images/posts/post-1.jpg') }) ), frequency: 'Weekly', randomize: true, linkedAccounts: ['twitter', 'linkedin'] },
+  { id: 'p2', title: 'Community Engagement', color: '#45B7D1', postCount: 2, schedule: 'Mon, Wed, Fri', isActive: false, status: 'paused', previewImageUrl: MOCK_POSTS[2 % MOCK_POSTS.length].imageUrl, posts: MOCK_POSTS.slice(3,5).map(p => ({id: p.id, caption: p.caption, imageSource: require('@/assets/images/posts/post-2.jpg') }) ), frequency: 'Custom', randomize: false, linkedAccounts: ['facebook'] },
+  { id: 'f1', title: 'Tuesday Tips', color: '#4ECDC4', postCount: 1, schedule: 'Every Tuesday', isActive: true, status: 'active', previewImageUrl: MOCK_POSTS[3 % MOCK_POSTS.length].imageUrl, posts: MOCK_POSTS.slice(5,6).map(p => ({id: p.id, caption: p.caption, imageSource: require('@/assets/images/posts/post-3.jpg') }) ), frequency: 'Weekly', randomize: false, linkedAccounts: ['instagram'] },
+  { id: 'f2', title: 'Market Updates', color: '#FFA07A', postCount: 2, schedule: 'Bi-Weekly', isActive: true, status: 'active', previewImageUrl: MOCK_POSTS[4 % MOCK_POSTS.length].imageUrl, posts: MOCK_POSTS.slice(6,8).map(p => ({id: p.id, caption: p.caption, imageSource: require('@/assets/images/posts/post-4.jpg') }) ), frequency: 'Bi-Weekly', randomize: true, linkedAccounts: ['linkedin'] },
+  { id: 'f3', title: 'Testimonials', color: '#96CEB4', postCount: 1, schedule: 'Monthly', isActive: false, status: 'paused', previewImageUrl: MOCK_POSTS[0 % MOCK_POSTS.length].imageUrl, posts: MOCK_POSTS.slice(8,9).map(p => ({id: p.id, caption: p.caption, imageSource: require('@/assets/images/posts/post-5.jpg') }) ), frequency: 'Monthly', randomize: false, linkedAccounts: ['facebook', 'instagram'] }, 
 ];
 
 // --- Initial Reducer State ---
@@ -98,6 +108,15 @@ const loopsReducer = (state: LoopsState, action: LoopsAction): LoopsState => {
         loops: state.loops.map(loop =>
           loop.id === action.payload.id
             ? { ...loop, ...action.payload } // Merge updates into the found loop
+            : loop
+        ),
+      };
+    case 'UPDATE_LOOP_POSTS': // Handle new action
+      return {
+        ...state,
+        loops: state.loops.map(loop =>
+          loop.id === action.payload.loopId
+            ? { ...loop, posts: action.payload.newPosts, postCount: action.payload.newPosts.length }
             : loop
         ),
       };

@@ -11,7 +11,6 @@ export default function LoopsStackLayout() {
           in this directory group. We don't need explicit Stack.Screen components here.
           Screen options can be configured globally via screenOptions prop
           or individually in each screen file. */}
-      {/* Restore headerShown: false */}
       <Stack screenOptions={{ headerShown: false }}>
         {/* Remove all <Stack.Screen ... /> components */}
       </Stack>
