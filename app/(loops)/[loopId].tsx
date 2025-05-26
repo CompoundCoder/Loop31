@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, TouchableOpacity, Switch, StyleSheet, Text, ScrollView, Platform, ImageSourcePropType } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, TouchableOpacity, Switch, StyleSheet, Text, ScrollView, Platform, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import TestPostCardMini from '../../components/test-PostCardMini';
 import { spacing } from '../../theme/theme';
-import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
-import Animated, { useAnimatedStyle, withTiming, Easing, useSharedValue } from 'react-native-reanimated';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { SCREEN_LAYOUT } from '@/constants/layout';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,102 +11,41 @@ import { useNavigation } from '@react-navigation/native';
 import { useLocalSearchParams } from 'expo-router';
 import { useLoops, type Loop as ContextLoop, type PostDisplayData } from '@/context/LoopsContext';
 import LoopEditMenu from '@/components/loops/LoopEditMenu';
-
-// Define LocalPostData interface (mock post structure for the list)
-// interface LocalPostData {
-//   id: string;
-//   caption: string;
-//   imageSource: ImageSourcePropType;
-// }
-
-const TEMP_COLORS = {
-  screenContentContainer: 'rgba(255, 0, 0, 0)',
-  backButton: 'rgba(0, 255, 0, 0)',
-  titleOptions: 'rgba(0, 0, 255, 0)',
-  queueTitle: 'rgba(0, 255, 255, 0)',
-  cardListContainer: 'rgba(200, 100, 0, 0)',
-  safeAreaContainer: 'rgba(128, 0, 128, 0)',
-  renderItemOuter: 'rgba(255, 166, 0, 0)',
-  renderItemTransform: 'rgba(255, 192, 203, 0)',
-};
+import PostCardS from '@/components/loops/PostCardS';
+import { useFadeIn } from '@/hooks/useFadeIn';
 
 const touchableMinHeight = 44;
 
 export const options = {
     headerShown: false,
     tabBarStyle: { display: 'none' },
-  };
-
-// Define the item renderer as a separate, memoized component
-const MemoizedQueueItem = React.memo(({ item, drag, isActive: itemIsActive }: RenderItemParams<PostDisplayData>) => {
-  const scale = useSharedValue(1);
-
-  useEffect(() => {
-    if (itemIsActive) {
-      scale.value = withTiming(1.06, { duration: 120 });
-    } else {
-      scale.value = withTiming(1.0, { duration: 160, easing: Easing.out(Easing.exp) });
-    }
-  }, [itemIsActive, scale]);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: scale.value }],
-    };
-  });
-
-  return (
-    <View style={{ flex: 1, overflow: 'visible', backgroundColor: TEMP_COLORS.renderItemOuter }}>
-      <Animated.View style={[
-        animatedStyle, 
-        { backgroundColor: TEMP_COLORS.renderItemTransform, paddingVertical: spacing.xs }
-      ]}>
-        <TestPostCardMini
-          image={item.imageSource}
-          caption={item.caption}
-          onPress={() => console.log(`Pressed ${item.id}`)}
-          drag={drag} 
-          isActive={itemIsActive} 
-        />
-      </Animated.View>
-    </View>
-  );
-});
+};
 
 export default function LoopDetailsScreen() {
-  const { colors, typography } = useThemeStyles();
+  const { colors, typography, spacing: themeSpacing } = useThemeStyles();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { loopId } = useLocalSearchParams<{ loopId: string }>();
   const { state, dispatch } = useLoops();
+  const { opacityStyle: upNextOpacityStyle } = useFadeIn();
 
   const loop: ContextLoop | undefined = state.loops.find(l => l.id === loopId);
 
   const [isActive, setIsActive] = useState(loop?.isActive ?? false);
-  const [posts, setPosts] = useState<PostDisplayData[]>(loop?.posts ?? []); // Use loop.posts here
-
-  const [scrollEnabled, setScrollEnabled] = useState(true); 
+  const [posts, setPosts] = useState<PostDisplayData[]>(loop?.posts ?? []);
   const [isEditMenuVisible, setIsEditMenuVisible] = useState(false);
 
   useEffect(() => {
     if (loop) {
-      console.log('Loop data updated for ID:', loopId, loop.title);
       setIsActive(loop.isActive);
-      setPosts(loop.posts); // Update posts when loop data changes
+      setPosts(loop.posts);
     } else {
-      console.log('Loop not found in context for ID:', loopId);
-      setPosts([]); // Clear posts if loop is not found
+      setPosts([]);
     }
   }, [loop, loopId]);
 
-  // Use loop.color for the gradient, provide a fallback if loop or loop.color is undefined
   const gradientStartColor = loop?.color ?? colors.accent; 
   const gradientEndColor = colors.background;
-
-  // Use the memoized component for renderItem
-  const renderQueueItem = useCallback((props: RenderItemParams<PostDisplayData>) => {
-    return <MemoizedQueueItem {...props} />;
-  }, []);
 
   const styles = StyleSheet.create({
     safeArea: {
@@ -141,12 +78,13 @@ export default function LoopDetailsScreen() {
       fontWeight: '600',
       color: colors.text,
     },
-    listHeaderContentContainer: { 
-      paddingTop: 16, 
-    },
     flatListContent: {
       paddingBottom: insets.bottom + 75,
       paddingHorizontal: SCREEN_LAYOUT.content.horizontalPadding,
+    },
+    listHeaderContentContainer: { 
+      paddingTop: 16, 
+      //backgroundColor: 'rgba(255, 0, 0, 0.3)',
     },
     backButtonContainer: {
       flexDirection: 'row',
@@ -171,7 +109,7 @@ export default function LoopDetailsScreen() {
       justifyContent: 'space-between',
       alignItems: 'center',
       width: '100%',
-      marginBottom: 12, 
+      marginBottom: 33, 
       marginTop: 12,
       paddingVertical: 4, 
     },
@@ -204,15 +142,40 @@ export default function LoopDetailsScreen() {
       fontSize: 22,
       fontWeight: 'bold',
       color: colors.text,
-      marginBottom: 16,
+      marginBottom: themeSpacing.md,
+      //backgroundColor: 'blue',
     },
     queueTitleSection: { 
-      marginTop: 12, 
+      marginTop: 16, 
       overflow: 'visible', 
+      //backgroundColor: 'red',
     },
     centeredFeedback: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background },
     feedbackText: { fontSize: 18, color: colors.text, textAlign: 'center' },
   }); 
+
+  const handleToggleIsActive = (newIsActiveValue: boolean) => {
+    setIsActive(newIsActiveValue);
+    if (loop?.id) {
+      dispatch({ type: 'TOGGLE_ACTIVE', payload: { loopId: loop.id, isActive: newIsActiveValue } });
+    }
+  };
+
+  const renderUpNext = () => {
+    if (posts.length === 0) {
+      return null;
+    }
+    return (
+      <View style={{ marginBottom: themeSpacing.sm }}>
+        <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.text, marginBottom: themeSpacing.sm }}>
+          Up Next
+        </Text>
+        <Animated.View style={[{ paddingVertical: themeSpacing.sm }, upNextOpacityStyle]}>
+          <PostCardS post={posts[0]} variant="featured" />
+        </Animated.View>
+      </View>
+    );
+  };
 
   if (!loop) {
     return (
@@ -221,14 +184,6 @@ export default function LoopDetailsScreen() {
       </View>
     );
   }
-
-  const handleToggleIsActive = (newIsActiveValue: boolean) => {
-    setIsActive(newIsActiveValue); // Update local state immediately
-    if (loop?.id) { // Ensure loop and loop.id are defined
-      dispatch({ type: 'TOGGLE_ACTIVE', payload: { loopId: loop.id, isActive: newIsActiveValue } });
-      console.log('Loop active state toggled to:', newIsActiveValue, 'for loop:', loop.id);
-    }
-  };
 
   return (
     <>
@@ -251,55 +206,46 @@ export default function LoopDetailsScreen() {
             end={{ x: 0.34, y: 0.5}}
             style={StyleSheet.absoluteFillObject}
           />
-          <DraggableFlatList
-            data={posts} // Use posts state here
-            keyExtractor={(item) => item.id}
-            renderItem={renderQueueItem}
-            onDragBegin={() => setScrollEnabled(false)}
-            onDragEnd={({ data }) => {
-              requestAnimationFrame(() => { // Delay state updates
-                setPosts(data); 
-                if (loopId) { 
-                  dispatch({ type: 'UPDATE_LOOP_POSTS', payload: { loopId, newPosts: data } });
-                }
-              });
-              setScrollEnabled(true);
-            }}
-            scrollEnabled={scrollEnabled}
-            removeClippedSubviews={false}
-            contentContainerStyle={styles.flatListContent} 
-            ListHeaderComponent={
-              <View style={styles.listHeaderContentContainer}> 
-                <View style={styles.titleOptionsRow}>
-                  <View style={styles.titleSubtitleContainer}>
-                    <Text style={styles.titleText}>{loop.title}</Text> 
-                    <Text style={styles.subtitleText}>Posts {loop.schedule}</Text>
-                  </View>
-                  <View style={styles.actionsContainer}>
-                    <Switch
-                      value={isActive} 
-                      onValueChange={handleToggleIsActive} 
-                      trackColor={{ true: loop?.color ? loop.color : '#34C759AA', false: '#E9E9EA' }}
-                      thumbColor={Platform.OS === 'ios' ? undefined : '#FFFFFF'}
-                      ios_backgroundColor="#E9E9EA"
-                      style={styles.switchStyle} 
-                    />
-                    <TouchableOpacity 
-                      onPress={() => setIsEditMenuVisible(true)} 
-                      style={styles.optionsButton}
-                    >
-                      <Ionicons name="ellipsis-vertical" size={24} color={colors.tabInactive} />
-                    </TouchableOpacity>
-                  </View>
+          <ScrollView contentContainerStyle={styles.flatListContent}>
+            <View style={styles.listHeaderContentContainer}> 
+              <View style={styles.titleOptionsRow}>
+                <View style={styles.titleSubtitleContainer}>
+                  <Text style={styles.titleText}>{loop.title}</Text> 
+                  <Text style={styles.subtitleText}>Posts {loop.schedule}</Text>
                 </View>
-                <View style={styles.queueTitleSection}>
-                  <Text style={styles.sectionTitle}>
-                    Queue ({posts.length})
-                  </Text>
+                <View style={styles.actionsContainer}>
+                  <Switch
+                    value={isActive} 
+                    onValueChange={handleToggleIsActive} 
+                    trackColor={{ true: loop?.color ? loop.color : '#34C759AA', false: '#E9E9EA' }}
+                    thumbColor={Platform.OS === 'ios' ? undefined : '#FFFFFF'}
+                    ios_backgroundColor="#E9E9EA"
+                    style={styles.switchStyle} 
+                  />
+                  <TouchableOpacity 
+                    onPress={() => setIsEditMenuVisible(true)} 
+                    style={styles.optionsButton}
+                  >
+                    <Ionicons name="ellipsis-vertical" size={24} color={colors.tabInactive} />
+                  </TouchableOpacity>
                 </View>
               </View>
-            }
-          />
+              {renderUpNext()}
+              <View style={styles.queueTitleSection}>
+                <Text style={styles.sectionTitle}>
+                  Queue ({posts.length})
+                </Text>
+              </View>
+            </View>
+            {posts.map((item) => (
+              <TestPostCardMini
+                key={item.id}
+                image={item.imageSource}
+                caption={item.caption}
+                onPress={() => console.log(`Pressed ${item.id}`)}
+              />
+            ))}
+          </ScrollView>
           {loop && (
             <LoopEditMenu
               isVisible={isEditMenuVisible}
@@ -310,11 +256,10 @@ export default function LoopDetailsScreen() {
                   dispatch({
                     type: 'UPDATE_LOOP',
                     payload: {
-                      ...updatedData, // Spread updatedData first
-                      id: loop.id,     // Ensure loop.id takes precedence
+                      ...updatedData,
+                      id: loop.id,
                     },
                   });
-                  console.log('✅ Dispatched UPDATE_LOOP with:', updatedData);
                 }
               }}
               typography={typography} 
@@ -324,4 +269,4 @@ export default function LoopDetailsScreen() {
       </SafeAreaView>
     </>
   );
-} 
+}

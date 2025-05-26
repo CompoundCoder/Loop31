@@ -118,7 +118,7 @@ const createStyles = (theme: ThemeStyles, variant: 'featured' | 'mini', cardWidt
     },
     captionContainer: { 
       paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm, 
+      paddingVertical: spacing.md, 
       minHeight: (18 * 2) + (spacing.sm * 2),
     },
     captionText: { 

@@ -13,7 +13,7 @@ import {
 import { useTheme } from '@react-navigation/native';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import type { ExtendedTheme } from '@/app/_layout';
+import type { Theme as ExtendedTheme } from '@/theme/theme';
 import Reanimated, { useSharedValue } from 'react-native-reanimated';
 import { FlashList } from "@shopify/flash-list";
 import * as Haptics from 'expo-haptics';

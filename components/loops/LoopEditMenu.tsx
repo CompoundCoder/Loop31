@@ -209,7 +209,7 @@ const LoopEditMenu: React.FC<LoopEditMenuProps> = ({ isVisible, onClose, loop, o
     if (editedSchedule === 'Custom') {
       if (customDays.length > 0) {
         const sortedDays = [...customDays].sort((a, b) => DAYS_FULL.indexOf(a) - DAYS_FULL.indexOf(b));
-        scheduleToSave = sortedDays.join(',');
+        scheduleToSave = sortedDays.join(', ');
       } else {
         if (customDays.length === 0) {
             console.log("[LoopEditMenu] Custom schedule selected but no days chosen. Not saving schedule change from commitScheduleChange.");
