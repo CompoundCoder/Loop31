@@ -21,58 +21,92 @@ const borderRadius = {
   full: 9999,
 } as const;
 
-// Platform-specific elevation
-const elevation = Platform.select({
-  ios: {
-    none: {
+// Helper function to define elevation properly
+function getElevation(level: number) {
+  return Platform.select({
+    ios: {
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: level * 0.5 },
+      shadowOpacity: 0.1 + level * 0.01,
+      shadowRadius: 1 + level * 0.5,
+    },
+    android: {
+      elevation: level,
+    },
+  })!;
+}
+
+// Platform-specific elevation, fixed for TS
+const elevation = {
+  none: Platform.select({
+    ios: {
       shadowColor: 'transparent',
       shadowOffset: { width: 0, height: 0 },
       shadowOpacity: 0,
       shadowRadius: 0,
     },
-    xs: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
-    },
-    sm: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.12,
-      shadowRadius: 4,
-    },
-    md: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.15,
-      shadowRadius: 6,
-    },
-    lg: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.18,
-      shadowRadius: 8,
-    },
-  },
-  android: {
-    none: {
+    android: {
       elevation: 0,
     },
-    xs: {
-      elevation: 2,
+  }) as object,
+  xs: Platform.select({
+    ios: {
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 1.5,
     },
-    sm: {
-      elevation: 4,
+    android: {
+      elevation: 1,
     },
-    md: {
-      elevation: 6,
+  }) as object,
+  sm: Platform.select({
+    ios: {
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.12,
+      shadowRadius: 2.5,
     },
-    lg: {
+    android: {
+      elevation: 3,
+    },
+  }) as object,
+  md: Platform.select({
+    ios: {
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.15,
+      shadowRadius: 4.5,
+    },
+    android: {
+      elevation: 5,
+    },
+  }) as object,
+  lg: Platform.select({
+    ios: {
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 5 },
+      shadowOpacity: 0.18,
+      shadowRadius: 7,
+    },
+    android: {
       elevation: 8,
     },
-  },
-});
+  }) as object,
+  xl: Platform.select({
+    ios: {
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.2,
+      shadowRadius: 10,
+    },
+    android: {
+      elevation: 12,
+    },
+  }) as object,
+} as const;
+
+export type Elevation = typeof elevation; // Export Elevation type
 
 // Typography
 const typography = {
@@ -173,7 +207,7 @@ const transitions = {
 export type Theme = {
   spacing: typeof spacing;
   borderRadius: typeof borderRadius;
-  elevation: typeof elevation;
+  elevation: typeof elevation; // Ensure elevation is part of the exported Theme type
   typography: typeof typography;
   colors: ColorPalette;
   opacity: typeof opacity;
@@ -184,7 +218,7 @@ export type Theme = {
 export const lightTheme: Theme = {
   spacing,
   borderRadius,
-  elevation,
+  elevation, // Ensure elevation is included here
   typography,
   colors: lightColors,
   opacity,
@@ -195,7 +229,10 @@ export const lightTheme: Theme = {
 export const darkTheme: Theme = {
   ...lightTheme,
   colors: darkColors,
+  elevation, // Ensure elevation is included for dark theme as well
 };
 
+export { elevation }; // Export the elevation object itself
+
 // Export default theme (light)
-export default lightTheme; 
+export default lightTheme;

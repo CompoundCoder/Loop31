@@ -19,6 +19,10 @@ import { FlashList } from "@shopify/flash-list";
 import * as Haptics from 'expo-haptics';
 import { useRouter, useNavigation } from 'expo-router';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import LoopCreationModal from '@/components/loops/CreateLoopModal';
+// Import Theme types for the style function
+import type { Theme } from '@/theme/theme';
+import type { Elevation } from '@/theme/theme'; // Assuming Elevation type is exported or can be inferred
 
 import AnimatedHeader, { MINI_HEADER_HEIGHT } from '@/components/AnimatedHeader';
 import EmptyState from '@/components/EmptyState';
@@ -37,6 +41,9 @@ import { SwipeableRowRef } from '@/components/common/SwipeableRow';
 import { MOCK_POSTS } from '@/data/mockPosts'; 
 import Popover from 'react-native-popover-view';
 import { useLoops } from '@/context/LoopsContext'; 
+import SlideUpMenu from '@/components/SlideUpMenu'; // Removed SlideUpMenuRef from here
+import { type SlideUpMenuRef } from '@/components/SlideUpMenu/types'; // Import type from types.ts
+import CreateLoopMenu from '@/components/CreateLoopMenu'; // Added
 
 type LoopsScreenProps = {
   isLoading?: boolean;
@@ -85,46 +92,86 @@ interface DiscoverPack {
   priceLabel?: string; 
 }
 
+// Added: Copied from CreateLoopMenu.tsx - ideally this would be in a shared constants file
+const PREDEFINED_LOOP_COLORS = [
+  '#FF6B6B', '#FFD166', '#06D6A0', '#118AB2', '#7F53AC', '#F778A1',
+  '#50C878', '#FF9F1C', '#54A0FF', '#A569BD', '#4ECDC4', '#F9A03F',
+  '#FF7F50', '#6A5ACD', '#20B2AA', '#FFC0CB', '#87CEEB', '#DA70D6',
+];
+
 export type LoopsStackParamList = {
   index: undefined; 
   '[loopId]': { loopId: string }; 
-  create: undefined; 
 };
 
-function LoopPlaceholder({ color }: { color: string }) {
-  const theme = useTheme() as unknown as ExtendedTheme;
-  return (
-    <View style={[
-      styles.loopCard,
-      {
-        backgroundColor: theme.colors.card,
-        borderRadius: theme.borderRadius.lg,
-        borderColor: theme.colors.border,
-        padding: theme.spacing.lg,
-        marginBottom: LAYOUT.content.cardSpacing,
-      }
-    ]}>
-      <View style={styles.loopHeader}>
-        <View style={[
-          styles.loopColorIndicator,
-          { backgroundColor: color, borderRadius: theme.borderRadius.full }
-        ]} />
-        <View style={[
-          styles.loopTitlePlaceholder,
-          { backgroundColor: theme.colors.border, borderRadius: theme.borderRadius.sm }
-        ]} />
-      </View>
-      <View style={[
-        styles.loopStatsPlaceholder,
-        { backgroundColor: theme.colors.border, borderRadius: theme.borderRadius.sm, marginTop: theme.spacing.md }
-      ]} />
-    </View>
-  );
-}
+// Removed LoopPlaceholder function definition from here. 
+// It should be a separate component with its own internal styling.
+
+// Define createStyles function outside the component
+const createStyles = (theme: {
+  colors: Theme['colors'];
+  spacing: Theme['spacing'];
+  borderRadius: Theme['borderRadius'];
+  typography: Theme['typography'];
+  elevation: Elevation; // Added elevation to the theme type for createStyles
+}) => StyleSheet.create({
+  listContentContainer: {
+    paddingHorizontal: SCREEN_LAYOUT.content.horizontalPadding,
+    paddingBottom: LAYOUT.content.cardSpacing + MINI_HEADER_HEIGHT,
+  },
+  centeredMessageContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: SCREEN_LAYOUT.content.horizontalPadding,
+  },
+  loadingText: {
+    marginTop: theme.spacing.md,
+    fontSize: theme.typography.fontSize.body,
+    color: theme.colors.text,
+  },
+  modalStyle: {
+    borderTopLeftRadius: theme.borderRadius.lg,
+    borderTopRightRadius: theme.borderRadius.lg,
+    backgroundColor: theme.colors.card,
+  },
+  listItem: {
+    marginBottom: LAYOUT.content.cardSpacing,
+  },
+  // Add back popover styles if they are used by HeaderRight or other parts of this screen
+  popoverMenu: {
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.sm,
+    ...theme.elevation.md, // Correctly access md from the passed elevation object
+  },
+  popoverItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm + 2, // A bit more padding for touchability
+  },
+  popoverItemText: {
+    fontSize: theme.typography.fontSize.body,
+    color: theme.colors.text,
+    marginLeft: theme.spacing.sm,
+  },
+  popoverSeparator: {
+    height: 1,
+    marginVertical: theme.spacing.xs,
+    // backgroundColor will be applied inline using colors.border
+  },
+});
 
 export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
-  const theme = useTheme() as unknown as ExtendedTheme;
-  const { colors, spacing, borderRadius } = useThemeStyles();
+  const baseTheme = useTheme() as unknown as ExtendedTheme;
+  const { colors, spacing, borderRadius, typography, elevation } = useThemeStyles(); // Destructure all needed theme parts
+
+  // Create styles inside the component, memoized
+  const styles = React.useMemo(() => createStyles({ colors, spacing, borderRadius, typography, elevation }), // Pass elevation
+    [colors, spacing, borderRadius, typography, elevation]
+  );
+
   const scrollY = useSharedValue(0);
   const [refreshing, setRefreshing] = React.useState(false);
   const [isPopoverVisible, setIsPopoverVisible] = useState(false);
@@ -133,9 +180,16 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
   const [selectedLoopData, setSelectedLoopData] = useState<SelectedLoopState | null>(null);
   const { state, dispatch } = useLoops(); 
   const { addNotification } = useNotifications();
-  const router = useRouter(); 
-  const navigation = useNavigation<NativeStackNavigationProp<LoopsStackParamList>>(); 
+  const router = useRouter();
+  const navigation = useNavigation<NativeStackNavigationProp<LoopsStackParamList>>();
   const swipeableRowRefs = useRef<Map<string, SwipeableRowRef | null>>(new Map());
+
+  // Added: State for CreateLoopMenu
+  const slideUpMenuRef = useRef<SlideUpMenuRef>(null);
+  const [loopName, setLoopName] = useState('');
+  const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'biweekly' | 'monthly'>('weekly');
+  const [loopColor, setLoopColor] = useState<string>(PREDEFINED_LOOP_COLORS[0]);
+  const [isCreateLoopMenuVisible, setIsCreateLoopMenuVisible] = useState(false); // Added state for visibility
 
   const closeSwipeableRow = (loopId: string) => {
     const rowRef = swipeableRowRefs.current.get(loopId);
@@ -184,8 +238,8 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
   const handleLoopPress = useCallback((loopId: string | undefined) => {
     if (!loopId) return;
     console.log(`Navigating to loop: ${loopId} using navigation.navigate`);
-    // Use the correct route name including the directory
-    navigation.navigate('loops/[loopId]', { loopId: loopId }); 
+    // Use the correct route name from LoopsStackParamList
+    navigation.navigate('[loopId]', { loopId: loopId }); 
   }, [navigation]);
 
   const listData = useMemo(() => {
@@ -234,20 +288,43 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
     }, 150); 
   }, [selectedLoopData, closeModal, handleEditLoop, handleDuplicateLoop, handleDeleteLoop]);
 
-  const handleCreateAction = useCallback((action: 'post' | 'loop') => {
+  // Added: Handler for saving the new loop
+  const handleCreateLoop = () => {
+    console.log('Creating Loop with:', { name: loopName, frequency, color: loopColor });
+    // dispatch({ type: 'ADD_LOOP', payload: { title: loopName, frequency, color: loopColor, /* other properties */ } });
+    setIsCreateLoopMenuVisible(false); // Close menu
+    // Reset form after save
+    setLoopName('');
+    setFrequency('weekly');
+    setLoopColor(PREDEFINED_LOOP_COLORS[0]);
+    addNotification({
+      title: "Loop Created!",
+      message: `"${loopName || 'New Loop'}" has been added to your loops.`,
+      accentColor: baseTheme.colors.success, // Use baseTheme here for direct access
+      icon: 'check-circle-outline',
+      displayTarget: 'toast'
+    });
+  };
+
+  // New handler for opening the Create Loop menu via ref
+  const handleOpenCreateLoopMenu = useCallback(() => {
+    setIsPopoverVisible(false); // Close the popover
+    slideUpMenuRef.current?.open(); // Open the SlideUpMenu using its ref
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  }, [slideUpMenuRef, setIsPopoverVisible]); // Dependencies for useCallback
+
+  const handleCreateAction = useCallback((action: 'post') => { // 'loop' case removed, only 'post' is handled
     setIsPopoverVisible(false);
     if (action === 'post') {
-      router.push('/posts/create'); 
-    } else if (action === 'loop') {
-      // Use the correct route name including the directory
-      navigation.navigate('loops/create'); 
+      router.push('/posts/create');
     }
+    // Haptics for 'post' action (haptics for 'loop' are in handleOpenCreateLoopMenu)
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  }, [navigation, router, setIsPopoverVisible]);
+  }, [router, setIsPopoverVisible]); // Updated dependencies
 
   const renderItem = useCallback(({ item }: { item: LoopsScreenItem }) => {
     const loop = item.loopData;
-    const baseHeaderStyle = { marginBottom: spacing.sm }; 
+    const baseHeaderStyle = { marginBottom: spacing.sm };
 
     switch (item.type) {
       case 'pinnedLoopsHeader':
@@ -255,13 +332,13 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
       case 'discoverPacksHeader':
         return item.title ? <View style={baseHeaderStyle}><SubtleSectionHeader title={item.title} /></View> : null;
       case 'autoListingLoopActive':
-        if (!loop || !item.loopId) return <LoopPlaceholder color={colors.border} />; 
+        if (!loop || !item.loopId) return null; // Removed LoopPlaceholder
         return <LoopCard ref={(ref) => item.loopId && swipeableRowRefs.current.set(item.loopId, ref)} loop={loop} onPress={() => handleLoopPress(item.loopId)} onLongPress={() => item.loopId && loop.title && handleLongPressLoop(item.loopId, loop.title, false)} onToggleActive={handleToggleLoopActive} style={styles.listItem} />;
       case 'pinnedLoopItem':
-        if (!loop || !item.loopId) return <LoopPlaceholder color={colors.border} />; 
+        if (!loop || !item.loopId) return null; // Removed LoopPlaceholder
         return <LoopCard ref={(ref) => item.loopId && swipeableRowRefs.current.set(item.loopId, ref)} loop={loop} isPinned={true} onPress={() => handleLoopPress(item.loopId)} onLongPress={() => item.loopId && loop.title && handleLongPressLoop(item.loopId, loop.title, true)} onToggleActive={handleToggleLoopActive} style={styles.listItem} onSwipeUnpin={handleUnpinLoop} />;
       case 'frequentLoopItem':
-        if (!loop || !item.loopId) return <LoopPlaceholder color={colors.border} />; 
+        if (!loop || !item.loopId) return null; // Removed LoopPlaceholder
         return <LoopCard ref={(ref) => item.loopId && swipeableRowRefs.current.set(item.loopId, ref)} loop={loop} isPinned={false} onPress={() => handleLoopPress(item.loopId)} onLongPress={() => item.loopId && loop.title && handleLongPressLoop(item.loopId, loop.title, false)} onToggleActive={handleToggleLoopActive} style={styles.listItem} onSwipePin={handlePinLoop} />;
       case 'discoverPacksCarousel': {
           const discoverPacksData: DiscoverPack[] = [
@@ -295,7 +372,7 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
     <ScreenContainer>
       <AnimatedHeader title="Loops" scrollY={scrollY} actionButton={<View ref={addButtonRef}><HeaderActionButton iconName="add" onPress={() => setIsPopoverVisible(true)} accessibilityLabel="Create" /></View>} />
       {isListEmpty ? (
-        <LoopsEmptyState onCreateLoop={() => handleCreateAction('loop')} />
+        <LoopsEmptyState onCreateLoop={handleOpenCreateLoopMenu} /> // Ensure this uses handleOpenCreateLoopMenu
       ) : (
         <FlashList
           data={listData}
@@ -304,13 +381,12 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
           estimatedItemSize={100} 
           onScroll={handleScroll} 
           scrollEventThrottle={16}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
-          contentContainerStyle={{ paddingTop: MINI_HEADER_HEIGHT + 16, paddingHorizontal: SCREEN_LAYOUT.content.horizontalPadding, paddingBottom: spacing.lg }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={baseTheme.colors.primary} />}
+          showsVerticalScrollIndicator={false}
         />
       )}
-      <Modalize ref={modalizeRef} adjustToContentHeight onClosed={() => setSelectedLoopData(null)} modalStyle={{ backgroundColor: colors.card }} handleStyle={{ backgroundColor: colors.border }} handlePosition="inside" 
-        HeaderComponent={selectedLoopData ? <View style={[styles.modalHeader, { backgroundColor: colors.card }]}><Text style={[styles.modalTitle, { color: colors.text }]}>{selectedLoopData.title}</Text></View> : null}
-      >
+
+      <Modalize ref={modalizeRef} adjustToContentHeight withHandle={false} modalStyle={styles.modalStyle}>
         {selectedLoopData && (
           <LoopActionsModalContent 
             loopId={selectedLoopData.id}
@@ -322,28 +398,32 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
         )}
       </Modalize>
       <Popover from={addButtonRef} isVisible={isPopoverVisible} onRequestClose={() => setIsPopoverVisible(false)} popoverStyle={{ borderRadius: borderRadius.md, backgroundColor: colors.card, paddingVertical: spacing.xs }} animationConfig={{ duration: 150 }} backgroundStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }} >
-        <View style={styles.popoverMenu}> 
+        <View style={styles.popoverMenu}>
           <TouchableOpacity style={styles.popoverOption} onPress={() => handleCreateAction('post')} accessibilityLabel="Create new post"><Text style={[styles.popoverText, { color: colors.text }]}>Create Post</Text></TouchableOpacity>
           <View style={[styles.popoverSeparator, { backgroundColor: colors.border }]} />
-          <TouchableOpacity style={styles.popoverOption} onPress={() => handleCreateAction('loop')} accessibilityLabel="Create new loop"><Text style={[styles.popoverText, { color: colors.text }]}>New Loop</Text></TouchableOpacity>
+          {/* Ensure this TouchableOpacity calls handleOpenCreateLoopMenu */}
+          <TouchableOpacity style={styles.popoverOption} onPress={handleOpenCreateLoopMenu} accessibilityLabel="Create new loop"><Text style={[styles.popoverText, { color: colors.text }]}>New Loop</Text></TouchableOpacity>
         </View>
       </Popover>
+      {/* Added SlideUpMenu for Create Loop */}
+      <SlideUpMenu
+        ref={slideUpMenuRef}
+        title="Create New Loop"
+        isVisible={isCreateLoopMenuVisible}
+        onClose={() => setIsCreateLoopMenuVisible(false)}
+        onOpenRequest={() => setIsCreateLoopMenuVisible(true)} // Action to take when menu requests open (e.g. via ref.open())
+        showSaveButton={true}
+        onSave={handleCreateLoop}
+      >
+        <CreateLoopMenu 
+          name={loopName} // Corrected prop name
+          onNameChange={setLoopName} // Corrected prop name
+          frequency={frequency}
+          onFrequencyChange={setFrequency} // Corrected prop name
+          color={loopColor} // Corrected prop name
+          onColorChange={setLoopColor} // Corrected prop name
+        />
+      </SlideUpMenu>
     </ScreenContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  loopCard: { borderWidth: 1 },
-  loopHeader: { flexDirection: 'row', alignItems: 'center' },
-  loopColorIndicator: { width: 24, height: 24, marginRight: 12 },
-  loopTitlePlaceholder: { height: 24, width: 160, opacity: 0.5 },
-  loopStatsPlaceholder: { height: 16, width: 120, opacity: 0.5 },
-  modalHeader: { padding: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'grey' },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', textAlign: 'center' },
-  popoverMenu: { },
-  popoverOption: { paddingVertical: 12, paddingHorizontal: 16 },
-  popoverText: { fontSize: 16, fontWeight: '500' },
-  popoverSeparator: { height: StyleSheet.hairlineWidth, marginHorizontal: 10 },
-  listItem: { marginBottom: 16 },
-}); 

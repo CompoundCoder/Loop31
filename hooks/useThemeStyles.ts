@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
-import { Platform } from 'react-native';
 import { useTheme } from '@react-navigation/native';
-import { type Theme as AppTheme } from '@/theme/theme';
+import { type Theme as AppTheme, elevation as appElevation } from '@/theme/theme'; // Import concrete elevation object
 
 /**
  * Hook that provides memoized access to theme values.
@@ -16,19 +15,9 @@ export function useThemeStyles() {
     borderRadius: theme.borderRadius,
     opacity: theme.opacity,
     typography: theme.typography,
-    elevation: Platform.select({
-      ios: {
-        shadowColor: theme.colors.text,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+    elevation: appElevation, // Use the imported elevation object directly
   }), [theme]);
 }
 
 // Type definition for the return value of useThemeStyles
-export type ThemeStyles = ReturnType<typeof useThemeStyles>; 
+export type ThemeStyles = ReturnType<typeof useThemeStyles>;
