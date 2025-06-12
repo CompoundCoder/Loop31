@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, TouchableOpacity, Switch, StyleSheet, Text, ScrollView, Platform, Animated } from 'react-native';
+import { View, TouchableOpacity, Switch, StyleSheet, Text, ScrollView, Platform, Animated, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import TestPostCardMini from '../../components/test-PostCardMini';
@@ -7,12 +7,13 @@ import { spacing } from '../../theme/theme';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { SCREEN_LAYOUT } from '@/constants/layout';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRouter } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
 import { useLoops, type Loop as ContextLoop, type PostDisplayData } from '@/context/LoopsContext';
-import LoopEditMenu from '@/components/loops/LoopEditMenu';
-import PostCardS from '@/components/loops/PostCardS';
 import { useFadeIn } from '@/hooks/useFadeIn';
+import { useEditLoopPopup } from '@/hooks/useEditLoopPopup';
+import EditLoopPopup from '@/components/loops/EditLoopPopup';
+import PostCardS from '@/components/loops/PostCardS';
 
 const touchableMinHeight = 44;
 
@@ -25,6 +26,7 @@ export default function LoopDetailsScreen() {
   const { colors, typography, spacing: themeSpacing } = useThemeStyles();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const router = useRouter();
   const { loopId } = useLocalSearchParams<{ loopId: string }>();
   const { state, dispatch } = useLoops();
   const { opacityStyle: upNextOpacityStyle } = useFadeIn();
@@ -33,7 +35,7 @@ export default function LoopDetailsScreen() {
 
   const [isActive, setIsActive] = useState(loop?.isActive ?? false);
   const [posts, setPosts] = useState<PostDisplayData[]>(loop?.posts ?? []);
-  const [isEditMenuVisible, setIsEditMenuVisible] = useState(false);
+  const { isEditPopupVisible, loopToEdit, openEditPopup, closeEditPopup } = useEditLoopPopup();
 
   useEffect(() => {
     if (loop) {
@@ -223,7 +225,7 @@ export default function LoopDetailsScreen() {
                     style={styles.switchStyle} 
                   />
                   <TouchableOpacity 
-                    onPress={() => setIsEditMenuVisible(true)} 
+                    onPress={() => openEditPopup(loop)} 
                     style={styles.optionsButton}
                   >
                     <Ionicons name="ellipsis-vertical" size={24} color={colors.tabInactive} />
@@ -246,27 +248,14 @@ export default function LoopDetailsScreen() {
               />
             ))}
           </ScrollView>
-          {loop && (
-            <LoopEditMenu
-              isVisible={isEditMenuVisible}
-              onClose={() => setIsEditMenuVisible(false)}
-              loop={loop} 
-              onSave={(updatedData) => { 
-                if (loop) { 
-                  dispatch({
-                    type: 'UPDATE_LOOP',
-                    payload: {
-                      ...updatedData,
-                      id: loop.id,
-                    },
-                  });
-                }
-              }}
-              typography={typography} 
-            />
-          )}
         </View>
       </SafeAreaView>
+      <EditLoopPopup
+        visible={isEditPopupVisible}
+        onClose={closeEditPopup}
+        onSaveSuccess={closeEditPopup}
+        loop={loopToEdit}
+      />
     </>
   );
 }
