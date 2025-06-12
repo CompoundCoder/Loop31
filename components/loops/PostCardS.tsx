@@ -93,7 +93,15 @@ const createStyles = (theme: ThemeStyles, variant: 'featured' | 'mini', cardWidt
 
   return StyleSheet.create({
     shadowWrapper: {
-      ...(elevation as object),
+      ...(variant === 'featured'
+        ? {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.15,
+            shadowRadius: 16,
+            elevation: 8,
+          }
+        : elevation),
       width: '100%',
     },
     cardContainer: {

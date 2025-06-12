@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform, ScrollVi
 import Modal from 'react-native-modal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeStyles, type ThemeStyles } from '@/hooks/useThemeStyles';
+import { useLoopSchedule } from '@/hooks/useLoopSchedule';
 import { type Theme as AppTheme } from '@/theme/theme';
 import { type Loop } from '@/context/LoopsContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,17 +24,17 @@ const PREDEFINED_COLORS = [
 
 // --- Define NEW Schedule Options ---
 interface ScheduleOption {
-  label: string; 
-  value: string; 
-  details?: string; 
+  label: string;
+  value: string;
+  details?: string;
 }
 
 const SCHEDULE_OPTIONS: ScheduleOption[] = [
   { label: 'Automatically (recommended)', value: 'Auto' },
   { label: 'Every Day', value: 'Daily', details: '(7x per week)' },
-  { label: 'A Few Times a Week', value: 'MWF', details: '(Mon, Wed, Fri)' }, 
-  { label: 'Once a Week', value: 'Weekly', details: '(e.g., Every Tuesday)' }, 
-  { label: 'Custom Schedule…', value: 'Custom' },
+  { label: 'A Few Times a Week', value: 'MWF', details: '(Mon, Wed, Fri)' },
+  { label: 'Once per Week', value: 'Weekly', details: '(e.g., Every Tuesday)' },
+  { label: 'Custom Schedule', value: 'Custom' },
 ];
 
 // --- Define Days for Custom Picker ---
@@ -150,6 +151,7 @@ const LoopEditMenu: React.FC<LoopEditMenuProps> = ({ isVisible, onClose, loop, o
   const themeStyles = useThemeStyles();
   const styles = createStyles(themeStyles, typography);
   const insets = useSafeAreaInsets();
+  const { SCHEDULE_OPTIONS, DAYS_FULL, parseSchedule, formatCustomDays } = useLoopSchedule();
 
   const [editedTitle, setEditedTitle] = useState(loop?.title || '');
   const [originalTitle, setOriginalTitle] = useState(loop?.title || '');
@@ -161,37 +163,21 @@ const LoopEditMenu: React.FC<LoopEditMenuProps> = ({ isVisible, onClose, loop, o
 
   useEffect(() => {
     let mountTimer: NodeJS.Timeout;
-    if (isVisible) {
+    if (isVisible)
       mountTimer = setTimeout(() => {
         setHasMounted(true);
         if (loop) {
           setEditedTitle(loop.title);
           setOriginalTitle(loop.title);
           setEditedColor(loop.color || PREDEFINED_COLORS[0]);
-          const schedule = loop.schedule || '';
-          const scheduleLower = schedule.toLowerCase();
-          let initialScheduleValue = SCHEDULE_OPTIONS.find(opt => opt.value.toLowerCase() === scheduleLower)?.value || SCHEDULE_OPTIONS[0].value;
-          let initialCustomDays: string[] = [];
-          const matchedOption = SCHEDULE_OPTIONS.find(opt => opt.value.toLowerCase() === scheduleLower);
-          if (matchedOption && matchedOption.value !== 'Custom') {
-            initialScheduleValue = matchedOption.value;
-          } else if (schedule) {
-            const potentialDays = schedule.split(',').map(d => d.trim()).filter(Boolean);
-            const validDays = potentialDays.filter(d => DAYS_FULL.some(kd => kd.toLowerCase() === d.toLowerCase()));
-            if (validDays.length > 0 && validDays.length === potentialDays.length) {
-              if (validDays.length === 7) initialScheduleValue = 'Daily';
-              else if (validDays.length === 3 && validDays.map(d => d.toLowerCase()).sort().join(',') === 'fri,mon,wed') initialScheduleValue = 'MWF';
-              else { initialScheduleValue = 'Custom'; initialCustomDays = validDays.map(d => DAYS_FULL.find(fd => fd.toLowerCase() === d.toLowerCase()) || '').filter(Boolean); }
-            } else if (!SCHEDULE_OPTIONS.find(opt => opt.value.toLowerCase() === scheduleLower)) { initialScheduleValue = 'Auto'; }
-          } else { initialScheduleValue = 'Auto'; }
-          setEditedSchedule(initialScheduleValue);
+          const { frequency, customDays: initialCustomDays } = parseSchedule(loop.schedule || '');
+          setEditedSchedule(frequency);
           setCustomDays(initialCustomDays);
           setIsScheduleInitialized(true);
         }
       }, 50);
-    }
     return () => clearTimeout(mountTimer);
-  }, [isVisible, loop]);
+  }, [isVisible, loop, parseSchedule]);
 
   const handleModalHide = () => {
     setHasMounted(false);
@@ -200,28 +186,27 @@ const LoopEditMenu: React.FC<LoopEditMenuProps> = ({ isVisible, onClose, loop, o
 
   const handleDismiss = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    onClose(); // Call onClose directly
+    onClose();
   };
 
   const commitScheduleChange = useCallback(() => {
     if (!loop) return;
     let scheduleToSave = editedSchedule;
-    if (editedSchedule === 'Custom') {
+    if (editedSchedule === 'custom') {
       if (customDays.length > 0) {
-        const sortedDays = [...customDays].sort((a, b) => DAYS_FULL.indexOf(a) - DAYS_FULL.indexOf(b));
-        scheduleToSave = sortedDays.join(', ');
+        scheduleToSave = formatCustomDays(customDays);
       } else {
         if (customDays.length === 0) {
-            console.log("[LoopEditMenu] Custom schedule selected but no days chosen. Not saving schedule change from commitScheduleChange.");
-            return; // Don't save if custom is chosen but no days are selected.
+          console.log("[LoopEditMenu] Custom schedule selected but no days chosen. Not saving schedule change from commitScheduleChange.");
+          return;
         }
       }
     }
     if (scheduleToSave !== loop.schedule) {
-        console.log(`[LoopEditMenu] commitScheduleChange: Saving schedule: ${scheduleToSave}`);
-        onSave({ id: loop.id, schedule: scheduleToSave });
+      console.log(`[LoopEditMenu] commitScheduleChange: Saving schedule: ${scheduleToSave}`);
+      onSave({ id: loop.id, schedule: scheduleToSave });
     }
-  }, [loop, editedSchedule, customDays, onSave]);
+  }, [loop, editedSchedule, customDays, onSave, formatCustomDays]);
 
   const handleTitleEndEditing = () => {
     // This function is no longer responsible for saving. It can be used for other onBlur logic if needed.
@@ -242,9 +227,6 @@ const LoopEditMenu: React.FC<LoopEditMenuProps> = ({ isVisible, onClose, loop, o
     if (loop && optionValue !== 'Custom') {
       onSave({ id: loop.id, schedule: optionValue }); // Save immediately if not custom
     }
-    // If 'Custom' is selected, user will interact with day picker, 
-    // and commitScheduleChange will be called separately (e.g., when modal for day picking closes or a dedicated save for custom is pressed)
-    // For now, if they switch TO custom, we don't save immediately. If they switch FROM custom to something else, it saves.
   };
   
   const toggleCustomDayModified = (day: string) => {

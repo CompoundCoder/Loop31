@@ -10,6 +10,7 @@ import {
   TextInput,
 } from 'react-native';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
+import { useLoopSchedule } from '@/hooks/useLoopSchedule';
 import Animated, {
   useAnimatedGestureHandler,
   useAnimatedStyle,
@@ -23,14 +24,6 @@ import * as Haptics from 'expo-haptics';
 import { PanGestureHandler, PanGestureHandlerGestureEvent, TapGestureHandler, TapGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import type { Loop } from '@/context/LoopsContext';
-
-const FREQUENCY_STOPS = [
-  { label: 'Automatically', value: 'auto', shortLabel: 'Auto' },
-  { label: 'Once per Week', value: 'weekly_1x', shortLabel: '1x' },
-  { label: '3x per Week', value: 'weekly_3x', shortLabel: '3x' },
-  { label: '5x per Week', value: 'weekly_5x', shortLabel: '5x' },
-  { label: 'Custom Schedule', value: 'custom', shortLabel: 'Days' },
-];
 
 const LOOP_COLORS = ['#FF6B6B', '#4ECDC4', '#54A0FF', '#F9A03F', '#A5D6A7', '#FFD166', '#D4A5FF'];
 
@@ -147,6 +140,7 @@ interface LoopPopupContentProps {
 const LoopPopupContent: React.FC<LoopPopupContentProps> = ({ onClose, onSave, title, saveButtonText, initialValues }) => {
   const theme = useThemeStyles();
   const { colors, spacing, typography, borderRadius } = theme;
+  const { SCHEDULE_OPTIONS, WEEKDAYS, getFrequencyTitle } = useLoopSchedule();
 
   const [loopName, setLoopName] = useState('');
   const [selectedFrequencyIndex, setSelectedFrequencyIndex] = useState(0);
@@ -158,7 +152,7 @@ const LoopPopupContent: React.FC<LoopPopupContentProps> = ({ onClose, onSave, ti
       setLoopName(initialValues.title || '');
       setSelectedColor(initialValues.color || LOOP_COLORS[0]);
       
-      const freqIndex = FREQUENCY_STOPS.findIndex(f => f.value === initialValues.frequency);
+      const freqIndex = SCHEDULE_OPTIONS.findIndex(f => f.value === initialValues.frequency);
       setSelectedFrequencyIndex(freqIndex >= 0 ? freqIndex : 0);
       
       if (initialValues.frequency === 'custom' && typeof initialValues.schedule === 'string') {
@@ -172,30 +166,15 @@ const LoopPopupContent: React.FC<LoopPopupContentProps> = ({ onClose, onSave, ti
       setCustomDays(new Set());
       setSelectedColor(LOOP_COLORS[0]);
     }
-  }, [initialValues]);
+  }, [initialValues, SCHEDULE_OPTIONS]);
 
   const frequencyTitle = useMemo(() => {
-    const selectedFrequency = FREQUENCY_STOPS[selectedFrequencyIndex];
+    const selectedFrequency = SCHEDULE_OPTIONS[selectedFrequencyIndex];
     if (!selectedFrequency) return 'Post Every';
-    const { value } = selectedFrequency;
-
-    if (value === 'auto') return "Post Automatically";
-    if (value.startsWith('weekly_')) {
-      const times = value.split('_')[1];
-      return `Post ${times} per week`;
-    }
-    if (value === 'custom') {
-      if (customDays.size === 0) return 'Post Every...';
-      const orderedSelectedDays = WEEKDAYS
-        .filter(day => customDays.has(day.value))
-        .map(day => SHORT_DAY_NAMES[day.value]);
-      if (orderedSelectedDays.length > 0) return `Post on ${orderedSelectedDays.join(', ')}`;
-      return 'Post Every...';
-    }
-    return 'Post Every';
-  }, [selectedFrequencyIndex, customDays]);
+    return getFrequencyTitle(selectedFrequency.value, Array.from(customDays));
+  }, [selectedFrequencyIndex, customDays, SCHEDULE_OPTIONS, getFrequencyTitle]);
   
-  const isCustomFrequency = FREQUENCY_STOPS[selectedFrequencyIndex]?.value === 'custom';
+  const isCustomFrequency = SCHEDULE_OPTIONS[selectedFrequencyIndex]?.value === 'custom';
   const canSave = loopName.trim() !== '' && (!isCustomFrequency || customDays.size > 0);
 
   const animatedCustomPickerStyle = useAnimatedStyle(() => ({
@@ -214,7 +193,7 @@ const LoopPopupContent: React.FC<LoopPopupContentProps> = ({ onClose, onSave, ti
 
   const handleSave = () => {
     if (!canSave) return;
-    const selectedFrequency = FREQUENCY_STOPS[selectedFrequencyIndex];
+    const selectedFrequency = SCHEDULE_OPTIONS[selectedFrequencyIndex];
     let schedule = selectedFrequency.value;
     if (selectedFrequency.value === 'custom') {
       schedule = Array.from(customDays).join(',');
@@ -244,7 +223,7 @@ const LoopPopupContent: React.FC<LoopPopupContentProps> = ({ onClose, onSave, ti
         <TextInput style={[modalStyles.input, { backgroundColor: colors.backgroundDefault, borderColor: colors.border, color: colors.text, fontSize: typography.fontSize.body, paddingHorizontal: spacing.lg, paddingVertical: Platform.OS === 'ios' ? spacing.md + 2 : spacing.sm + 4, borderRadius: borderRadius.md }]} value={loopName} onChangeText={setLoopName} placeholder="e.g., Morning Motivation" placeholderTextColor={textFadedColor} />
         
         <Text style={[modalStyles.sectionTitle, { color: colors.text, marginTop: spacing.xl, marginBottom: spacing.sm, fontSize: typography.fontSize.subtitle, fontWeight: '500' }]}>{frequencyTitle}</Text>
-        <FrequencySlider stops={FREQUENCY_STOPS} selectedIndex={selectedFrequencyIndex} onIndexChange={setSelectedFrequencyIndex} theme={theme} />
+        <FrequencySlider stops={SCHEDULE_OPTIONS} selectedIndex={selectedFrequencyIndex} onIndexChange={setSelectedFrequencyIndex} theme={theme} />
         
         <Animated.View style={animatedCustomPickerStyle}>
           <View style={[modalStyles.customDayPicker, { marginTop: spacing.xl }]}>

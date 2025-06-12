@@ -9,6 +9,7 @@ interface TestPostCardMiniProps {
   image: ImageSourcePropType; // Accept number for require() or {uri: string} for network
   caption: string;
   onPress?: () => void; // Added onPress prop
+  onLongPress?: () => void; // Add long press handler
   drag?: () => void; // Prop to initiate drag
   isActive?: boolean; // Prop to indicate active drag state
 }
@@ -16,11 +17,11 @@ interface TestPostCardMiniProps {
 // const cardHeight = 100; // Removed fixed height
 // const imageSize = cardHeight - 2 * 12; // Removed fixed image size calculation
 
-const TestPostCardMini: React.FC<TestPostCardMiniProps> = ({ image, caption, onPress, drag, isActive }) => {
+const TestPostCardMini: React.FC<TestPostCardMiniProps> = ({ image, caption, onPress, onLongPress, drag, isActive }) => {
   return (
     <TouchableOpacity 
       onPress={onPress} 
-      onLongPress={drag} // Use drag for onLongPress
+      onLongPress={onLongPress}
       style={[styles.cardContainer, cardShadow]}
       activeOpacity={isActive ? 1 : 0.8} // Adjust activeOpacity based on isActive, or keep consistent if preferred
       disabled={isActive} // Disable touchable when active to prevent onPress firing during drag
@@ -34,11 +35,6 @@ const TestPostCardMini: React.FC<TestPostCardMiniProps> = ({ image, caption, onP
           <Text style={styles.captionText} numberOfLines={3} ellipsizeMode="tail">
             {caption}
           </Text>
-        </View>
-        <View style={styles.menuWrapper}>
-          <TouchableOpacity onPress={() => console.log('Mini post options pressed')}>
-            <Ionicons name="ellipsis-horizontal" size={20} color="#606770" />
-          </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
@@ -78,13 +74,6 @@ const styles = StyleSheet.create({
   captionWrapper: {
     //backgroundColor: 'rgb(255, 0, 255)', // TEMP: magenta
     paddingRight: 8,
-  },
-  menuWrapper: {
-    position: 'absolute',
-    right: 0,
-    bottom: 0,
-    paddingTop: 4,
-    //backgroundColor: 'rgb(0, 255, 128)', // TEMP: mint
   },
   captionText: {
     fontSize: 16,

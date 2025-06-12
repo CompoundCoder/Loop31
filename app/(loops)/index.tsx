@@ -162,7 +162,7 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
   if (isLoading && !searchQuery && state.loops.length === 0 && listData.length === 0) {
     return (
       <ScreenContainer>
-        <AnimatedHeader title="Loops" scrollY={scrollY} actionButton={<View ref={addButtonRef}><HeaderActionButton iconName="add" onPress={openCreatePopover} accessibilityLabel="Create" /></View>} />
+        <AnimatedHeader title="Loops" scrollY={scrollY} actionButton={<View ref={addButtonRef}><HeaderActionButton iconName="add" onPress={showCreateLoopForm} accessibilityLabel="Create" /></View>} />
         <EmptyState isLoading />
       </ScreenContainer>
     );
@@ -170,7 +170,7 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
 
   return (
     <ScreenContainer>
-      <AnimatedHeader title="Loops" scrollY={scrollY} actionButton={<View ref={addButtonRef}><HeaderActionButton iconName="add" onPress={openCreatePopover} accessibilityLabel="Create" /></View>} />
+      <AnimatedHeader title="Loops" scrollY={scrollY} actionButton={<View ref={addButtonRef}><HeaderActionButton iconName="add" onPress={showCreateLoopForm} accessibilityLabel="Create" /></View>} />
       {showOverallEmptyState ? (
         <LoopsEmptyState onCreateLoop={showCreateLoopForm} />
       ) : noResultsAfterSearch ? (

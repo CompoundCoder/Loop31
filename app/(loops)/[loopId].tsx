@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, TouchableOpacity, Switch, StyleSheet, Text, ScrollView, Platform, Animated, Alert } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, TouchableOpacity, Switch, StyleSheet, Text, ScrollView, Platform, Animated as RNAnimated, Alert, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import TestPostCardMini from '../../components/test-PostCardMini';
@@ -14,6 +14,10 @@ import { useFadeIn } from '@/hooks/useFadeIn';
 import { useEditLoopPopup } from '@/hooks/useEditLoopPopup';
 import EditLoopPopup from '@/components/loops/EditLoopPopup';
 import PostCardS from '@/components/loops/PostCardS';
+import HeaderActionButton from '@/components/HeaderActionButton';
+import CreatePostPopup from '@/components/posts/CreatePostPopup';
+import EditPostPopup from '@/components/posts/EditPostPopup';
+import { Modalize } from 'react-native-modalize';
 
 const touchableMinHeight = 44;
 
@@ -31,7 +35,12 @@ export default function LoopDetailsScreen() {
   const { state, dispatch } = useLoops();
   const { opacityStyle: upNextOpacityStyle } = useFadeIn();
 
+  const [isPostPopupVisible, setIsPostPopupVisible] = useState(false);
+  const [isEditPostVisible, setIsEditPostVisible] = useState(false);
+  const [selectedPostToEdit, setSelectedPostToEdit] = useState<PostDisplayData | null>(null);
   const loop: ContextLoop | undefined = state.loops.find(l => l.id === loopId);
+
+  const postOptionsModalRef = useRef<Modalize>(null);
 
   const [isActive, setIsActive] = useState(loop?.isActive ?? false);
   const [posts, setPosts] = useState<PostDisplayData[]>(loop?.posts ?? []);
@@ -79,6 +88,13 @@ export default function LoopDetailsScreen() {
       fontSize: 17,
       fontWeight: '600',
       color: colors.text,
+    },
+    headerRightContainer: {
+      position: 'absolute',
+      right: SCREEN_LAYOUT.content.horizontalPadding,
+      top: 0,
+      bottom: 0,
+      justifyContent: 'center',
     },
     flatListContent: {
       paddingBottom: insets.bottom + 75,
@@ -154,6 +170,27 @@ export default function LoopDetailsScreen() {
     },
     centeredFeedback: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background },
     feedbackText: { fontSize: 18, color: colors.text, textAlign: 'center' },
+    modalHeader: {
+      padding: 16,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      alignItems: 'center',
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      lineHeight: 22,
+    },
+    modalOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+      minHeight: 44,
+    },
+    separator: {
+      height: StyleSheet.hairlineWidth,
+      width: '100%',
+    },
   }); 
 
   const handleToggleIsActive = (newIsActiveValue: boolean) => {
@@ -172,11 +209,31 @@ export default function LoopDetailsScreen() {
         <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.text, marginBottom: themeSpacing.sm }}>
           Up Next
         </Text>
-        <Animated.View style={[{ paddingVertical: themeSpacing.sm }, upNextOpacityStyle]}>
-          <PostCardS post={posts[0]} variant="featured" />
-        </Animated.View>
+        <RNAnimated.View style={[{ paddingVertical: themeSpacing.sm }, upNextOpacityStyle]}>
+          <PostCardS 
+            post={posts[0]} 
+            variant="featured" 
+            onLongPress={() => handlePostOptions(posts[0])}
+          />
+        </RNAnimated.View>
       </View>
     );
+  };
+
+  const handleEditPost = (post: PostDisplayData) => {
+    setSelectedPostToEdit(post);
+    setIsEditPostVisible(true);
+    postOptionsModalRef.current?.close();
+  };
+
+  const handleCloseEditPost = () => {
+    setIsEditPostVisible(false);
+    setSelectedPostToEdit(null);
+  };
+
+  const handlePostOptions = (post: PostDisplayData) => {
+    setSelectedPostToEdit(post);
+    postOptionsModalRef.current?.open();
   };
 
   if (!loop) {
@@ -199,6 +256,13 @@ export default function LoopDetailsScreen() {
           </View>
           <View style={styles.headerTitleContainer}>
             <Text style={styles.headerTitleText}>Loop Details</Text>
+          </View>
+          <View style={styles.headerRightContainer}>
+            <HeaderActionButton 
+              iconName="add"
+              onPress={() => setIsPostPopupVisible(true)}
+              accessibilityLabel="Create Post"
+            />
           </View>
         </View>
         <View style={styles.pageContentWrapper}>
@@ -235,16 +299,17 @@ export default function LoopDetailsScreen() {
               {renderUpNext()}
               <View style={styles.queueTitleSection}>
                 <Text style={styles.sectionTitle}>
-                  Queue ({posts.length})
+                  Queue ({Math.max(0, posts.length - 1)})
                 </Text>
               </View>
             </View>
-            {posts.map((item) => (
+            {posts.slice(1).map((item) => (
               <TestPostCardMini
                 key={item.id}
                 image={item.imageSource}
                 caption={item.caption}
                 onPress={() => console.log(`Pressed ${item.id}`)}
+                onLongPress={() => handlePostOptions(item)}
               />
             ))}
           </ScrollView>
@@ -256,6 +321,111 @@ export default function LoopDetailsScreen() {
         onSaveSuccess={closeEditPopup}
         loop={loopToEdit}
       />
+      <CreatePostPopup
+        isVisible={isPostPopupVisible}
+        onClose={() => setIsPostPopupVisible(false)}
+        loopId={loop.id}
+      />
+      {selectedPostToEdit && (
+        <EditPostPopup
+          isVisible={isEditPostVisible}
+          post={selectedPostToEdit}
+          loopId={loop.id}
+          onClose={handleCloseEditPost}
+        />
+      )}
+      <Modalize
+        ref={postOptionsModalRef}
+        adjustToContentHeight
+        modalStyle={{ backgroundColor: colors.card }}
+        handleStyle={{ backgroundColor: colors.border }}
+        handlePosition="inside"
+        HeaderComponent={
+          selectedPostToEdit && (
+            <View style={[styles.modalHeader, { backgroundColor: colors.card, borderBottomColor: colors.border }]}> 
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Post Options</Text>
+            </View>
+          )
+        }
+      >
+        {selectedPostToEdit && (
+          <View style={{ paddingVertical: spacing.sm, paddingBottom: spacing.sm }}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalOption,
+                { backgroundColor: pressed ? colors.border + '33' : 'transparent' }
+              ]}
+              onPress={() => {
+                // Move to top handler
+                const idx = posts.findIndex(p => p.id === selectedPostToEdit.id);
+                if (idx > 0) { // Allow moving if not already the Up Next post
+                  const updatedPosts = [...posts];
+                  const [moved] = updatedPosts.splice(idx, 1);
+                  // Insert at index 0 to make it the Up Next post
+                  updatedPosts.unshift(moved);
+                  dispatch({ type: 'UPDATE_LOOP_POSTS', payload: { loopId: loop.id, newPosts: updatedPosts } });
+                }
+                setSelectedPostToEdit(null);
+                postOptionsModalRef.current?.close();
+              }}
+              disabled={posts.findIndex(p => p.id === selectedPostToEdit.id) === 0}
+            >
+              <Ionicons 
+                name="arrow-up-circle-outline" 
+                size={24} 
+                color={posts.findIndex(p => p.id === selectedPostToEdit.id) === 0 ? colors.tabInactive : colors.text} 
+                style={{ marginRight: spacing.lg }} 
+              />
+              <Text 
+                style={{ 
+                  color: posts.findIndex(p => p.id === selectedPostToEdit.id) === 0 ? colors.tabInactive : colors.text, 
+                  fontSize: 16, 
+                  fontWeight: '500' 
+                }}
+              >
+                Move To Up Next
+              </Text>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalOption,
+                { backgroundColor: pressed ? colors.border + '33' : 'transparent' }
+              ]}
+              onPress={() => handleEditPost(selectedPostToEdit)}
+            >
+              <Ionicons name="create-outline" size={24} color={colors.text} style={{ marginRight: spacing.lg }} />
+              <Text style={{ color: colors.text, fontSize: 16, fontWeight: '500' }}>Edit Post</Text>
+            </Pressable>
+            <View style={[styles.separator, { backgroundColor: colors.border, marginVertical: 8 }]} />
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalOption,
+                { backgroundColor: pressed ? colors.border + '33' : 'transparent' }
+              ]}
+              onPress={() => {
+                // Delete handler
+                Alert.alert(
+                  'Delete Post',
+                  'Are you sure you want to delete this post?',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Delete', style: 'destructive', onPress: () => {
+                      // Remove post from queue
+                      const updatedPosts = posts.filter(p => p.id !== selectedPostToEdit.id);
+                      dispatch({ type: 'UPDATE_LOOP_POSTS', payload: { loopId: loop.id, newPosts: updatedPosts } });
+                      setSelectedPostToEdit(null);
+                      postOptionsModalRef.current?.close();
+                    }}
+                  ]
+                );
+              }}
+            >
+              <Ionicons name="trash-outline" size={24} color="#FF3B30" style={{ marginRight: spacing.lg }} />
+              <Text style={{ color: '#FF3B30', fontSize: 16, fontWeight: '500' }}>Delete</Text>
+            </Pressable>
+          </View>
+        )}
+      </Modalize>
     </>
   );
 }
