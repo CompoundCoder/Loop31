@@ -120,7 +120,11 @@ const loopsReducer = (state: LoopsState, action: LoopsAction): LoopsState => {
             : loop
         ),
       };
-    // Add future cases for ADD_LOOP
+    case 'ADD_LOOP':
+      return {
+        ...state,
+        loops: [action.payload, ...state.loops],
+      };
     default:
       // Ensure exhaustive check if needed, or return state
       return state;

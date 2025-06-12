@@ -169,7 +169,7 @@ const SlideUpMenu = React.forwardRef<SlideUpMenuRef, SlideUpMenuProps>((
           >
             <Text style={{color: 'white', fontSize: 18}}>Close Debug View</Text>
           </TouchableOpacity>
-        </View>
+                </View>
       )}
     </Modal>
   );

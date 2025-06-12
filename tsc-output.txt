@@ -1,0 +1,717 @@
+app/(loops)/edit/[loopId].tsx(4,25): error TS6133: 'Loop' is declared but its value is never read.
+app/(loops)/edit/[loopId].tsx(22,64): error TS2339: Property 'description' does not exist on type 'Loop'.
+app/(loops)/edit/[loopId].tsx(44,7): error TS2322: Type '"EDIT_LOOP"' is not assignable to type '"TOGGLE_ACTIVE" | "PIN" | "UNPIN" | "DELETE" | "SET_INITIAL_LOOPS" | "UPDATE_LOOP" | "ADD_LOOP" | "UPDATE_LOOP_POSTS"'.
+app/(loops)/edit/[loopId].tsx(49,9): error TS2353: Object literal may only specify known properties, and 'updates' does not exist in type 'Loop | Loop[] | { loopId: string; isActive: boolean; } | (Partial<Loop> & { id: string; }) | { loopId: string; newPosts: PostDisplayData[]; }'.
+app/(loops)/index.tsx(1,25): error TS6133: 'useMemo' is declared but its value is never read.
+app/(loops)/index.tsx(6,3): error TS6133: 'RefreshControl' is declared but its value is never read.
+app/(loops)/index.tsx(15,1): error TS6133: 'MaterialCommunityIcons' is declared but its value is never read.
+app/(loops)/index.tsx(28,25): error TS6133: 'Loop' is declared but its value is never read.
+app/(loops)/index.tsx(35,1): error TS6192: All imports in import declaration are unused.
+app/(loops)/index.tsx(36,37): error TS6133: 'LoopsScreenItemInternal' is declared but its value is never read.
+app/(loops)/index.tsx(60,9): error TS6133: 'theme' is declared but its value is never read.
+app/(loops)/index.tsx(77,24): error TS6133: 'setSearchQuery' is declared but its value is never read.
+app/(loops)/index.tsx(146,18): error TS6133: 'isLayoutListEmpty' is declared but its value is never read.
+app/(loops)/index.tsx(168,9): error TS6133: 'discoverPacksForLoopListSection' is declared but its value is never read.
+app/shop/pack/[packId].tsx(51,28): error TS6133: 'borderRadius' is declared but its value is never read.
+archive/app/edit/wrong[loopId].tsx(4,25): error TS6133: 'Loop' is declared but its value is never read.
+archive/app/edit/wrong[loopId].tsx(22,64): error TS2339: Property 'description' does not exist on type 'Loop'.
+archive/app/edit/wrong[loopId].tsx(44,7): error TS2322: Type '"EDIT_LOOP"' is not assignable to type '"TOGGLE_ACTIVE" | "PIN" | "UNPIN" | "DELETE" | "SET_INITIAL_LOOPS" | "UPDATE_LOOP" | "ADD_LOOP" | "UPDATE_LOOP_POSTS"'.
+archive/app/edit/wrong[loopId].tsx(49,9): error TS2353: Object literal may only specify known properties, and 'updates' does not exist in type 'Loop | Loop[] | { loopId: string; isActive: boolean; } | (Partial<Loop> & { id: string; }) | { loopId: string; newPosts: PostDisplayData[]; }'.
+archive/app/loops/index.tsx(1,57): error TS6133: 'useContext' is declared but its value is never read.
+archive/app/loops/index.tsx(8,3): error TS6133: 'Pressable' is declared but its value is never read.
+archive/app/loops/index.tsx(9,3): error TS6133: 'Platform' is declared but its value is never read.
+archive/app/loops/index.tsx(17,8): error TS6133: 'Reanimated' is declared but its value is never read.
+archive/app/loops/index.tsx(22,1): error TS6133: 'LoopCreationModal' is declared but its value is never read.
+archive/app/loops/index.tsx(22,31): error TS2307: Cannot find module '@/components/loops/CreateLoopModal' or its corresponding type declarations.
+archive/app/loops/index.tsx(41,1): error TS6133: 'MOCK_POSTS' is declared but its value is never read.
+archive/app/loops/index.tsx(278,9): error TS6133: 'handleModalAction' is declared but its value is never read.
+archive/app/loops/index.tsx(360,126): error TS2304: Cannot find name 'theme'.
+archive/app/loops/index.tsx(402,43): error TS2339: Property 'popoverOption' does not exist on type '{ listContentContainer: { paddingHorizontal: 24; paddingBottom: number; }; centeredMessageContainer: { flex: number; justifyContent: "center"; alignItems: "center"; paddingHorizontal: 24; }; ... 6 more ...; popoverSeparator: { ...; }; }'.
+archive/app/loops/index.tsx(402,159): error TS2551: Property 'popoverText' does not exist on type '{ listContentContainer: { paddingHorizontal: 24; paddingBottom: number; }; centeredMessageContainer: { flex: number; justifyContent: "center"; alignItems: "center"; paddingHorizontal: 24; }; ... 6 more ...; popoverSeparator: { ...; }; }'. Did you mean 'popoverItem'?
+archive/app/loops/index.tsx(405,43): error TS2339: Property 'popoverOption' does not exist on type '{ listContentContainer: { paddingHorizontal: 24; paddingBottom: number; }; centeredMessageContainer: { flex: number; justifyContent: "center"; alignItems: "center"; paddingHorizontal: 24; }; ... 6 more ...; popoverSeparator: { ...; }; }'.
+archive/app/loops/index.tsx(405,151): error TS2551: Property 'popoverText' does not exist on type '{ listContentContainer: { paddingHorizontal: 24; paddingBottom: number; }; centeredMessageContainer: { flex: number; justifyContent: "center"; alignItems: "center"; paddingHorizontal: 24; }; ... 6 more ...; popoverSeparator: { ...; }; }'. Did you mean 'popoverItem'?
+archive/app/test-grid.tsx(66,7): error TS6133: 'ESTIMATED_ITEM_HEIGHT' is declared but its value is never read.
+archive/components/AnalyticsChart.tsx(16,3): error TS6133: 'data' is declared but its value is never read.
+archive/components/AnimatedText.tsx(2,20): error TS6133: 'Text' is declared but its value is never read.
+archive/components/animations/EntryAnimationView.tsx(4,1): error TS6133: 'ANIMATION' is declared but its value is never read.
+archive/components/animations/useEntryAnimation.ts(1,10): error TS6133: 'useRef' is declared but its value is never read.
+archive/components/common/DragOverlay.tsx(1,27): error TS6133: 'useEffect' is declared but its value is never read.
+archive/components/common/DragOverlay.tsx(2,28): error TS6133: 'Platform' is declared but its value is never read.
+archive/components/common/DragOverlay.tsx(4,31): error TS6133: 'DraggedItemDetails' is declared but its value is never read.
+archive/components/common/DragOverlay.tsx(4,64): error TS6133: 'DragOverlayPost' is declared but its value is never read.
+archive/components/common/DragOverlay.tsx(5,8): error TS6133: 'PostCardS' is declared but its value is never read.
+archive/components/common/DragOverlay.tsx(10,7): error TS6133: 'FALLBACK_POST' is declared but its value is never read.
+archive/components/common/DragOverlay.tsx(26,10): error TS6133: 'displayVariant' is declared but its value is never read.
+archive/components/common/DragOverlay.tsx(27,10): error TS6133: 'displayCardWidth' is declared but its value is never read.
+archive/components/common/DragOverlay.tsx(35,14): error TS6133: 'previousResult' is declared but its value is never read.
+archive/components/containers/index.ts(9,50): error TS2345: Argument of type 'AnimatedComponent<typeof ScrollView>' is not assignable to parameter of type 'ComponentType<ScrollableComponentProps<T>>'.
+  Type 'AnimatedComponent<typeof ScrollView>' is not assignable to type 'FunctionComponent<ScrollableComponentProps<T>>'.
+    Types of property 'propTypes' are incompatible.
+      Type 'WeakValidationMap<AnimatedProps<ScrollViewProps & RefAttributes<ScrollView>>> | undefined' is not assignable to type 'WeakValidationMap<ScrollableComponentProps<T>> | undefined'.
+        Type 'WeakValidationMap<AnimatedProps<ScrollViewProps & RefAttributes<ScrollView>>>' is not assignable to type 'WeakValidationMap<ScrollableComponentProps<T>> | undefined'.
+          Type 'WeakValidationMap<AnimatedProps<ScrollViewProps & RefAttributes<ScrollView>>>' is not assignable to type 'WeakValidationMap<ScrollableProps & AnimatedProps<ScrollViewProps>>'.
+            Types of property 'contentContainerStyle' are incompatible.
+              Type 'Validator<false | "" | Value | RegisteredStyle<ViewStyle> | WithAnimatedObject<ViewStyle> | AnimatedInterpolation<string | number> | WithAnimatedArray<...> | null | undefined> | undefined' is not assignable to type 'Validator<((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined> | undefined'.
+                Type 'Validator<false | "" | Value | RegisteredStyle<ViewStyle> | WithAnimatedObject<ViewStyle> | AnimatedInterpolation<string | number> | WithAnimatedArray<...> | null | undefined>' is not assignable to type 'Validator<((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined>'.
+                  Type 'false | "" | Value | RegisteredStyle<ViewStyle> | WithAnimatedObject<ViewStyle> | AnimatedInterpolation<string | number> | WithAnimatedArray<...> | null | undefined' is not assignable to type '((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined'.
+                    Type 'WithAnimatedObject<ViewStyle>' is not assignable to type '((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined'.
+                      Type 'WithAnimatedObject<ViewStyle>' is not assignable to type '(false & WithAnimatedObject<ViewStyle>) | ("" & WithAnimatedObject<ViewStyle>) | (ViewStyle & false) | ... 7 more ... | (RecursiveArray<...> & WithAnimatedObject<...>)'.
+                        Type 'WithAnimatedObject<ViewStyle>' is not assignable to type 'RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> & WithAnimatedObject<ViewStyle>'.
+                          Type 'WithAnimatedObject<ViewStyle>' is missing the following properties from type 'RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>': length, pop, push, concat, and 34 more.
+archive/components/containers/index.ts(10,48): error TS2345: Argument of type 'AnimatedComponent<typeof SectionList>' is not assignable to parameter of type 'ComponentType<ScrollableComponentProps<T>>'.
+  Type 'AnimatedComponent<typeof SectionList>' is not assignable to type 'FunctionComponent<ScrollableComponentProps<T>>'.
+    Types of property 'propTypes' are incompatible.
+      Type 'WeakValidationMap<AnimatedProps<SectionListProps<unknown, unknown> & RefAttributes<SectionList<unknown, unknown>>>> | undefined' is not assignable to type 'WeakValidationMap<ScrollableComponentProps<T>> | undefined'.
+        Type 'WeakValidationMap<AnimatedProps<SectionListProps<unknown, unknown> & RefAttributes<SectionList<unknown, unknown>>>>' is not assignable to type 'WeakValidationMap<ScrollableComponentProps<T>> | undefined'.
+          Type 'WeakValidationMap<AnimatedProps<SectionListProps<unknown, unknown> & RefAttributes<SectionList<unknown, unknown>>>>' is not assignable to type 'WeakValidationMap<ScrollableProps & AnimatedProps<SectionListProps<unknown, unknown>>>'.
+            Types of property 'contentContainerStyle' are incompatible.
+              Type 'Validator<false | "" | Value | RegisteredStyle<ViewStyle> | WithAnimatedObject<ViewStyle> | AnimatedInterpolation<string | number> | WithAnimatedArray<...> | null | undefined> | undefined' is not assignable to type 'Validator<((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined> | undefined'.
+                Type 'Validator<false | "" | Value | RegisteredStyle<ViewStyle> | WithAnimatedObject<ViewStyle> | AnimatedInterpolation<string | number> | WithAnimatedArray<...> | null | undefined>' is not assignable to type 'Validator<((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined>'.
+                  Type 'false | "" | Value | RegisteredStyle<ViewStyle> | WithAnimatedObject<ViewStyle> | AnimatedInterpolation<string | number> | WithAnimatedArray<...> | null | undefined' is not assignable to type '((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined'.
+                    Type 'WithAnimatedObject<ViewStyle>' is not assignable to type '((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined'.
+                      Type 'WithAnimatedObject<ViewStyle>' is not assignable to type '(false & WithAnimatedObject<ViewStyle>) | ("" & WithAnimatedObject<ViewStyle>) | (ViewStyle & false) | ... 7 more ... | (RecursiveArray<...> & WithAnimatedObject<...>)'.
+                        Type 'WithAnimatedObject<ViewStyle>' is not assignable to type 'RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> & WithAnimatedObject<ViewStyle>'.
+                          Type 'WithAnimatedObject<ViewStyle>' is missing the following properties from type 'RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>': length, pop, push, concat, and 34 more.
+archive/components/containers/index.ts(11,14): error TS2322: Type '(props: ScrollableComponentProps<T>) => Element' is not assignable to type 'typeof FlatList'.
+  Type '(props: ScrollableComponentProps<T>) => Element' provides no match for the signature 'new <ItemT = any>(props: FlatListProps<ItemT>): FlatList<ItemT>'.
+archive/components/containers/index.ts(11,65): error TS2345: Argument of type 'AnimatedComponent<typeof FlatList>' is not assignable to parameter of type 'ComponentType<ScrollableComponentProps<T>>'.
+  Type 'AnimatedComponent<typeof FlatList>' is not assignable to type 'FunctionComponent<ScrollableComponentProps<T>>'.
+    Types of property 'propTypes' are incompatible.
+      Type 'WeakValidationMap<AnimatedProps<FlatListProps<unknown> & RefAttributes<FlatList<unknown>>>> | undefined' is not assignable to type 'WeakValidationMap<ScrollableComponentProps<T>> | undefined'.
+        Type 'WeakValidationMap<AnimatedProps<FlatListProps<unknown> & RefAttributes<FlatList<unknown>>>>' is not assignable to type 'WeakValidationMap<ScrollableComponentProps<T>> | undefined'.
+          Type 'WeakValidationMap<AnimatedProps<FlatListProps<unknown> & RefAttributes<FlatList<unknown>>>>' is not assignable to type 'WeakValidationMap<ScrollableProps & AnimatedProps<SectionListProps<unknown, unknown>>>'.
+            Types of property 'contentContainerStyle' are incompatible.
+              Type 'Validator<false | "" | Value | RegisteredStyle<ViewStyle> | WithAnimatedObject<ViewStyle> | AnimatedInterpolation<string | number> | WithAnimatedArray<...> | null | undefined> | undefined' is not assignable to type 'Validator<((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined> | undefined'.
+                Type 'Validator<false | "" | Value | RegisteredStyle<ViewStyle> | WithAnimatedObject<ViewStyle> | AnimatedInterpolation<string | number> | WithAnimatedArray<...> | null | undefined>' is not assignable to type 'Validator<((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined>'.
+                  Type 'false | "" | Value | RegisteredStyle<ViewStyle> | WithAnimatedObject<ViewStyle> | AnimatedInterpolation<string | number> | WithAnimatedArray<...> | null | undefined' is not assignable to type '((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined'.
+                    Type 'WithAnimatedObject<ViewStyle>' is not assignable to type '((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined'.
+                      Type 'WithAnimatedObject<ViewStyle>' is not assignable to type '(false & WithAnimatedObject<ViewStyle>) | ("" & WithAnimatedObject<ViewStyle>) | (ViewStyle & false) | ... 7 more ... | (RecursiveArray<...> & WithAnimatedObject<...>)'.
+                        Type 'WithAnimatedObject<ViewStyle>' is not assignable to type 'RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> & WithAnimatedObject<ViewStyle>'.
+                          Type 'WithAnimatedObject<ViewStyle>' is missing the following properties from type 'RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>': length, pop, push, concat, and 34 more.
+archive/components/containers/ScreenContentContainer.tsx(3,1): error TS6133: 'LAYOUT' is declared but its value is never read.
+archive/components/containers/ScreenContentContainer.tsx(16,50): error TS2344: Type 'FlatList<T>' does not satisfy the constraint 'JSXElementConstructor<any> | keyof IntrinsicElements'.
+archive/components/containers/ScreenContentContainer.tsx(54,17): error TS2551: Property 'onScroll' does not exist on type 'ScrollableComponentProps<T>'. Did you mean 'scrollY'?
+  Property 'onScroll' does not exist on type 'ScrollableProps & AnimatedProps<{}>'.
+archive/components/DropdownMenu.tsx(9,3): error TS6133: 'Dimensions' is declared but its value is never read.
+archive/components/DropdownMenu.tsx(24,42): error TS6133: 'elevation' is declared but its value is never read.
+archive/components/FadeSlideInView.tsx(35,9): error TS6133: 'instanceNumber' is declared but its value is never read.
+archive/components/home/TopPerformingPostsSection.tsx(2,50): error TS6133: 'Platform' is declared but its value is never read.
+archive/components/home/TopPerformingPostsSection.tsx(14,1): error TS6133: 'SectionTitle' is declared but its value is never read.
+archive/components/home/TopPerformingPostsSection.tsx(32,9): error TS6133: 'theme' is declared but its value is never read.
+archive/components/InsightCard.tsx(2,22): error TS6133: 'StyleSheet' is declared but its value is never read.
+archive/components/insights/InsightMetric.tsx(2,22): error TS6133: 'StyleSheet' is declared but its value is never read.
+archive/components/insights/InsightsCard.tsx(2,10): error TS6133: 'View' is declared but its value is never read.
+archive/components/insights_apple/InsightDetailCard.tsx(4,26): error TS6133: 'ThemeStyles' is declared but its value is never read.
+archive/components/LoopBadge.tsx(4,36): error TS2307: Cannot find module '../app/_layout' or its corresponding type declarations.
+archive/components/LoopGridItem.tsx(3,36): error TS6133: 'PanGesture' is declared but its value is never read.
+archive/components/LoopGridItem.tsx(4,20): error TS6133: 'useSharedValue' is declared but its value is never read.
+archive/components/LoopGridItem.tsx(6,10): error TS2614: Module '"@/app/(loops)/[loopId]"' has no exported member 'Post'. Did you mean to use 'import Post from "@/app/(loops)/[loopId]"' instead?
+archive/components/loops/CreateLoopModal.tsx(1,17): error TS6133: 'createContext' is declared but its value is never read.
+archive/components/loops/CreateLoopModal.tsx(1,32): error TS6133: 'useContext' is declared but its value is never read.
+archive/components/loops/CreateLoopModal.tsx(1,54): error TS6133: 'ReactNode' is declared but its value is never read.
+archive/components/loops/CreateLoopModal.tsx(5,26): error TS2307: Cannot find module './LoopEditMenu' or its corresponding type declarations.
+archive/components/loops/CreateLoopModal.tsx(12,30): error TS2307: Cannot find module '@/context/LoopModalContext' or its corresponding type declarations.
+archive/components/loops/CreateLoopModal.tsx(24,9): error TS6133: 'insets' is declared but its value is never read.
+archive/components/loops/FeaturedPostCard.tsx(2,22): error TS6133: 'Image' is declared but its value is never read.
+archive/components/loops/FeaturedPostCard.tsx(31,7): error TS6133: 'screenWidth' is declared but its value is never read.
+archive/components/loops/LoopFormFields.tsx(1,38): error TS6133: 'useCallback' is declared but its value is never read.
+archive/components/loops/LoopFormFields.tsx(10,1): error TS6133: 'LinearGradient' is declared but its value is never read.
+archive/components/loops/MiniPostCard.tsx(2,22): error TS6133: 'Image' is declared but its value is never read.
+archive/components/loops/MiniPostCard.tsx(2,41): error TS6133: 'Dimensions' is declared but its value is never read.
+archive/components/loops/PostEditMenu.tsx(7,3): error TS6133: 'Button' is declared but its value is never read.
+archive/components/loops/PostEditMenu.tsx(8,3): error TS6133: 'TouchableWithoutFeedback' is declared but its value is never read.
+archive/components/loops/PostEditMenu.tsx(16,15): error TS2614: Module '"@/app/(loops)/[loopId]"' has no exported member 'Post'. Did you mean to use 'import Post from "@/app/(loops)/[loopId]"' instead?
+archive/components/loops/PostEditMenu.tsx(116,43): error TS6133: 'typography' is declared but its value is never read.
+archive/components/loops/renderLoopItem.tsx(2,16): error TS6133: 'Text' is declared but its value is never read.
+archive/components/loops/renderLoopItem.tsx(11,29): error TS2307: Cannot find module '@/components/loops/LoopPlaceholder' or its corresponding type declarations.
+archive/components/loops/SwipeableLoopItem.tsx(5,3): error TS6133: 'View' is declared but its value is never read.
+archive/components/loops/SwipeableLoopItem.tsx(55,5): error TS6133: 'progress' is declared but its value is never read.
+archive/components/notifications/NotificationCard.tsx(7,3): error TS6133: 'Platform' is declared but its value is never read.
+archive/components/notifications/NotificationStack.tsx(6,1): error TS6133: 'LinkProps' is declared but its value is never read.
+archive/components/notifications/NotificationStackFeed.tsx(3,22): error TS6133: 'Layout' is declared but its value is never read.
+archive/components/notifications/NotificationStackInline.tsx(5,3): error TS6133: 'Platform' is declared but its value is never read.
+archive/components/notifications/NotificationStackInline.tsx(6,3): error TS6133: 'UIManager' is declared but its value is never read.
+archive/components/notifications/ToastNotification.tsx(2,45): error TS6133: 'Platform' is declared but its value is never read.
+archive/components/notifications/ToastNotification.tsx(3,1): error TS6133: 'MaterialCommunityIcons' is declared but its value is never read.
+archive/components/notifications/ToastNotification.tsx(20,19): error TS6133: 'spacing' is declared but its value is never read.
+archive/components/NotificationStack.tsx(169,9): error TS2322: Type '"/tabs"' is not assignable to type 'RelativePathString | ExternalPathString | "/" | "/you" | "/_sitemap" | "/(loops)" | "/(modals)/create-loop" | "/create-loop" | "/constants/loopItemTypes" | ... 6 more ... | "/shop/pack/[packId]"'.
+archive/components/PostCard.tsx(8,3): error TS6133: 'Platform' is declared but its value is never read.
+archive/components/PostCard.tsx(13,3): error TS6133: 'Easing' is declared but its value is never read.
+archive/components/PostCard.tsx(18,1): error TS6133: 'LinearGradient' is declared but its value is never read.
+archive/components/PostCard.tsx(20,22): error TS2307: Cannot find module '../data/Post' or its corresponding type declarations.
+archive/components/PostCard.tsx(21,1): error TS6133: 'LoopBadge' is declared but its value is never read.
+archive/components/PostCard.tsx(22,36): error TS2307: Cannot find module '../app/_layout' or its corresponding type declarations.
+archive/components/PostCard.tsx(84,3): error TS6133: 'mediaStyle' is declared but its value is never read.
+archive/components/PostCard.tsx(89,3): error TS6133: 'showLoopBadge' is declared but its value is never read.
+archive/components/PostCard.tsx(223,9): error TS2322: Type '({ pressed }: PressableStateCallbackType) => (false | "" | { readonly none: object; readonly xs: object; readonly sm: object; readonly md: object; readonly lg: object; readonly xl: object; } | ... 6 more ... | undefined)[]' is not assignable to type 'StyleProp<ViewStyle> | ((state: PressableStateCallbackType) => StyleProp<ViewStyle>)'.
+  Type '({ pressed }: PressableStateCallbackType) => (false | "" | { readonly none: object; readonly xs: object; readonly sm: object; readonly md: object; readonly lg: object; readonly xl: object; } | ... 6 more ... | undefined)[]' is not assignable to type '(state: PressableStateCallbackType) => StyleProp<ViewStyle>'.
+    Type '(false | "" | { readonly none: object; readonly xs: object; readonly sm: object; readonly md: object; readonly lg: object; readonly xl: object; } | ViewStyle | RegisteredStyle<ViewStyle> | ... 4 more ... | undefined)[]' is not assignable to type 'StyleProp<ViewStyle>'.
+      Type '(false | "" | { readonly none: object; readonly xs: object; readonly sm: object; readonly md: object; readonly lg: object; readonly xl: object; } | ViewStyle | RegisteredStyle<ViewStyle> | ... 4 more ... | undefined)[]' is not assignable to type 'RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>'.
+        The types returned by 'pop()' are incompatible between these types.
+          Type 'false | "" | { readonly none: object; readonly xs: object; readonly sm: object; readonly md: object; readonly lg: object; readonly xl: object; } | ViewStyle | RegisteredStyle<ViewStyle> | ... 4 more ... | undefined' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+            Type '{ readonly none: object; readonly xs: object; readonly sm: object; readonly md: object; readonly lg: object; readonly xl: object; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+archive/components/PostCard.tsx(269,41): error TS7006: Parameter 'platform' implicitly has an 'any' type.
+archive/components/posts/PostEditMenu.tsx(3,94): error TS6133: 'Platform' is declared but its value is never read.
+archive/components/posts/PostEditMenu.tsx(11,3): error TS6133: 'SharedValue' is declared but its value is never read.
+archive/components/posts/PostEditMenu.tsx(13,3): error TS6133: 'withDelay' is declared but its value is never read.
+archive/components/posts/PostEditMenu.tsx(20,22): error TS7016: Could not find a declaration file for module 'lodash.debounce'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/lodash.debounce/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lodash.debounce` if it exists or add a new declaration (.d.ts) file containing `declare module 'lodash.debounce';`
+archive/components/posts/PostEditMenu.tsx(43,7): error TS6133: 'FADE_IN_EASING' is declared but its value is never read.
+archive/components/posts/PostEditMenu.tsx(96,9): error TS6133: 'screenWidth' is declared but its value is never read.
+archive/components/posts/PostEditMenu.tsx(97,9): error TS6133: 'containerPadding' is declared but its value is never read.
+archive/components/posts/PostEditMenu.tsx(256,20): error TS6133: 'previousState' is declared but its value is never read.
+archive/components/QuickInsightsSection.tsx(46,9): error TS6133: 'growthTextRef' is declared but its value is never read.
+archive/components/QuickInsightsSection.tsx(49,9): error TS6133: 'handleGrowthTextLayout' is declared but its value is never read.
+archive/components/QuickInsightsSection.tsx(109,9): error TS6133: 'socialStats' is declared but its value is never read.
+archive/components/SectionTitle.tsx(4,36): error TS2307: Cannot find module '../app/_layout' or its corresponding type declarations.
+archive/components/SimpleButton.tsx(15,36): error TS2307: Cannot find module '../app/_layout' or its corresponding type declarations.
+archive/components/ui/IconSymbol.tsx(42,72): error TS2322: Type 'StyleProp<ViewStyle>' is not assignable to type 'StyleProp<TextStyle>'.
+  Type 'ViewStyle' is not assignable to type 'StyleProp<TextStyle>'.
+    Type 'ViewStyle' is not assignable to type 'TextStyle'.
+      Types of property 'userSelect' are incompatible.
+        Type 'string | undefined' is not assignable to type '"none" | "auto" | "contain" | "text" | "all" | undefined'.
+          Type 'string' is not assignable to type '"none" | "auto" | "contain" | "text" | "all" | undefined'.
+archive/components/WelcomeMessage.tsx(209,27): error TS6133: 'pulseOpacity' is declared but its value is never read.
+archive/context/LoopModalContext.tsx(1,65): error TS6133: 'useRef' is declared but its value is never read.
+archive/context/LoopModalContext.tsx(1,73): error TS6133: 'useEffect' is declared but its value is never read.
+archive/context/LoopModalContext.tsx(1,84): error TS6133: 'useCallback' is declared but its value is never read.
+archive/hooks/useLoopListRenderers.tsx(2,16): error TS6133: 'StyleSheet' is declared but its value is never read.
+archive/pages/test-grid.tsx(66,7): error TS6133: 'ESTIMATED_ITEM_HEIGHT' is declared but its value is never read.
+archive/pages/wrong[loopId].tsx(4,25): error TS6133: 'Loop' is declared but its value is never read.
+archive/pages/wrong[loopId].tsx(22,64): error TS2339: Property 'description' does not exist on type 'Loop'.
+archive/pages/wrong[loopId].tsx(44,7): error TS2322: Type '"EDIT_LOOP"' is not assignable to type '"TOGGLE_ACTIVE" | "PIN" | "UNPIN" | "DELETE" | "SET_INITIAL_LOOPS" | "UPDATE_LOOP" | "ADD_LOOP" | "UPDATE_LOOP_POSTS"'.
+archive/pages/wrong[loopId].tsx(49,9): error TS2353: Object literal may only specify known properties, and 'updates' does not exist in type 'Loop | Loop[] | { loopId: string; isActive: boolean; } | (Partial<Loop> & { id: string; }) | { loopId: string; newPosts: PostDisplayData[]; }'.
+archive/screens/AnalyticsScreen.tsx(11,52): error TS2307: Cannot find module '../components/AnimatedHeader' or its corresponding type declarations.
+archive/screens/AnalyticsScreen.tsx(13,24): error TS2307: Cannot find module '../components/EmptyState' or its corresponding type declarations.
+archive/screens/LoopsScreen.tsx(8,3): error TS6133: 'Pressable' is declared but its value is never read.
+archive/screens/LoopsScreen.tsx(9,3): error TS6133: 'Platform' is declared but its value is never read.
+archive/screens/LoopsScreen.tsx(14,32): error TS2307: Cannot find module '../hooks/useThemeStyles' or its corresponding type declarations.
+archive/screens/LoopsScreen.tsx(16,36): error TS2307: Cannot find module '../app/_layout' or its corresponding type declarations.
+archive/screens/LoopsScreen.tsx(17,8): error TS6133: 'Reanimated' is declared but its value is never read.
+archive/screens/LoopsScreen.tsx(22,52): error TS2307: Cannot find module '../components/AnimatedHeader' or its corresponding type declarations.
+archive/screens/LoopsScreen.tsx(23,24): error TS2307: Cannot find module '../components/EmptyState' or its corresponding type declarations.
+archive/screens/LoopsScreen.tsx(24,29): error TS2307: Cannot find module '../components/ScreenContainer' or its corresponding type declarations.
+archive/screens/LoopsScreen.tsx(25,39): error TS2307: Cannot find module '../constants/layout' or its corresponding type declarations.
+archive/screens/LoopsScreen.tsx(26,32): error TS2307: Cannot find module '../components/HeaderActionButton' or its corresponding type declarations.
+archive/screens/LoopsScreen.tsx(27,37): error TS2307: Cannot find module '../components/SubtleSectionHeader' or its corresponding type declarations.
+archive/screens/LoopsScreen.tsx(28,26): error TS2307: Cannot find module '../components/LoopCard' or its corresponding type declarations.
+archive/screens/LoopsScreen.tsx(29,30): error TS2307: Cannot find module '../components/shop/LoopPackCard' or its corresponding type declarations.
+archive/screens/LoopsScreen.tsx(35,41): error TS2307: Cannot find module '../components/modals/LoopActionsModalContent' or its corresponding type declarations.
+archive/screens/LoopsScreen.tsx(38,33): error TS2307: Cannot find module '../components/loops/LoopsEmptyState' or its corresponding type declarations.
+archive/screens/LoopsScreen.tsx(41,34): error TS2307: Cannot find module '../modules/notifications' or its corresponding type declarations.
+archive/screens/LoopsScreen.tsx(265,9): error TS6133: 'handleToggleLoopActive' is declared but its value is never read.
+archive/screens/LoopsScreen.tsx(441,9): error TS6133: 'handleModalAction' is declared but its value is never read.
+archive/screens/LoopsScreen.tsx(481,11): error TS6133: 'baseItemStyle' is declared but its value is never read.
+archive/screens/LoopsScreen.tsx(509,30): error TS7006: Parameter 'loopId' implicitly has an 'any' type.
+archive/screens/LoopsScreen.tsx(509,38): error TS7006: Parameter 'isActive' implicitly has an 'any' type.
+archive/screens/LoopsScreen.tsx(522,30): error TS7006: Parameter 'loopId' implicitly has an 'any' type.
+archive/screens/LoopsScreen.tsx(522,38): error TS7006: Parameter 'isActive' implicitly has an 'any' type.
+archive/screens/LoopsScreen.tsx(536,30): error TS7006: Parameter 'loopId' implicitly has an 'any' type.
+archive/screens/LoopsScreen.tsx(536,38): error TS7006: Parameter 'isActive' implicitly has an 'any' type.
+archive/screens/PublishedPostsScreen.tsx(7,3): error TS6133: 'RefreshControl' is declared but its value is never read.
+archive/screens/PublishedPostsScreen.tsx(9,3): error TS6133: 'SectionListData' is declared but its value is never read.
+archive/screens/PublishedPostsScreen.tsx(13,1): error TS6133: 'SafeAreaView' is declared but its value is never read.
+archive/screens/PublishedPostsScreen.tsx(14,1): error TS6133: 'useTheme' is declared but its value is never read.
+archive/screens/PublishedPostsScreen.tsx(17,22): error TS2307: Cannot find module '../data/Post' or its corresponding type declarations.
+archive/screens/PublishedPostsScreen.tsx(19,24): error TS2307: Cannot find module '../components/EmptyState' or its corresponding type declarations.
+archive/screens/PublishedPostsScreen.tsx(20,26): error TS6133: 'HEADER_TOTAL_HEIGHT' is declared but its value is never read.
+archive/screens/PublishedPostsScreen.tsx(20,73): error TS2307: Cannot find module '../components/AnimatedHeader' or its corresponding type declarations.
+archive/screens/PublishedPostsScreen.tsx(24,25): error TS6133: 'ScrollContainer' is declared but its value is never read.
+archive/screens/PublishedPostsScreen.tsx(25,10): error TS6133: 'LAYOUT' is declared but its value is never read.
+archive/screens/PublishedPostsScreen.tsx(29,7): error TS6133: 'AnimatedSectionList' is declared but its value is never read.
+archive/screens/PublishedPostsScreen.tsx(31,6): error TS6196: 'AnimatedSectionListProps' is declared but never used.
+archive/screens/PublishedPostsScreen.tsx(51,19): error TS6133: 'spacing' is declared but its value is never read.
+archive/screens/ScheduledPostsScreen.tsx(12,10): error TS6133: 'LAYOUT' is declared but its value is never read.
+archive/screens/ScheduledPostsScreen.tsx(14,22): error TS2307: Cannot find module '../data/Post' or its corresponding type declarations.
+archive/screens/ScheduledPostsScreen.tsx(16,24): error TS2307: Cannot find module '../components/EmptyState' or its corresponding type declarations.
+archive/screens/ScheduledPostsScreen.tsx(17,52): error TS2307: Cannot find module '../components/AnimatedHeader' or its corresponding type declarations.
+archive/screens/ScheduledPostsScreen.tsx(21,1): error TS6133: 'ScrollContainer' is declared but its value is never read.
+archive/screens/SettingsScreen.tsx(5,3): error TS6133: 'Text' is declared but its value is never read.
+archive/screens/SettingsScreen.tsx(152,9): error TS2739: Type 'Value' is missing the following properties from type 'SharedValue<number>': value, get, set, modify
+archive/screens/SettingsScreen.tsx(228,56): error TS6133: 'index' is declared but its value is never read.
+archive/screens/YouScreen.tsx(87,11): error TS2739: Type 'Value' is missing the following properties from type 'SharedValue<number>': value, get, set, modify
+archive/screens/YouScreen.tsx(98,9): error TS2739: Type 'Value' is missing the following properties from type 'SharedValue<number>': value, get, set, modify
+components/AnalyticsChart.tsx(16,3): error TS6133: 'data' is declared but its value is never read.
+components/AnimatedHeader.tsx(1,17): error TS6133: 'useState' is declared but its value is never read.
+components/AnimatedHeader.tsx(4,3): error TS6133: 'useSharedValue' is declared but its value is never read.
+components/AnimatedText.tsx(2,20): error TS6133: 'Text' is declared but its value is never read.
+components/animations/EntryAnimationView.tsx(4,1): error TS6133: 'ANIMATION' is declared but its value is never read.
+components/animations/useEntryAnimation.ts(1,10): error TS6133: 'useRef' is declared but its value is never read.
+components/common/DragOverlay.tsx(1,27): error TS6133: 'useEffect' is declared but its value is never read.
+components/common/DragOverlay.tsx(2,28): error TS6133: 'Platform' is declared but its value is never read.
+components/common/DragOverlay.tsx(4,31): error TS6133: 'DraggedItemDetails' is declared but its value is never read.
+components/common/DragOverlay.tsx(4,64): error TS6133: 'DragOverlayPost' is declared but its value is never read.
+components/common/DragOverlay.tsx(5,8): error TS6133: 'PostCardS' is declared but its value is never read.
+components/common/DragOverlay.tsx(10,7): error TS6133: 'FALLBACK_POST' is declared but its value is never read.
+components/common/DragOverlay.tsx(26,10): error TS6133: 'displayVariant' is declared but its value is never read.
+components/common/DragOverlay.tsx(27,10): error TS6133: 'displayCardWidth' is declared but its value is never read.
+components/common/DragOverlay.tsx(35,14): error TS6133: 'previousResult' is declared but its value is never read.
+components/common/SwipeableRow.tsx(9,3): error TS6133: 'runOnJS' is declared but its value is never read.
+components/common/SwipeableRow.tsx(11,1): error TS6133: 'Haptics' is declared but its value is never read.
+components/containers/index.ts(9,50): error TS2345: Argument of type 'AnimatedComponent<typeof ScrollView>' is not assignable to parameter of type 'ComponentType<ScrollableComponentProps<T>>'.
+  Type 'AnimatedComponent<typeof ScrollView>' is not assignable to type 'FunctionComponent<ScrollableComponentProps<T>>'.
+    Types of property 'propTypes' are incompatible.
+      Type 'WeakValidationMap<AnimatedProps<ScrollViewProps & RefAttributes<ScrollView>>> | undefined' is not assignable to type 'WeakValidationMap<ScrollableComponentProps<T>> | undefined'.
+        Type 'WeakValidationMap<AnimatedProps<ScrollViewProps & RefAttributes<ScrollView>>>' is not assignable to type 'WeakValidationMap<ScrollableComponentProps<T>> | undefined'.
+          Type 'WeakValidationMap<AnimatedProps<ScrollViewProps & RefAttributes<ScrollView>>>' is not assignable to type 'WeakValidationMap<ScrollableProps & AnimatedProps<ScrollViewProps>>'.
+            Types of property 'contentContainerStyle' are incompatible.
+              Type 'Validator<false | "" | Value | RegisteredStyle<ViewStyle> | WithAnimatedObject<ViewStyle> | AnimatedInterpolation<string | number> | WithAnimatedArray<...> | null | undefined> | undefined' is not assignable to type 'Validator<((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined> | undefined'.
+                Type 'Validator<false | "" | Value | RegisteredStyle<ViewStyle> | WithAnimatedObject<ViewStyle> | AnimatedInterpolation<string | number> | WithAnimatedArray<...> | null | undefined>' is not assignable to type 'Validator<((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined>'.
+                  Type 'false | "" | Value | RegisteredStyle<ViewStyle> | WithAnimatedObject<ViewStyle> | AnimatedInterpolation<string | number> | WithAnimatedArray<...> | null | undefined' is not assignable to type '((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined'.
+                    Type 'WithAnimatedObject<ViewStyle>' is not assignable to type '((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined'.
+                      Type 'WithAnimatedObject<ViewStyle>' is not assignable to type '(false & WithAnimatedObject<ViewStyle>) | ("" & WithAnimatedObject<ViewStyle>) | (ViewStyle & false) | ... 7 more ... | (RecursiveArray<...> & WithAnimatedObject<...>)'.
+                        Type 'WithAnimatedObject<ViewStyle>' is not assignable to type 'RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> & WithAnimatedObject<ViewStyle>'.
+                          Type 'WithAnimatedObject<ViewStyle>' is missing the following properties from type 'RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>': length, pop, push, concat, and 34 more.
+components/containers/index.ts(10,48): error TS2345: Argument of type 'AnimatedComponent<typeof SectionList>' is not assignable to parameter of type 'ComponentType<ScrollableComponentProps<T>>'.
+  Type 'AnimatedComponent<typeof SectionList>' is not assignable to type 'FunctionComponent<ScrollableComponentProps<T>>'.
+    Types of property 'propTypes' are incompatible.
+      Type 'WeakValidationMap<AnimatedProps<SectionListProps<unknown, unknown> & RefAttributes<SectionList<unknown, unknown>>>> | undefined' is not assignable to type 'WeakValidationMap<ScrollableComponentProps<T>> | undefined'.
+        Type 'WeakValidationMap<AnimatedProps<SectionListProps<unknown, unknown> & RefAttributes<SectionList<unknown, unknown>>>>' is not assignable to type 'WeakValidationMap<ScrollableComponentProps<T>> | undefined'.
+          Type 'WeakValidationMap<AnimatedProps<SectionListProps<unknown, unknown> & RefAttributes<SectionList<unknown, unknown>>>>' is not assignable to type 'WeakValidationMap<ScrollableProps & AnimatedProps<SectionListProps<unknown, unknown>>>'.
+            Types of property 'contentContainerStyle' are incompatible.
+              Type 'Validator<false | "" | Value | RegisteredStyle<ViewStyle> | WithAnimatedObject<ViewStyle> | AnimatedInterpolation<string | number> | WithAnimatedArray<...> | null | undefined> | undefined' is not assignable to type 'Validator<((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined> | undefined'.
+                Type 'Validator<false | "" | Value | RegisteredStyle<ViewStyle> | WithAnimatedObject<ViewStyle> | AnimatedInterpolation<string | number> | WithAnimatedArray<...> | null | undefined>' is not assignable to type 'Validator<((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined>'.
+                  Type 'false | "" | Value | RegisteredStyle<ViewStyle> | WithAnimatedObject<ViewStyle> | AnimatedInterpolation<string | number> | WithAnimatedArray<...> | null | undefined' is not assignable to type '((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined'.
+                    Type 'WithAnimatedObject<ViewStyle>' is not assignable to type '((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined'.
+                      Type 'WithAnimatedObject<ViewStyle>' is not assignable to type '(false & WithAnimatedObject<ViewStyle>) | ("" & WithAnimatedObject<ViewStyle>) | (ViewStyle & false) | ... 7 more ... | (RecursiveArray<...> & WithAnimatedObject<...>)'.
+                        Type 'WithAnimatedObject<ViewStyle>' is not assignable to type 'RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> & WithAnimatedObject<ViewStyle>'.
+                          Type 'WithAnimatedObject<ViewStyle>' is missing the following properties from type 'RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>': length, pop, push, concat, and 34 more.
+components/containers/index.ts(11,14): error TS2322: Type '(props: ScrollableComponentProps<T>) => Element' is not assignable to type 'typeof FlatList'.
+  Type '(props: ScrollableComponentProps<T>) => Element' provides no match for the signature 'new <ItemT = any>(props: FlatListProps<ItemT>): FlatList<ItemT>'.
+components/containers/index.ts(11,65): error TS2345: Argument of type 'AnimatedComponent<typeof FlatList>' is not assignable to parameter of type 'ComponentType<ScrollableComponentProps<T>>'.
+  Type 'AnimatedComponent<typeof FlatList>' is not assignable to type 'FunctionComponent<ScrollableComponentProps<T>>'.
+    Types of property 'propTypes' are incompatible.
+      Type 'WeakValidationMap<AnimatedProps<FlatListProps<unknown> & RefAttributes<FlatList<unknown>>>> | undefined' is not assignable to type 'WeakValidationMap<ScrollableComponentProps<T>> | undefined'.
+        Type 'WeakValidationMap<AnimatedProps<FlatListProps<unknown> & RefAttributes<FlatList<unknown>>>>' is not assignable to type 'WeakValidationMap<ScrollableComponentProps<T>> | undefined'.
+          Type 'WeakValidationMap<AnimatedProps<FlatListProps<unknown> & RefAttributes<FlatList<unknown>>>>' is not assignable to type 'WeakValidationMap<ScrollableProps & AnimatedProps<SectionListProps<unknown, unknown>>>'.
+            Types of property 'contentContainerStyle' are incompatible.
+              Type 'Validator<false | "" | Value | RegisteredStyle<ViewStyle> | WithAnimatedObject<ViewStyle> | AnimatedInterpolation<string | number> | WithAnimatedArray<...> | null | undefined> | undefined' is not assignable to type 'Validator<((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined> | undefined'.
+                Type 'Validator<false | "" | Value | RegisteredStyle<ViewStyle> | WithAnimatedObject<ViewStyle> | AnimatedInterpolation<string | number> | WithAnimatedArray<...> | null | undefined>' is not assignable to type 'Validator<((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined>'.
+                  Type 'false | "" | Value | RegisteredStyle<ViewStyle> | WithAnimatedObject<ViewStyle> | AnimatedInterpolation<string | number> | WithAnimatedArray<...> | null | undefined' is not assignable to type '((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined'.
+                    Type 'WithAnimatedObject<ViewStyle>' is not assignable to type '((false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>) & (false | ... 5 more ... | WithAnimatedArray<...>)) | null | undefined'.
+                      Type 'WithAnimatedObject<ViewStyle>' is not assignable to type '(false & WithAnimatedObject<ViewStyle>) | ("" & WithAnimatedObject<ViewStyle>) | (ViewStyle & false) | ... 7 more ... | (RecursiveArray<...> & WithAnimatedObject<...>)'.
+                        Type 'WithAnimatedObject<ViewStyle>' is not assignable to type 'RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> & WithAnimatedObject<ViewStyle>'.
+                          Type 'WithAnimatedObject<ViewStyle>' is missing the following properties from type 'RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>': length, pop, push, concat, and 34 more.
+components/containers/ScreenContentContainer.tsx(3,1): error TS6133: 'LAYOUT' is declared but its value is never read.
+components/containers/ScreenContentContainer.tsx(16,50): error TS2344: Type 'FlatList<T>' does not satisfy the constraint 'JSXElementConstructor<any> | keyof IntrinsicElements'.
+components/containers/ScreenContentContainer.tsx(54,17): error TS2551: Property 'onScroll' does not exist on type 'ScrollableComponentProps<T>'. Did you mean 'scrollY'?
+  Property 'onScroll' does not exist on type 'ScrollableProps & AnimatedProps<{}>'.
+components/CreateLoopMenu.tsx(43,3): error TS6133: 'onSave' is declared but its value is never read.
+components/DropdownMenu.tsx(9,3): error TS6133: 'Dimensions' is declared but its value is never read.
+components/DropdownMenu.tsx(24,42): error TS6133: 'elevation' is declared but its value is never read.
+components/EmptyState.tsx(11,3): error TS6133: 'Animated' is declared but its value is never read.
+components/FadeSlideInView.tsx(35,9): error TS6133: 'instanceNumber' is declared but its value is never read.
+components/home/TopPerformingPostsSection.tsx(2,50): error TS6133: 'Platform' is declared but its value is never read.
+components/home/TopPerformingPostsSection.tsx(14,1): error TS6133: 'SectionTitle' is declared but its value is never read.
+components/home/TopPerformingPostsSection.tsx(32,9): error TS6133: 'theme' is declared but its value is never read.
+components/InsightCard.tsx(2,22): error TS6133: 'StyleSheet' is declared but its value is never read.
+components/insights/InsightMetric.tsx(2,22): error TS6133: 'StyleSheet' is declared but its value is never read.
+components/insights/InsightsCard.tsx(2,10): error TS6133: 'View' is declared but its value is never read.
+components/insights_apple/InsightDetailCard.tsx(4,26): error TS6133: 'ThemeStyles' is declared but its value is never read.
+components/LoopCard.tsx(2,82): error TS6133: 'Platform' is declared but its value is never read.
+components/LoopGridItem.tsx(3,36): error TS6133: 'PanGesture' is declared but its value is never read.
+components/LoopGridItem.tsx(4,20): error TS6133: 'useSharedValue' is declared but its value is never read.
+components/LoopGridItem.tsx(6,10): error TS2614: Module '"@/app/(loops)/[loopId]"' has no exported member 'Post'. Did you mean to use 'import Post from "@/app/(loops)/[loopId]"' instead?
+components/loops/LoopCard.tsx(1,29): error TS6133: 'useImperativeHandle' is declared but its value is never read.
+components/loops/LoopCard.tsx(1,50): error TS6133: 'useRef' is declared but its value is never read.
+components/loops/LoopCard.tsx(2,82): error TS6133: 'Platform' is declared but its value is never read.
+components/loops/LoopCard.tsx(4,32): error TS2307: Cannot find module '../hooks/useThemeStyles' or its corresponding type declarations.
+components/loops/LoopCard.tsx(10,1): error TS6133: 'useTheme' is declared but its value is never read.
+components/loops/LoopCard.tsx(11,1): error TS6133: 'Theme' is declared but its value is never read.
+components/loops/LoopCard.tsx(12,15): error TS2440: Import declaration conflicts with local declaration of 'Loop'.
+components/loops/LoopCard.tsx(13,52): error TS2307: Cannot find module '../../common/SwipeableRow' or its corresponding type declarations.
+components/loops/LoopEditMenu.tsx(1,51): error TS6133: 'useRef' is declared but its value is never read.
+components/loops/LoopListSection.tsx(4,3): error TS6133: 'View' is declared but its value is never read.
+components/loops/LoopListSection.tsx(5,3): error TS6133: 'Text' is declared but its value is never read.
+components/loops/LoopListSection.tsx(7,3): error TS6133: 'FlatList' is declared but its value is never read.
+components/loops/LoopListSection.tsx(19,1): error TS6133: 'MaterialCommunityIcons' is declared but its value is never read.
+components/loops/LoopListSection.tsx(38,11): error TS6196: 'DiscoverPackInternal' is declared but never used.
+components/loops/LoopListSection.tsx(67,3): error TS6133: 'scrollY' is declared but its value is never read.
+components/loops/LoopListSection.tsx(128,7): error TS6133: 'styles' is declared but its value is never read.
+components/loops/PostCardS.tsx(92,9): error TS6133: 'baseCardWidth' is declared but its value is never read.
+components/modals/CreateLoopModal.tsx(11,1): error TS6133: 'MaterialCommunityIcons' is declared but its value is never read.
+components/modals/CreateLoopModal.tsx(281,9): error TS6133: 'accentContrastColor' is declared but its value is never read.
+components/modals/LoopActionsModalContent.tsx(54,3): error TS6133: 'loopTitle' is declared but its value is never read.
+components/modals/LoopActionsModalContent.tsx(63,11): error TS6133: 'colors' is declared but its value is never read.
+components/notifications/NotificationCard.tsx(7,3): error TS6133: 'Platform' is declared but its value is never read.
+components/notifications/NotificationStackFeed.tsx(3,22): error TS6133: 'Layout' is declared but its value is never read.
+components/notifications/ToastNotification.tsx(2,45): error TS6133: 'Platform' is declared but its value is never read.
+components/notifications/ToastNotification.tsx(3,1): error TS6133: 'MaterialCommunityIcons' is declared but its value is never read.
+components/notifications/ToastNotification.tsx(20,19): error TS6133: 'spacing' is declared but its value is never read.
+components/notifications/ToastStack.tsx(2,28): error TS6133: 'Dimensions' is declared but its value is never read.
+components/notifications/ToastStack.tsx(2,40): error TS6133: 'Platform' is declared but its value is never read.
+components/notifications/ToastStack.tsx(2,50): error TS6133: 'SafeAreaView' is declared but its value is never read.
+components/notifications/ToastStack.tsx(3,1): error TS6192: All imports in import declaration are unused.
+components/NotificationStack.tsx(169,9): error TS2322: Type '"/tabs"' is not assignable to type 'RelativePathString | ExternalPathString | "/" | "/you" | "/_sitemap" | "/(loops)" | "/(modals)/create-loop" | "/create-loop" | "/constants/loopItemTypes" | ... 6 more ... | "/shop/pack/[packId]"'.
+components/PostCard.tsx(8,3): error TS6133: 'Platform' is declared but its value is never read.
+components/PostCard.tsx(13,3): error TS6133: 'Easing' is declared but its value is never read.
+components/PostCard.tsx(18,1): error TS6133: 'LinearGradient' is declared but its value is never read.
+components/PostCard.tsx(21,1): error TS6133: 'LoopBadge' is declared but its value is never read.
+components/PostCard.tsx(84,3): error TS6133: 'mediaStyle' is declared but its value is never read.
+components/PostCard.tsx(89,3): error TS6133: 'showLoopBadge' is declared but its value is never read.
+components/PostCard.tsx(223,9): error TS2322: Type '({ pressed }: PressableStateCallbackType) => ({ readonly none: object; readonly xs: object; readonly sm: object; readonly md: object; readonly lg: object; readonly xl: object; } | StyleProp<...> | { ...; })[]' is not assignable to type 'StyleProp<ViewStyle> | ((state: PressableStateCallbackType) => StyleProp<ViewStyle>)'.
+  Type '({ pressed }: PressableStateCallbackType) => ({ readonly none: object; readonly xs: object; readonly sm: object; readonly md: object; readonly lg: object; readonly xl: object; } | StyleProp<...> | { ...; })[]' is not assignable to type '(state: PressableStateCallbackType) => StyleProp<ViewStyle>'.
+    Type '({ readonly none: object; readonly xs: object; readonly sm: object; readonly md: object; readonly lg: object; readonly xl: object; } | StyleProp<ViewStyle> | { overflow: "hidden"; })[]' is not assignable to type 'StyleProp<ViewStyle>'.
+      Type '({ readonly none: object; readonly xs: object; readonly sm: object; readonly md: object; readonly lg: object; readonly xl: object; } | StyleProp<ViewStyle> | { overflow: "hidden"; })[]' is not assignable to type 'RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>'.
+        The types returned by 'pop()' are incompatible between these types.
+          Type '{ readonly none: object; readonly xs: object; readonly sm: object; readonly md: object; readonly lg: object; readonly xl: object; } | StyleProp<ViewStyle> | { overflow: "hidden"; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+            Type '{ readonly none: object; readonly xs: object; readonly sm: object; readonly md: object; readonly lg: object; readonly xl: object; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/posts/PostEditMenu.tsx(3,94): error TS6133: 'Platform' is declared but its value is never read.
+components/posts/PostEditMenu.tsx(11,3): error TS6133: 'SharedValue' is declared but its value is never read.
+components/posts/PostEditMenu.tsx(13,3): error TS6133: 'withDelay' is declared but its value is never read.
+components/posts/PostEditMenu.tsx(20,22): error TS7016: Could not find a declaration file for module 'lodash.debounce'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/lodash.debounce/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lodash.debounce` if it exists or add a new declaration (.d.ts) file containing `declare module 'lodash.debounce';`
+components/posts/PostEditMenu.tsx(43,7): error TS6133: 'FADE_IN_EASING' is declared but its value is never read.
+components/posts/PostEditMenu.tsx(96,9): error TS6133: 'screenWidth' is declared but its value is never read.
+components/posts/PostEditMenu.tsx(97,9): error TS6133: 'containerPadding' is declared but its value is never read.
+components/posts/PostEditMenu.tsx(256,20): error TS6133: 'previousState' is declared but its value is never read.
+components/QuickInsightsSection.tsx(46,9): error TS6133: 'growthTextRef' is declared but its value is never read.
+components/QuickInsightsSection.tsx(49,9): error TS6133: 'handleGrowthTextLayout' is declared but its value is never read.
+components/QuickInsightsSection.tsx(109,9): error TS6133: 'socialStats' is declared but its value is never read.
+components/SlideUpMenu/index.tsx(1,51): error TS6133: 'useMemo' is declared but its value is never read.
+components/SlideUpMenu/index.tsx(9,3): error TS6133: 'KeyboardAvoidingView' is declared but its value is never read.
+components/SlideUpMenu/index.tsx(10,3): error TS6133: 'Platform' is declared but its value is never read.
+components/SlideUpMenu/index.tsx(11,3): error TS6133: 'Pressable' is declared but its value is never read.
+components/SlideUpMenu/index.tsx(14,8): error TS6133: 'Animated' is declared but its value is never read.
+components/SlideUpMenu/index.tsx(14,36): error TS6133: 'runOnJS' is declared but its value is never read.
+components/SlideUpMenu/index.tsx(14,45): error TS6133: 'withSpring' is declared but its value is never read.
+components/SlideUpMenu/index.tsx(14,57): error TS6133: 'withTiming' is declared but its value is never read.
+components/SlideUpMenu/index.tsx(15,1): error TS6192: All imports in import declaration are unused.
+components/SlideUpMenu/index.tsx(16,1): error TS6133: 'SafeAreaView' is declared but its value is never read.
+components/SlideUpMenu/index.tsx(17,1): error TS6133: 'Ionicons' is declared but its value is never read.
+components/SlideUpMenu/index.tsx(20,1): error TS6133: 'MenuHeader' is declared but its value is never read.
+components/SlideUpMenu/index.tsx(29,5): error TS6133: 'children' is declared but its value is never read.
+components/SlideUpMenu/index.tsx(30,5): error TS6133: 'title' is declared but its value is never read.
+components/SlideUpMenu/index.tsx(33,5): error TS6133: 'onSave' is declared but its value is never read.
+components/SlideUpMenu/index.tsx(35,5): error TS6133: 'showSaveButton' is declared but its value is never read.
+components/SlideUpMenu/index.tsx(44,9): error TS6133: 'styles' is declared but its value is never read.
+components/SlideUpMenu/index.tsx(68,9): error TS6133: 'handleLayout' is declared but its value is never read.
+components/SlideUpMenu/index.tsx(178,49): error TS6133: 'theme' is declared but its value is never read.
+components/SubtleSectionHeader.tsx(14,19): error TS6133: 'spacing' is declared but its value is never read.
+components/ui/IconSymbol.tsx(42,72): error TS2322: Type 'StyleProp<ViewStyle>' is not assignable to type 'StyleProp<TextStyle>'.
+  Type 'ViewStyle' is not assignable to type 'StyleProp<TextStyle>'.
+    Type 'ViewStyle' is not assignable to type 'TextStyle'.
+      Types of property 'userSelect' are incompatible.
+        Type 'string | undefined' is not assignable to type '"none" | "auto" | "contain" | "text" | "all" | undefined'.
+          Type 'string' is not assignable to type '"none" | "auto" | "contain" | "text" | "all" | undefined'.
+components/WelcomeMessage.tsx(209,27): error TS6133: 'pulseOpacity' is declared but its value is never read.
+context/DragOverlayContext.tsx(1,44): error TS6133: 'useMemo' is declared but its value is never read.
+context/DragOverlayContext.tsx(2,8): error TS6133: 'Reanimated' is declared but its value is never read.
+data/mockInsights.ts(5,3): error TS6133: 'getTrendColor' is declared but its value is never read.
+hooks/useAnimatedDismiss.ts(1,23): error TS6133: 'useEffect' is declared but its value is never read.
+hooks/useLoopListRenderers.tsx(2,10): error TS6133: 'View' is declared but its value is never read.
+hooks/useLoopListRenderers.tsx(2,26): error TS6133: 'StyleSheet' is declared but its value is never read.
+hooks/useLoopListRenderers.tsx(70,11): error TS6133: 'colors' is declared but its value is never read.
+hooks/useLoopListRenderers.tsx(70,28): error TS6133: 'borderRadius' is declared but its value is never read.
+hooks/useLoopManager.ts(5,21): error TS6196: 'LoopsAction' is declared but never used.
+modules/notifications/cards/AlertCard.tsx(19,3): error TS6133: 'id' is declared but its value is never read.
+modules/notifications/cards/AlertCard.tsx(20,3): error TS6133: 'type' is declared but its value is never read.
+modules/notifications/cards/cardRegistry.ts(2,1): error TS6133: 'BaseCardProps' is declared but its value is never read.
+modules/notifications/cards/ReminderCard.tsx(53,3): error TS6133: 'id' is declared but its value is never read.
+modules/notifications/cards/ReminderCard.tsx(54,3): error TS6133: 'type' is declared but its value is never read.
+modules/notifications/components/NotificationStack.tsx(7,10): error TS2724: '"../index"' has no exported member named 'NOTIFICATION_TYPES'. Did you mean 'NotificationItem'?
+modules/notifications/components/NotificationStack.tsx(8,26): error TS2307: Cannot find module 'react-native-paper' or its corresponding type declarations.
+modules/notifications/components/NotificationStack.tsx(259,9): error TS2322: Type '"/tabs"' is not assignable to type 'RelativePathString | ExternalPathString | "/" | "/you" | "/_sitemap" | "/(loops)" | "/(modals)/create-loop" | "/create-loop" | "/constants/loopItemTypes" | ... 6 more ... | "/shop/pack/[packId]"'.
+modules/notifications/components/NotificationStack.tsx(385,43): error TS2339: Property 'toLowerCase' does not exist on type 'string | number | symbol'.
+  Property 'toLowerCase' does not exist on type 'number'.
+modules/notifications/notificationLogic.ts(1,15): error TS6196: 'NotificationInput' is declared but never used.
+modules/notifications/NotificationProvider.tsx(10,22): error TS6133: 'View' is declared but its value is never read.
+modules/notifications/NotificationProvider.tsx(82,9): error TS6133: 'handleNotificationPress' is declared but its value is never read.
+modules/notifications/NotificationProvider.tsx(82,48): error TS6133: 'notification' is declared but its value is never read.
+modules/notifications/NotificationProvider.tsx(103,7): error TS6133: 'styles' is declared but its value is never read.
+node_modules.old/@babel/core/src/config/files/index-browser.ts(3,30): error TS7016: Could not find a declaration file for module 'gensync'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/gensync/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/gensync` if it exists or add a new declaration (.d.ts) file containing `declare module 'gensync';`
+node_modules.old/@babel/core/src/config/files/index-browser.ts(10,8): error TS2307: Cannot find module './types.ts' or its corresponding type declarations.
+node_modules.old/@babel/core/src/config/files/index-browser.ts(12,37): error TS2307: Cannot find module '../validation/options.ts' or its corresponding type declarations.
+node_modules.old/@babel/core/src/config/files/index-browser.ts(18,3): error TS6133: 'rootDir' is declared but its value is never read.
+node_modules.old/@babel/core/src/config/files/index-browser.ts(36,3): error TS6133: 'pkgData' is declared but its value is never read.
+node_modules.old/@babel/core/src/config/files/index-browser.ts(38,3): error TS6133: 'envName' is declared but its value is never read.
+node_modules.old/@babel/core/src/config/files/index-browser.ts(40,3): error TS6133: 'caller' is declared but its value is never read.
+node_modules.old/@babel/core/src/config/files/index-browser.ts(48,3): error TS6133: 'dirname' is declared but its value is never read.
+node_modules.old/@babel/core/src/config/files/index-browser.ts(50,3): error TS6133: 'envName' is declared but its value is never read.
+node_modules.old/@babel/core/src/config/files/index-browser.ts(52,3): error TS6133: 'caller' is declared but its value is never read.
+node_modules.old/@babel/core/src/config/files/index-browser.ts(62,3): error TS6133: 'envName' is declared but its value is never read.
+node_modules.old/@babel/core/src/config/files/index-browser.ts(64,3): error TS6133: 'caller' is declared but its value is never read.
+node_modules.old/@babel/core/src/config/files/index-browser.ts(72,3): error TS6133: 'dirname' is declared but its value is never read.
+node_modules.old/@babel/core/src/config/files/index-browser.ts(84,31): error TS6133: 'name' is declared but its value is never read.
+node_modules.old/@babel/core/src/config/files/index-browser.ts(84,45): error TS6133: 'dirname' is declared but its value is never read.
+node_modules.old/@babel/core/src/config/files/index-browser.ts(89,31): error TS6133: 'name' is declared but its value is never read.
+node_modules.old/@babel/core/src/config/files/index-browser.ts(89,45): error TS6133: 'dirname' is declared but its value is never read.
+node_modules.old/@babel/core/src/config/files/index.ts(8,33): error TS2307: Cannot find module './package.ts' or its corresponding type declarations.
+node_modules.old/@babel/core/src/config/files/index.ts(17,8): error TS2307: Cannot find module './configuration.ts' or its corresponding type declarations.
+node_modules.old/@babel/core/src/config/files/index.ts(23,8): error TS2307: Cannot find module './types.ts' or its corresponding type declarations.
+node_modules.old/@babel/core/src/config/files/index.ts(29,8): error TS2307: Cannot find module './plugins.ts' or its corresponding type declarations.
+node_modules.old/@expo/metro-runtime/src/error-overlay/Data/LogBoxData.tsx(371,17): error TS7006: Parameter 'props' implicitly has an 'any' type.
+node_modules.old/@expo/metro-runtime/src/error-overlay/modules/ExceptionsManager/index.native.ts(1,31): error TS7016: Could not find a declaration file for module 'react-native/Libraries/Core/ExceptionsManager'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/react-native/Libraries/Core/ExceptionsManager.js' implicitly has an 'any' type.
+  If the 'react-native' package actually exposes this module, try adding a new declaration (.d.ts) file containing `declare module 'react-native/Libraries/Core/ExceptionsManager';`
+node_modules.old/@expo/metro-runtime/src/error-overlay/modules/NativeLogBox/index.native.ts(1,26): error TS7016: Could not find a declaration file for module 'react-native/Libraries/NativeModules/specs/NativeLogBox'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/react-native/Libraries/NativeModules/specs/NativeLogBox.js' implicitly has an 'any' type.
+  If the 'react-native' package actually exposes this module, try adding a new declaration (.d.ts) file containing `declare module 'react-native/Libraries/NativeModules/specs/NativeLogBox';`
+node_modules.old/@expo/metro-runtime/src/error-overlay/modules/NativeLogBox/index.tsx(2,22): error TS7016: Could not find a declaration file for module 'react-dom/client'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/react-dom/client.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react-dom` if it exists or add a new declaration (.d.ts) file containing `declare module 'react-dom/client';`
+node_modules.old/@expo/metro-runtime/src/error-overlay/modules/openFileInEditor/index.native.ts(1,30): error TS7016: Could not find a declaration file for module 'react-native/Libraries/Core/Devtools/openFileInEditor'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/react-native/Libraries/Core/Devtools/openFileInEditor.js' implicitly has an 'any' type.
+  If the 'react-native' package actually exposes this module, try adding a new declaration (.d.ts) file containing `declare module 'react-native/Libraries/Core/Devtools/openFileInEditor';`
+node_modules.old/@expo/metro-runtime/src/error-overlay/overlay/LogBoxInspectorCodeFrame.tsx(17,39): error TS2307: Cannot find module '../formatProjectFilePath' or its corresponding type declarations.
+node_modules.old/@expo/metro-runtime/src/error-overlay/overlay/LogBoxInspectorFooter.tsx(44,9): error TS2578: Unused '@ts-expect-error' directive.
+node_modules.old/@expo/metro-runtime/src/error-overlay/overlay/LogBoxInspectorFooter.tsx(52,15): error TS2578: Unused '@ts-expect-error' directive.
+node_modules.old/@expo/metro-runtime/src/error-overlay/overlay/LogBoxInspectorStackFrame.tsx(16,43): error TS2307: Cannot find module '../formatProjectFilePath' or its corresponding type declarations.
+node_modules.old/@expo/metro-runtime/src/error-overlay/toast/ErrorToast.tsx(41,11): error TS2578: Unused '@ts-expect-error' directive.
+node_modules.old/@expo/metro-runtime/src/error-overlay/toast/ErrorToast.tsx(49,17): error TS2578: Unused '@ts-expect-error' directive.
+node_modules.old/@expo/metro-runtime/src/error-overlay/toast/ErrorToast.tsx(90,9): error TS2578: Unused '@ts-expect-error' directive.
+node_modules.old/@expo/metro-runtime/src/error-overlay/toast/ErrorToastContainer.web.tsx(15,37): error TS2307: Cannot find module '../useRejectionHandler' or its corresponding type declarations.
+node_modules.old/@expo/metro-runtime/src/error-overlay/toast/ErrorToastContainer.web.tsx(87,5): error TS2578: Unused '@ts-expect-error' directive.
+node_modules.old/@shopify/flash-list/src/__tests__/helpers/mountFlashList.tsx(4,30): error TS2307: Cannot find module '@quilted/react-testing' or its corresponding type declarations.
+node_modules.old/@shopify/flash-list/src/__tests__/helpers/mountFlashList.tsx(6,23): error TS2307: Cannot find module '../../FlashList' or its corresponding type declarations.
+node_modules.old/@shopify/flash-list/src/__tests__/helpers/mountFlashList.tsx(7,48): error TS2307: Cannot find module '../../FlashListProps' or its corresponding type declarations.
+node_modules.old/@shopify/flash-list/src/__tests__/helpers/mountFlashList.tsx(54,44): error TS7031: Binding element 'item' implicitly has an 'any' type.
+node_modules.old/@shopify/flash-list/src/__tests__/helpers/mountMasonryFlashList.tsx(4,30): error TS2307: Cannot find module '@quilted/react-testing' or its corresponding type declarations.
+node_modules.old/@shopify/flash-list/src/__tests__/helpers/mountMasonryFlashList.tsx(6,32): error TS2307: Cannot find module '../../FlashListProps' or its corresponding type declarations.
+node_modules.old/@shopify/flash-list/src/__tests__/helpers/mountMasonryFlashList.tsx(11,8): error TS2307: Cannot find module '../../MasonryFlashList' or its corresponding type declarations.
+node_modules.old/@shopify/flash-list/src/__tests__/helpers/mountMasonryFlashList.tsx(65,44): error TS7031: Binding element 'item' implicitly has an 'any' type.
+node_modules.old/@shopify/flash-list/src/native/config/PlatformHelper.android.ts(10,3): error TS6133: 'inverted' is declared but its value is never read.
+node_modules.old/@shopify/flash-list/src/native/config/PlatformHelper.android.ts(11,3): error TS6133: 'parentProps' is declared but its value is never read.
+node_modules.old/@shopify/flash-list/src/native/config/PlatformHelper.ios.ts(9,3): error TS6133: 'inverted' is declared but its value is never read.
+node_modules.old/@shopify/flash-list/src/native/config/PlatformHelper.ios.ts(10,3): error TS6133: 'parentProps' is declared but its value is never read.
+node_modules.old/@shopify/flash-list/src/native/config/PlatformHelper.ts(10,3): error TS6133: 'inverted' is declared but its value is never read.
+node_modules.old/@shopify/flash-list/src/native/config/PlatformHelper.ts(11,3): error TS6133: 'parentProps' is declared but its value is never read.
+node_modules.old/expo/src/winter/fetch/__tests__/convertFormData-test.native.ts(1,24): error TS7016: Could not find a declaration file for module 'react-native/Libraries/Network/FormData'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/react-native/Libraries/Network/FormData.js' implicitly has an 'any' type.
+  If the 'react-native' package actually exposes this module, try adding a new declaration (.d.ts) file containing `declare module 'react-native/Libraries/Network/FormData';`
+node_modules.old/expo/src/winter/fetch/__tests__/convertFormData-test.native.ts(4,71): error TS2307: Cannot find module '../convertFormData' or its corresponding type declarations.
+node_modules.old/expo/src/winter/fetch/__tests__/RequestUtils-test.ts(4,24): error TS7016: Could not find a declaration file for module 'react-native/Libraries/Network/FormData'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/react-native/Libraries/Network/FormData.js' implicitly has an 'any' type.
+  If the 'react-native' package actually exposes this module, try adding a new declaration (.d.ts) file containing `declare module 'react-native/Libraries/Network/FormData';`
+node_modules.old/expo/src/winter/fetch/__tests__/RequestUtils-test.ts(8,40): error TS2307: Cannot find module '../NativeRequest' or its corresponding type declarations.
+node_modules.old/expo/src/winter/fetch/__tests__/RequestUtils-test.ts(14,8): error TS2307: Cannot find module '../RequestUtils' or its corresponding type declarations.
+node_modules.old/expo/src/winter/fetch/__tests__/RequestUtils-test.ts(53,7): error TS7034: Variable 'originalFormData' implicitly has type 'any' in some locations where its type cannot be determined.
+node_modules.old/expo/src/winter/fetch/__tests__/RequestUtils-test.ts(59,27): error TS7005: Variable 'originalFormData' implicitly has an 'any' type.
+node_modules.old/expo/src/winter/fetch/__tests__/RequestUtils-test.ts(161,26): error TS7006: Parameter 'a' implicitly has an 'any' type.
+node_modules.old/expo/src/winter/fetch/__tests__/RequestUtils-test.ts(161,29): error TS7006: Parameter 'b' implicitly has an 'any' type.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/attachHandlers.ts(2,47): error TS2307: Cannot find module '../gesture' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/attachHandlers.ts(3,33): error TS2307: Cannot find module '../../handlersRegistry' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/attachHandlers.ts(4,36): error TS2307: Cannot find module '../../../RNGestureHandlerModule' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/attachHandlers.ts(5,55): error TS2307: Cannot find module '../../utils' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/attachHandlers.ts(6,33): error TS2307: Cannot find module '../gestureComposition' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/attachHandlers.ts(7,28): error TS2307: Cannot find module '../../../ActionType' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/attachHandlers.ts(9,44): error TS2307: Cannot find module '../../../RNGestureHandlerModule.web' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/attachHandlers.ts(10,34): error TS2307: Cannot find module '../../../ghQueueMicrotask' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/dropHandlers.ts(1,35): error TS2307: Cannot find module '../../handlersRegistry' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/dropHandlers.ts(2,36): error TS2307: Cannot find module '../../../RNGestureHandlerModule' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/dropHandlers.ts(3,41): error TS2307: Cannot find module '../../utils' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/index.tsx(10,29): error TS2307: Cannot find module '../gesture' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/index.tsx(11,41): error TS2307: Cannot find module '../../gestureHandlerCommon' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/index.tsx(12,33): error TS2307: Cannot find module '../gestureComposition' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/index.tsx(13,27): error TS2307: Cannot find module '../../../utils' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/index.tsx(15,43): error TS2307: Cannot find module '../../../GestureHandlerRootViewContext' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/index.tsx(110,6): error TS7006: Parameter 'g' implicitly has an 'any' type.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/needsToReattach.ts(1,29): error TS2307: Cannot find module '../gesture' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/types.ts(1,47): error TS2307: Cannot find module '../gesture' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/types.ts(2,29): error TS2307: Cannot find module '../reanimatedWrapper' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/types.ts(3,41): error TS2307: Cannot find module '../../gestureHandlerCommon' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/updateHandlers.ts(1,47): error TS2307: Cannot find module '../gesture' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/updateHandlers.ts(2,33): error TS2307: Cannot find module '../../handlersRegistry' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/updateHandlers.ts(3,36): error TS2307: Cannot find module '../../../RNGestureHandlerModule' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/updateHandlers.ts(4,55): error TS2307: Cannot find module '../../utils' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/updateHandlers.ts(5,33): error TS2307: Cannot find module '../gestureComposition' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/updateHandlers.ts(6,34): error TS2307: Cannot find module '../../../ghQueueMicrotask' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/useAnimatedGesture.ts(1,49): error TS2307: Cannot find module '../gesture' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/useAnimatedGesture.ts(2,28): error TS2307: Cannot find module '../reanimatedWrapper' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/useAnimatedGesture.ts(7,8): error TS2307: Cannot find module '../../gestureHandlerCommon' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/useAnimatedGesture.ts(11,8): error TS2307: Cannot find module '../gestureStateManager' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/useAnimatedGesture.ts(12,23): error TS2307: Cannot find module '../../../State' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/useAnimatedGesture.ts(13,32): error TS2307: Cannot find module '../../../TouchEventType' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/useAnimatedGesture.ts(14,28): error TS2307: Cannot find module '../../../utils' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/useDetectorUpdater.ts(3,29): error TS2307: Cannot find module '../gesture' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/useDetectorUpdater.ts(4,33): error TS2307: Cannot find module '../gestureComposition' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/useViewRefHandler.ts(1,38): error TS2307: Cannot find module '../../../utils' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/useViewRefHandler.ts(2,38): error TS2307: Cannot find module '../../../getShadowNodeFromRef' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/utils.ts(3,39): error TS2307: Cannot find module '../../../utils' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/utils.ts(4,54): error TS2307: Cannot find module '../gesture' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/utils.ts(6,42): error TS2307: Cannot find module '../../FlingGestureHandler' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/utils.ts(7,47): error TS2307: Cannot find module '../../ForceTouchGestureHandler' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/utils.ts(8,46): error TS2307: Cannot find module '../../LongPressGestureHandler' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/utils.ts(12,8): error TS2307: Cannot find module '../../PanGestureHandler' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/utils.ts(13,40): error TS2307: Cannot find module '../../TapGestureHandler' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/utils.ts(14,42): error TS2307: Cannot find module '../hoverGesture' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/utils.ts(15,47): error TS2307: Cannot find module '../../NativeViewGestureHandler' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/utils.ts(19,8): error TS2307: Cannot find module '../../gestureHandlerCommon' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/utils.ts(20,47): error TS2307: Cannot find module '../../../EnableNewWebImplementation' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/utils.ts(21,39): error TS2307: Cannot find module '../../../getReactNativeVersion' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/utils.ts(22,28): error TS2307: Cannot find module '../../../RNRenderer' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/utils.ts(24,28): error TS2307: Cannot find module '../reanimatedWrapper' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/utils.ts(25,39): error TS2307: Cannot find module '../eventReceiver' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/Wrap.tsx(2,28): error TS2307: Cannot find module '../reanimatedWrapper' or its corresponding type declarations.
+node_modules.old/react-native-gesture-handler/src/handlers/gestures/GestureDetector/Wrap.tsx(3,28): error TS2307: Cannot find module '../../../utils' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/animation/Bounce.web.ts(2,51): error TS2307: Cannot find module '../animationParser' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/animation/Fade.web.ts(2,51): error TS2307: Cannot find module '../animationParser' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/animation/Flip.web.ts(2,51): error TS2307: Cannot find module '../animationParser' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/animation/Lightspeed.web.ts(2,51): error TS2307: Cannot find module '../animationParser' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/animation/Pinwheel.web.ts(2,51): error TS2307: Cannot find module '../animationParser' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/animation/Roll.web.ts(2,51): error TS2307: Cannot find module '../animationParser' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/animation/Rotate.web.ts(2,51): error TS2307: Cannot find module '../animationParser' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/animation/Slide.web.ts(2,51): error TS2307: Cannot find module '../animationParser' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/animation/Stretch.web.ts(2,51): error TS2307: Cannot find module '../animationParser' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/animation/Zoom.web.ts(2,51): error TS2307: Cannot find module '../animationParser' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/transition/Curved.web.ts(2,44): error TS2307: Cannot find module '../../../js-reanimated' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/transition/Curved.web.ts(3,37): error TS2307: Cannot find module '../..' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/transition/Curved.web.ts(4,38): error TS2307: Cannot find module '../Easing.web' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/transition/Curved.web.ts(5,33): error TS2307: Cannot find module '../Easing.web' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/transition/Curved.web.ts(6,37): error TS2307: Cannot find module '../animationParser' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/transition/Curved.web.ts(7,38): error TS2307: Cannot find module '../config' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/transition/EntryExit.web.ts(6,8): error TS2307: Cannot find module '../animationParser' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/transition/EntryExit.web.ts(7,32): error TS2307: Cannot find module '../config' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/transition/Fading.web.ts(2,37): error TS2307: Cannot find module '../animationParser' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/transition/Jumping.web.ts(2,37): error TS2307: Cannot find module '../animationParser' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/transition/Jumping.web.ts(3,24): error TS2307: Cannot find module '../../../Easing' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/transition/Linear.web.ts(2,37): error TS2307: Cannot find module '../animationParser' or its corresponding type declarations.
+node_modules.old/react-native-reanimated/src/layoutReanimation/web/transition/Sequenced.web.ts(2,37): error TS2307: Cannot find module '../animationParser' or its corresponding type declarations.
+node_modules.old/recyclerlistview/src/core/devutils/debughandlers/resize/DefaultResizeDebugHandler.ts(1,27): error TS2307: Cannot find module '../../../..' or its corresponding type declarations.
+node_modules.old/recyclerlistview/src/core/devutils/debughandlers/resize/ResizeDebugHandler.ts(1,27): error TS2307: Cannot find module '../../../..' or its corresponding type declarations.
+node_modules.old/recyclerlistview/src/platform/reactnative/itemanimators/defaultjsanimator/DefaultJSItemAnimator.ts(2,34): error TS2307: Cannot find module '../../../../core/ItemAnimator' or its corresponding type declarations.
+node_modules.old/recyclerlistview/src/platform/reactnative/itemanimators/defaultjsanimator/DefaultJSItemAnimator.ts(20,29): error TS6133: 'atX' is declared but its value is never read.
+node_modules.old/recyclerlistview/src/platform/reactnative/itemanimators/defaultjsanimator/DefaultJSItemAnimator.ts(20,42): error TS6133: 'atY' is declared but its value is never read.
+node_modules.old/recyclerlistview/src/platform/reactnative/itemanimators/defaultjsanimator/DefaultJSItemAnimator.ts(20,55): error TS6133: 'itemIndex' is declared but its value is never read.
+node_modules.old/recyclerlistview/src/platform/reactnative/itemanimators/defaultjsanimator/DefaultJSItemAnimator.ts(23,28): error TS6133: 'atX' is declared but its value is never read.
+node_modules.old/recyclerlistview/src/platform/reactnative/itemanimators/defaultjsanimator/DefaultJSItemAnimator.ts(23,41): error TS6133: 'atY' is declared but its value is never read.
+node_modules.old/recyclerlistview/src/platform/reactnative/itemanimators/defaultjsanimator/DefaultJSItemAnimator.ts(23,54): error TS6133: 'itemRef' is declared but its value is never read.
+node_modules.old/recyclerlistview/src/platform/reactnative/itemanimators/defaultjsanimator/DefaultJSItemAnimator.ts(23,71): error TS6133: 'itemIndex' is declared but its value is never read.
+node_modules.old/recyclerlistview/src/platform/reactnative/itemanimators/defaultjsanimator/DefaultJSItemAnimator.ts(27,30): error TS6133: 'fromX' is declared but its value is never read.
+node_modules.old/recyclerlistview/src/platform/reactnative/itemanimators/defaultjsanimator/DefaultJSItemAnimator.ts(27,45): error TS6133: 'fromY' is declared but its value is never read.
+node_modules.old/recyclerlistview/src/platform/reactnative/itemanimators/defaultjsanimator/DefaultJSItemAnimator.ts(27,60): error TS6133: 'toX' is declared but its value is never read.
+node_modules.old/recyclerlistview/src/platform/reactnative/itemanimators/defaultjsanimator/DefaultJSItemAnimator.ts(27,73): error TS6133: 'toY' is declared but its value is never read.
+node_modules.old/recyclerlistview/src/platform/reactnative/itemanimators/defaultjsanimator/DefaultJSItemAnimator.ts(27,86): error TS6133: 'itemRef' is declared but its value is never read.
+node_modules.old/recyclerlistview/src/platform/reactnative/itemanimators/defaultjsanimator/DefaultJSItemAnimator.ts(27,103): error TS6133: 'itemIndex' is declared but its value is never read.
+node_modules.old/recyclerlistview/src/platform/reactnative/itemanimators/defaultjsanimator/DefaultJSItemAnimator.ts(31,98): error TS6133: 'itemIndex' is declared but its value is never read.
+node_modules.old/recyclerlistview/src/platform/reactnative/itemanimators/defaultjsanimator/DefaultJSItemAnimator.ts(69,31): error TS6133: 'atX' is declared but its value is never read.
+node_modules.old/recyclerlistview/src/platform/reactnative/itemanimators/defaultjsanimator/DefaultJSItemAnimator.ts(69,44): error TS6133: 'atY' is declared but its value is never read.
+node_modules.old/recyclerlistview/src/platform/reactnative/itemanimators/defaultjsanimator/DefaultJSItemAnimator.ts(69,74): error TS6133: 'itemIndex' is declared but its value is never read.
+node_modules.old/recyclerlistview/src/platform/reactnative/itemanimators/defaultjsanimator/DefaultJSItemAnimator.web.ts(1,40): error TS2307: Cannot find module '../../../web/itemanimators/DefaultWebItemAnimator' or its corresponding type declarations.
+node_modules_old/@babel/core/src/config/files/index-browser.ts(3,30): error TS7016: Could not find a declaration file for module 'gensync'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/gensync/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/gensync` if it exists or add a new declaration (.d.ts) file containing `declare module 'gensync';`
+node_modules_old/@babel/core/src/config/files/index-browser.ts(10,8): error TS2307: Cannot find module './types.ts' or its corresponding type declarations.
+node_modules_old/@babel/core/src/config/files/index-browser.ts(12,37): error TS2307: Cannot find module '../validation/options.ts' or its corresponding type declarations.
+node_modules_old/@babel/core/src/config/files/index-browser.ts(18,3): error TS6133: 'rootDir' is declared but its value is never read.
+node_modules_old/@babel/core/src/config/files/index-browser.ts(36,3): error TS6133: 'pkgData' is declared but its value is never read.
+node_modules_old/@babel/core/src/config/files/index-browser.ts(38,3): error TS6133: 'envName' is declared but its value is never read.
+node_modules_old/@babel/core/src/config/files/index-browser.ts(40,3): error TS6133: 'caller' is declared but its value is never read.
+node_modules_old/@babel/core/src/config/files/index-browser.ts(48,3): error TS6133: 'dirname' is declared but its value is never read.
+node_modules_old/@babel/core/src/config/files/index-browser.ts(50,3): error TS6133: 'envName' is declared but its value is never read.
+node_modules_old/@babel/core/src/config/files/index-browser.ts(52,3): error TS6133: 'caller' is declared but its value is never read.
+node_modules_old/@babel/core/src/config/files/index-browser.ts(62,3): error TS6133: 'envName' is declared but its value is never read.
+node_modules_old/@babel/core/src/config/files/index-browser.ts(64,3): error TS6133: 'caller' is declared but its value is never read.
+node_modules_old/@babel/core/src/config/files/index-browser.ts(72,3): error TS6133: 'dirname' is declared but its value is never read.
+node_modules_old/@babel/core/src/config/files/index-browser.ts(84,31): error TS6133: 'name' is declared but its value is never read.
+node_modules_old/@babel/core/src/config/files/index-browser.ts(84,45): error TS6133: 'dirname' is declared but its value is never read.
+node_modules_old/@babel/core/src/config/files/index-browser.ts(89,31): error TS6133: 'name' is declared but its value is never read.
+node_modules_old/@babel/core/src/config/files/index-browser.ts(89,45): error TS6133: 'dirname' is declared but its value is never read.
+node_modules_old/@babel/core/src/config/files/index.ts(8,33): error TS2307: Cannot find module './package.ts' or its corresponding type declarations.
+node_modules_old/@babel/core/src/config/files/index.ts(17,8): error TS2307: Cannot find module './configuration.ts' or its corresponding type declarations.
+node_modules_old/@babel/core/src/config/files/index.ts(23,8): error TS2307: Cannot find module './types.ts' or its corresponding type declarations.
+node_modules_old/@babel/core/src/config/files/index.ts(29,8): error TS2307: Cannot find module './plugins.ts' or its corresponding type declarations.
+node_modules_old/@babel/core/src/config/resolve-targets-browser.ts(3,39): error TS2307: Cannot find module './validation/options.ts' or its corresponding type declarations.
+node_modules_old/@babel/core/src/config/resolve-targets-browser.ts(6,8): error TS7016: Could not find a declaration file for module '@babel/helper-compilation-targets'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/@babel/helper-compilation-targets/lib/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/babel__helper-compilation-targets` if it exists or add a new declaration (.d.ts) file containing `declare module '@babel/helper-compilation-targets';`
+node_modules_old/@babel/core/src/config/resolve-targets-browser.ts(8,30): error TS7016: Could not find a declaration file for module '@babel/helper-compilation-targets'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/@babel/helper-compilation-targets/lib/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/babel__helper-compilation-targets` if it exists or add a new declaration (.d.ts) file containing `declare module '@babel/helper-compilation-targets';`
+node_modules_old/@babel/core/src/config/resolve-targets-browser.ts(12,3): error TS6133: 'browserslistConfigFile' is declared but its value is never read.
+node_modules_old/@babel/core/src/config/resolve-targets-browser.ts(14,3): error TS6133: 'configFilePath' is declared but its value is never read.
+node_modules_old/@babel/core/src/config/resolve-targets-browser.ts(22,3): error TS6133: 'root' is declared but its value is never read.
+node_modules_old/@babel/core/src/config/resolve-targets.ts(8,39): error TS2307: Cannot find module './validation/options.ts' or its corresponding type declarations.
+node_modules_old/@babel/core/src/config/resolve-targets.ts(12,8): error TS7016: Could not find a declaration file for module '@babel/helper-compilation-targets'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/@babel/helper-compilation-targets/lib/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/babel__helper-compilation-targets` if it exists or add a new declaration (.d.ts) file containing `declare module '@babel/helper-compilation-targets';`
+node_modules_old/@babel/core/src/config/resolve-targets.ts(14,30): error TS7016: Could not find a declaration file for module '@babel/helper-compilation-targets'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/@babel/helper-compilation-targets/lib/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/babel__helper-compilation-targets` if it exists or add a new declaration (.d.ts) file containing `declare module '@babel/helper-compilation-targets';`
+node_modules_old/@babel/core/src/transform-file-browser.ts(14,3): error TS6133: 'filename' is declared but its value is never read.
+node_modules_old/@babel/core/src/transform-file-browser.ts(22,3): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+node_modules_old/@babel/core/src/transform-file.ts(1,39): error TS7016: Could not find a declaration file for module 'gensync'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/gensync/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/gensync` if it exists or add a new declaration (.d.ts) file containing `declare module 'gensync';`
+node_modules_old/@babel/core/src/transform-file.ts(3,24): error TS2307: Cannot find module './config/index.ts' or its corresponding type declarations.
+node_modules_old/@babel/core/src/transform-file.ts(4,51): error TS2307: Cannot find module './config/index.ts' or its corresponding type declarations.
+node_modules_old/@babel/core/src/transform-file.ts(5,21): error TS2307: Cannot find module './transformation/index.ts' or its corresponding type declarations.
+node_modules_old/@babel/core/src/transform-file.ts(6,53): error TS2307: Cannot find module './transformation/index.ts' or its corresponding type declarations.
+node_modules_old/@babel/core/src/transform-file.ts(7,21): error TS2307: Cannot find module './gensync-utils/fs.ts' or its corresponding type declarations.
+node_modules_old/@babel/core/src/transform-file.ts(30,1): error TS2578: Unused '@ts-expect-error' directive.
+node_modules_old/@babel/plugin-transform-runtime/src/get-runtime-path/browser.ts(3,3): error TS6133: 'dirname' is declared but its value is never read.
+node_modules_old/@babel/plugin-transform-runtime/src/get-runtime-path/index.ts(4,31): error TS1343: The 'import.meta' meta-property is only allowed when the '--module' option is 'es2020', 'es2022', 'esnext', 'system', 'node16', 'node18', or 'nodenext'.
+node_modules_old/@babel/plugin-transform-runtime/src/get-runtime-path/index.ts(27,9): error TS18046: 'err' is of type 'unknown'.
+node_modules_old/@expo/metro-runtime/src/async-require/index.ts(9,1): error TS7053: Element implicitly has an 'any' type because expression of type '`${any}__loadBundleAsync`' can't be used to index type 'typeof globalThis'.
+node_modules_old/@expo/metro-runtime/src/async-require/index.ts(9,18): error TS7017: Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.
+node_modules_old/@expo/metro-runtime/src/error-overlay/Data/LogBoxData.tsx(371,17): error TS7006: Parameter 'props' implicitly has an 'any' type.
+node_modules_old/@expo/metro-runtime/src/error-overlay/ErrorOverlay.tsx(182,5): error TS2578: Unused '@ts-expect-error' directive.
+node_modules_old/@expo/metro-runtime/src/error-overlay/index.tsx(4,3): error TS2741: Property '__promisify__' is missing in type '(fn: any) => Timeout' but required in type 'typeof setImmediate'.
+node_modules_old/@expo/metro-runtime/src/error-overlay/index.tsx(4,35): error TS7006: Parameter 'fn' implicitly has an 'any' type.
+node_modules_old/@expo/metro-runtime/src/error-overlay/LogBox.ts(30,14): error TS6133: 'patterns' is declared but its value is never read.
+node_modules_old/@expo/metro-runtime/src/error-overlay/LogBox.ts(34,17): error TS6133: 'value' is declared but its value is never read.
+node_modules_old/@expo/metro-runtime/src/error-overlay/LogBox.ts(42,10): error TS6133: 'log' is declared but its value is never read.
+node_modules_old/@expo/metro-runtime/src/error-overlay/LogBox.ts(46,16): error TS6133: 'ex' is declared but its value is never read.
+node_modules_old/@expo/metro-runtime/src/error-overlay/LogBox.web.ts(166,16): error TS6133: 'patterns' is declared but its value is never read.
+node_modules_old/@expo/metro-runtime/src/error-overlay/LogBox.web.ts(167,19): error TS6133: 'value' is declared but its value is never read.
+node_modules_old/@expo/metro-runtime/src/error-overlay/LogBox.web.ts(169,12): error TS6133: 'log' is declared but its value is never read.
+node_modules_old/@expo/metro-runtime/src/error-overlay/LogBox.web.ts(170,18): error TS6133: 'ex' is declared but its value is never read.
+node_modules_old/@expo/metro-runtime/src/error-overlay/modules/ExceptionsManager/index.native.ts(1,31): error TS7016: Could not find a declaration file for module 'react-native/Libraries/Core/ExceptionsManager'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/react-native/Libraries/Core/ExceptionsManager.js' implicitly has an 'any' type.
+  If the 'react-native' package actually exposes this module, try adding a new declaration (.d.ts) file containing `declare module 'react-native/Libraries/Core/ExceptionsManager';`
+node_modules_old/@expo/metro-runtime/src/error-overlay/modules/NativeLogBox/index.native.ts(1,26): error TS7016: Could not find a declaration file for module 'react-native/Libraries/NativeModules/specs/NativeLogBox'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/react-native/Libraries/NativeModules/specs/NativeLogBox.js' implicitly has an 'any' type.
+  If the 'react-native' package actually exposes this module, try adding a new declaration (.d.ts) file containing `declare module 'react-native/Libraries/NativeModules/specs/NativeLogBox';`
+node_modules_old/@expo/metro-runtime/src/error-overlay/modules/NativeLogBox/index.tsx(2,22): error TS7016: Could not find a declaration file for module 'react-dom/client'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/react-dom/client.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react-dom` if it exists or add a new declaration (.d.ts) file containing `declare module 'react-dom/client';`
+node_modules_old/@expo/metro-runtime/src/error-overlay/modules/openFileInEditor/index.native.ts(1,30): error TS7016: Could not find a declaration file for module 'react-native/Libraries/Core/Devtools/openFileInEditor'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/react-native/Libraries/Core/Devtools/openFileInEditor.js' implicitly has an 'any' type.
+  If the 'react-native' package actually exposes this module, try adding a new declaration (.d.ts) file containing `declare module 'react-native/Libraries/Core/Devtools/openFileInEditor';`
+node_modules_old/@expo/metro-runtime/src/error-overlay/overlay/LogBoxInspectorFooter.tsx(44,9): error TS2578: Unused '@ts-expect-error' directive.
+node_modules_old/@expo/metro-runtime/src/error-overlay/overlay/LogBoxInspectorFooter.tsx(52,15): error TS2578: Unused '@ts-expect-error' directive.
+node_modules_old/@expo/metro-runtime/src/error-overlay/toast/ErrorToast.tsx(41,11): error TS2578: Unused '@ts-expect-error' directive.
+node_modules_old/@expo/metro-runtime/src/error-overlay/toast/ErrorToast.tsx(49,17): error TS2578: Unused '@ts-expect-error' directive.
+node_modules_old/@expo/metro-runtime/src/error-overlay/toast/ErrorToast.tsx(90,9): error TS2578: Unused '@ts-expect-error' directive.
+node_modules_old/@expo/metro-runtime/src/error-overlay/toast/ErrorToastContainer.web.tsx(87,5): error TS2578: Unused '@ts-expect-error' directive.
+node_modules_old/@expo/metro-runtime/src/error-overlay/useRejectionHandler.ts(9,7): error TS2578: Unused '@ts-expect-error' directive.
+node_modules_old/@expo/metro-runtime/src/error-overlay/useRejectionHandler.ts(11,7): error TS2578: Unused '@ts-expect-error' directive.
+node_modules_old/@expo/metro-runtime/src/error-overlay/useRejectionHandler.ts(17,9): error TS2578: Unused '@ts-expect-error' directive.
+node_modules_old/@expo/metro-runtime/src/getDevServer.native.ts(1,26): error TS7016: Could not find a declaration file for module 'react-native/Libraries/Core/Devtools/getDevServer'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/react-native/Libraries/Core/Devtools/getDevServer.js' implicitly has an 'any' type.
+  If the 'react-native' package actually exposes this module, try adding a new declaration (.d.ts) file containing `declare module 'react-native/Libraries/Core/Devtools/getDevServer';`
+node_modules_old/@expo/metro-runtime/src/HMRClient.ts(11,28): error TS7016: Could not find a declaration file for module 'metro-runtime/src/modules/HMRClient'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/metro-runtime/src/modules/HMRClient.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/metro-runtime` if it exists or add a new declaration (.d.ts) file containing `declare module 'metro-runtime/src/modules/HMRClient';`
+node_modules_old/@expo/metro-runtime/src/LoadingView.native.ts(1,25): error TS7016: Could not find a declaration file for module 'react-native/Libraries/Utilities/DevLoadingView'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/react-native/Libraries/Utilities/DevLoadingView.js' implicitly has an 'any' type.
+  If the 'react-native' package actually exposes this module, try adding a new declaration (.d.ts) file containing `declare module 'react-native/Libraries/Utilities/DevLoadingView';`
+node_modules_old/@expo/metro-runtime/src/LoadingView.ts(8,36): error TS7016: Could not find a declaration file for module 'react-native-web'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/react-native-web/dist/cjs/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react-native-web` if it exists or add a new declaration (.d.ts) file containing `declare module 'react-native-web';`
+node_modules_old/@expo/metro-runtime/src/LoadingView.ts(11,39): error TS6133: 'type' is declared but its value is never read.
+node_modules_old/@expo/metro-runtime/src/location/install.native.ts(11,49): error TS7016: Could not find a declaration file for module 'react-native/Libraries/Utilities/PolyfillFunctions'. '/Users/trevorpowers/Desktop/Loop31-Restored/node_modules/react-native/Libraries/Utilities/PolyfillFunctions.js' implicitly has an 'any' type.
+  If the 'react-native' package actually exposes this module, try adding a new declaration (.d.ts) file containing `declare module 'react-native/Libraries/Utilities/PolyfillFunctions';`
+node_modules_old/@expo/metro-runtime/src/location/Location.ts(3,33): error TS6133: 'href' is declared but its value is never read.
+node_modules_old/@expo/metro-runtime/src/messageSocket.native.ts(16,42): error TS7006: Parameter 'message' implicitly has an 'any' type.
+node_modules_old/@expo/metro-runtime/src/messageSocket.native.ts(27,24): error TS7017: Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.
+node_modules_old/@expo/metro-runtime/src/messageSocket.native.ts(29,27): error TS7017: Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.
+node_modules_old/@expo/metro-runtime/src/messageSocket.native.ts(32,24): error TS7017: Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.
+node_modules_old/@expo/metro-runtime/src/messageSocket.native.ts(32,64): error TS7006: Parameter 'l' implicitly has an 'any' type.
+node_modules_old/@expo/metro-runtime/src/messageSocket.ts(6,7): error TS2451: Cannot redeclare block-scoped variable 'protocol'.
+node_modules_old/@expo/metro-runtime/src/messageSocket.ts(7,7): error TS2451: Cannot redeclare block-scoped variable 'messageSocket'.
+node_modules_old/@expo/metro-runtime/src/messageSocket.ts(20,22): error TS7017: Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.
+node_modules_old/@expo/metro-runtime/src/messageSocket.ts(20,62): error TS7006: Parameter 'l' implicitly has an 'any' type.
+node_modules_old/@expo/metro-runtime/src/setupFastRefresh.ts(3,7): error TS2451: Cannot redeclare block-scoped variable 'ReactRefreshRuntime'.
+node_modules_old/@expo/metro-runtime/src/setupFastRefresh.ts(6,7): error TS2451: Cannot redeclare block-scoped variable 'Refresh'.
+node_modules_old/@expo/metro-runtime/src/setupFastRefresh.ts(30,1): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'typeof globalThis'.
+  No index signature with a parameter of type 'string' was found on type 'typeof globalThis'.
+node_modules_old/@expo/metro-runtime/src/setupFastRefresh.ts(30,16): error TS7017: Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.
+node_modules_old/@expo/metro-runtime/src/setupHMR.ts(12,32): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'Console'.
+  No index signature with a parameter of type 'string' was found on type 'Console'.
+node_modules_old/@expo/metro-runtime/src/setupHMR.ts(13,7): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'Console'.
+  No index signature with a parameter of type 'string' was found on type 'Console'.
+screens/HomeScreen.tsx(1,27): error TS6133: 'useRef' is declared but its value is never read.
+screens/HomeScreen.tsx(2,10): error TS6133: 'Animated' is declared but its value is never read.
+screens/HomeScreen.tsx(4,3): error TS6133: 'FadeIn' is declared but its value is never read.
+screens/HomeScreen.tsx(5,3): error TS6133: 'FadeOut' is declared but its value is never read.
+screens/HomeScreen.tsx(16,1): error TS6133: 'SimpleButton' is declared but its value is never read.
+screens/HomeScreen.tsx(17,1): error TS6133: 'SectionTitle' is declared but its value is never read.
+screens/HomeScreen.tsx(18,1): error TS6133: 'MetricCard' is declared but its value is never read.
+screens/HomeScreen.tsx(20,1): error TS6133: 'FadeSlideInView' is declared but its value is never read.
+screens/HomeScreen.tsx(22,1): error TS6133: 'ScrollContainer' is declared but its value is never read.
+screens/HomeScreen.tsx(24,1): error TS6133: 'QUICK_INSIGHTS' is declared but its value is never read.
+screens/HomeScreen.tsx(25,1): error TS6133: 'HeaderActionButton' is declared but its value is never read.
+screens/HomeScreen.tsx(26,1): error TS6133: 'InsightsSection' is declared but its value is never read.
+screens/HomeScreen.tsx(27,1): error TS6133: 'InsightsCard' is declared but its value is never read.
+screens/HomeScreen.tsx(28,1): error TS6133: 'InsightMetric' is declared but its value is never read.
+screens/HomeScreen.tsx(29,1): error TS6192: All imports in import declaration are unused.
+screens/HomeScreen.tsx(30,1): error TS6133: 'lightTheme' is declared but its value is never read.
+screens/HomeScreen.tsx(31,1): error TS6133: 'QuickInsightsSection' is declared but its value is never read.
+screens/HomeScreen.tsx(32,1): error TS6133: 'InsightStackSection' is declared but its value is never read.
+screens/HomeScreen.tsx(33,1): error TS6133: 'MaterialCommunityIcons' is declared but its value is never read.
+screens/HomeScreen.tsx(61,28): error TS6133: 'borderRadius' is declared but its value is never read.
+screens/HomeScreen.tsx(62,9): error TS6133: 'theme' is declared but its value is never read.
+screens/HomeScreen.tsx(238,7): error TS6133: 'styles' is declared but its value is never read.
+theme/theme.ts(25,10): error TS6133: 'getElevation' is declared but its value is never read.

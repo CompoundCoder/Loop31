@@ -30,15 +30,12 @@ export const useLoopsHeader = ({
     setIsPopoverVisible(false);
   }, []);
 
-  const handlePopoverAction = useCallback((action: 'post' | 'loop') => {
+  const handlePopoverAction = useCallback((action: 'loop') => {
     closeCreatePopover(); 
-    if (action === 'post') {
-      router.push('/posts/create');
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    } else if (action === 'loop') {
+    if (action === 'loop') {
       onOpenNewLoopForm(); 
     }
-  }, [router, onOpenNewLoopForm, closeCreatePopover]);
+  }, [onOpenNewLoopForm, closeCreatePopover]);
 
   return {
     addButtonRef,

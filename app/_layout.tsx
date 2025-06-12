@@ -87,66 +87,55 @@ export default function RootLayout() {
           <NotificationProvider>
             {/* Wrap the navigator and ToastStack with LoopsProvider */}
             <LoopsProvider>
-              <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-              <Tabs
-                screenOptions={{                
-                  tabBarActiveTintColor: themeForProvider.colors.accent, // Use themeForProvider
-                  tabBarInactiveTintColor: themeForProvider.colors.tabInactive, // Use themeForProvider
-                  headerShown: false,
-                  tabBarStyle: {
-                    borderTopWidth: 0,
-                    elevation: 0, // Consider using themeForProvider.elevation.none or similar if defined
-                    shadowOpacity: 0,
-                    height: 50 + insets.bottom,
-                    paddingBottom: 10 + insets.bottom,
-                    paddingTop: 10,
-                    backgroundColor: themeForProvider.colors.card, // Use themeForProvider
-                  },
+            <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+            <Tabs
+              screenOptions={{                
+                tabBarActiveTintColor: themeForProvider.colors.accent, // Use themeForProvider
+                tabBarInactiveTintColor: themeForProvider.colors.tabInactive, // Use themeForProvider
+                headerShown: false,
+                tabBarStyle: {
+                  borderTopWidth: 0,
+                  elevation: 0, // Consider using themeForProvider.elevation.none or similar if defined
+                  shadowOpacity: 0,
+                  height: 50 + insets.bottom,
+                  paddingBottom: 10 + insets.bottom,
+                  paddingTop: 10,
+                  backgroundColor: themeForProvider.colors.card, // Use themeForProvider
+                },
+              }}
+            >
+              <Tabs.Screen
+                name="(loops)"
+                options={{
+                  title: 'Loops',
+                  tabBarIcon: ({ focused, color, size }) => (
+                    <AnimatedTabIcon focused={focused} iconName="repeat" color={color} size={size} />
+                  ),
                 }}
-              >
-                <Tabs.Screen
-                  name="(loops)"
-                  options={{
-                    title: 'Loops',
-                    tabBarIcon: ({ focused, color, size }) => (
-                      <AnimatedTabIcon focused={focused} iconName="repeat" color={color} size={size} />
-                    ),
-                  }}
-                />
-                <Tabs.Screen
-                  name="index"
-                  options={{
-                    title: 'Home',
-                    tabBarIcon: ({ focused, color, size }) => (
-                      <AnimatedTabIcon focused={focused} iconName="home-outline" color={color} size={size} />
-                    ),
-                  }}
-                />
-                <Tabs.Screen
-                  name="you" // This will look for app/you.tsx
-                  options={{
-                    title: 'You',
-                    tabBarIcon: ({ focused, color, size }) => (
-                      <AnimatedTabIcon focused={focused} iconName="person-outline" color={color} size={size} />
-                    ),
-                  }}
-                />
-                {/* Screens to hide from the tab bar */}
-                <Tabs.Screen name="posts/create" options={{ href: null }} />
-                <Tabs.Screen name="shop/pack/[packId]" options={{ href: null }} />
-                <Tabs.Screen name="+not-found" options={{ href: null }} />
-                {/* <Tabs.Screen 
-                  name="test-loop-header" 
-                  options={{ 
-                    title: 'Test Header',
-                    tabBarIcon: ({ focused, color, size }) => (
-                      <AnimatedTabIcon focused={focused} iconName="construct-outline" color={color} size={size} />
-                    ),
-                    tabBarStyle: { display: 'none' } 
-                  }}
-                /> */}
-              </Tabs>
-              <ToastStack />
+              />
+              <Tabs.Screen
+                name="index"
+                options={{
+                  title: 'Home',
+                  tabBarIcon: ({ focused, color, size }) => (
+                    <AnimatedTabIcon focused={focused} iconName="home-outline" color={color} size={size} />
+                  ),
+                }}
+              />
+              <Tabs.Screen
+                name="you" // This will look for app/you.tsx
+                options={{
+                  title: 'You',
+                  tabBarIcon: ({ focused, color, size }) => (
+                    <AnimatedTabIcon focused={focused} iconName="person-outline" color={color} size={size} />
+                  ),
+                }}
+              />
+              {/* Screens to hide from the tab bar */}
+              <Tabs.Screen name="shop/pack/[packId]" options={{ href: null }} />
+              <Tabs.Screen name="+not-found" options={{ href: null }} />
+            </Tabs>
+            <ToastStack />
             </LoopsProvider>
           </NotificationProvider>
         </ThemeProvider>

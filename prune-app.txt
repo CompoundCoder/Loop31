@@ -1,0 +1,27 @@
+app/_layout.tsx:28 - default
+app/+not-found.tsx:7 - default
+app/index.tsx:9 - default
+app/test-grid.tsx:117 - default
+app/you.tsx:4 - default
+app/(loops)/_layout.tsx:7 - default
+app/(loops)/[loopId].tsx:24 - default
+app/(loops)/[loopId].tsx:19 - options
+app/(loops)/create.tsx:6 - default
+app/(loops)/index.tsx:59 - default
+app/(loops)/index.tsx:41 - LoopsStackParamList (used in module)
+app/(modals)/create-loop.tsx:6 - default
+app/constants/loopItemTypes.ts:16 - default
+app/hooks/useLoopListRenderers.tsx:11 - SIMPLE_LOOP_ITEM_TYPE (used in module)
+app/hooks/useLoopListRenderers.tsx:17 - SimpleLoopItemType (used in module)
+app/hooks/useLoopListRenderers.tsx:19 - SimpleListItem (used in module)
+app/hooks/useLoopListRenderers.tsx:29 - UseLoopListRenderersDeps (used in module)
+app/hooks/useLoopListRenderers.tsx:43 - useLoopListRenderers (used in module)
+app/hooks/useLoopListRenderers.tsx:115 - default
+app/hooks/useLoopNotifications.ts:5 - useLoopNotifications (used in module)
+app/hooks/useLoopNotifications.ts:57 - default
+app/posts/create.tsx:6 - default
+app/(loops)/edit/[loopId].tsx:9 - default
+app/(loops)/edit/wrong[loopId].tsx:9 - default
+app/(loops)/loops/index.tsx:166 - default
+app/(loops)/loops/index.tsx:102 - LoopsStackParamList (used in module)
+app/shop/pack/[packId].tsx:49 - default
