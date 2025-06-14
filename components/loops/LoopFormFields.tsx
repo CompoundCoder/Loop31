@@ -9,6 +9,9 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { useAnimatedStyle, withTiming, Easing, useSharedValue, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import ColorPicker from '@/components/common/ColorPicker';
+import DropdownSelector from '@/components/common/DropdownSelector';
+import { POST_FREQUENCIES } from '@/constants/loopFrequencies';
 
 // --- Define a list of selectable colors ---
 const PREDEFINED_COLORS = [
@@ -126,6 +129,15 @@ const createStyles = (themeStyles: ThemeStyles, typography: AppTheme['typography
     dayButtonText: {
       fontSize: typography.fontSize.body,
       fontWeight: typography.fontWeight.medium,
+    },
+    fieldContainer: {
+      marginBottom: spacing.md,
+    },
+    label: {
+      fontSize: typography.fontSize.body,
+      fontWeight: typography.fontWeight.medium,
+      color: colors.text,
+      marginBottom: spacing.xs,
     },
   });
 };
@@ -296,6 +308,16 @@ const LoopFormFields: React.FC<LoopFormFieldsProps> = ({ loop, isCreateMode = fa
             </TouchableOpacity>
           ))}
         </View>
+      </View>
+
+      <View style={styles.fieldContainer}>
+        <Text style={styles.label}>Frequency</Text>
+        <DropdownSelector
+          options={POST_FREQUENCIES}
+          selectedValue={formData.schedule}
+          onValueChange={handleScheduleOptionPress}
+          placeholder="Select a frequency"
+        />
       </View>
     </ScrollView>
   );

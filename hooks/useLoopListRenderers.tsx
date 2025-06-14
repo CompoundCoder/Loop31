@@ -1,15 +1,20 @@
 import React, { useMemo, useCallback } from 'react';
 import { View, FlatList, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { type Loop } from '@/context/LoopsContext';
+import { MOCK_POSTS } from '@/data/mockPosts';
+import { getLoopPostCount } from '@/utils/loopHelpers';
 import { type SwipeableRowRef } from '@/components/common/SwipeableRow';
-import { LoopCard } from '@/components/LoopCard';
+import { LoopCard } from '@/components/loops/LoopCard';
 import { LoopPackCard } from '@/components/shop/LoopPackCard';
 import LoopListPlaceholder from '@/components/loops/LoopListPlaceholder';
 import { SCREEN_LAYOUT } from '@/constants/layout';
 import LoopListSectionHeader from '@/components/loops/LoopListSectionHeader';
 import LoopListSectionFooter from '@/components/loops/LoopListSectionFooter';
 
-// Data types used by this hook - consistent with LoopListSection internal types
+// This is the key change: The loopData now includes postCount.
+type LoopWithCount = Loop & { postCount: number };
+
+// Data types used by this hook
 export interface LoopsScreenItemInternal {
   id: string;
   type:
@@ -22,7 +27,7 @@ export interface LoopsScreenItemInternal {
     | 'discoverPacksCarousel';
   title?: string;
   loopId?: string;
-  loopData?: Loop;
+  loopData?: LoopWithCount; // Use the enhanced type here
 }
 
 interface DiscoverPackInternal {
@@ -70,9 +75,14 @@ export const useLoopListRenderers = ({
   const { colors, spacing, borderRadius } = themeStyles; // Destructure for convenience
 
   const listData = useMemo(() => {
-    const currentPinnedLoops = filteredLoops.filter(loop => pinnedIds.has(loop.id));
-    const currentFrequentLoops = filteredLoops.filter(loop => !pinnedIds.has(loop.id) && loop.id !== 'auto-listing');
-    const autoListingLoopFromFiltered = filteredLoops.find(loop => loop.id === 'auto-listing');
+    const loopsWithCounts: LoopWithCount[] = filteredLoops.map(loop => ({
+      ...loop,
+      postCount: getLoopPostCount(loop.id, MOCK_POSTS),
+    }));
+
+    const currentPinnedLoops = loopsWithCounts.filter(loop => pinnedIds.has(loop.id));
+    const currentFrequentLoops = loopsWithCounts.filter(loop => !pinnedIds.has(loop.id) && loop.id !== 'auto-listing');
+    const autoListingLoopFromFiltered = loopsWithCounts.find(loop => loop.id === 'auto-listing');
 
     const items: LoopsScreenItemInternal[] = [];
 

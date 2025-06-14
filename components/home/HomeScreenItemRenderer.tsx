@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { type HomeScreenItem } from '@/types/homeScreen';
 import { type NotificationItem } from '@/modules/notifications';
+import { SCREEN_LAYOUT } from '@/constants/layout';
 
 // Import components used in the renderer
 import WelcomeMessage from '@/components/WelcomeMessage';

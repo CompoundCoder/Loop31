@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { View, TouchableOpacity, Switch, StyleSheet, Text, ScrollView, Platform, Animated as RNAnimated, Alert, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,6 +18,9 @@ import HeaderActionButton from '@/components/HeaderActionButton';
 import CreatePostPopup from '@/components/posts/CreatePostPopup';
 import EditPostPopup from '@/components/posts/EditPostPopup';
 import { Modalize } from 'react-native-modalize';
+import { MOCK_POSTS, type Post } from '@/data/mockPosts';
+import { getLoopPostCount } from '@/utils/loopHelpers';
+import { getFrequencyLabel } from '@/constants/loopFrequencies';
 
 const touchableMinHeight = 44;
 
@@ -41,17 +44,25 @@ export default function LoopDetailsScreen() {
   const loop: ContextLoop | undefined = state.loops.find(l => l.id === loopId);
 
   const postOptionsModalRef = useRef<Modalize>(null);
+  const loopActionsModalRef = useRef<Modalize>(null);
+
+  // Get posts for this specific loop and transform them to the expected format
+  const posts: PostDisplayData[] = useMemo(() => {
+    if (!loopId) return [];
+    const filteredPosts = MOCK_POSTS.filter(p => p.loopFolders?.includes(loopId));
+    return filteredPosts.map(p => ({
+      id: p.id,
+      caption: p.caption,
+      imageSource: { uri: p.imageUrl }, // Transform imageUrl to imageSource
+    }));
+  }, [loopId]);
 
   const [isActive, setIsActive] = useState(loop?.isActive ?? false);
-  const [posts, setPosts] = useState<PostDisplayData[]>(loop?.posts ?? []);
   const { isEditPopupVisible, loopToEdit, openEditPopup, closeEditPopup } = useEditLoopPopup();
 
   useEffect(() => {
     if (loop) {
       setIsActive(loop.isActive);
-      setPosts(loop.posts);
-    } else {
-      setPosts([]);
     }
   }, [loop, loopId]);
 
@@ -140,11 +151,23 @@ export default function LoopDetailsScreen() {
       fontWeight: 'bold',
       color: colors.text,
     },
+    subtitleContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 8,
+      opacity: 0.7,
+    },
     subtitleText: {
       fontSize: 15,
       color: colors.text,
-      opacity: 0.7,
-      marginTop: 2,
+    },
+    subtitleIcon: {
+      marginRight: 6,
+    },
+    subtitleSeparator: {
+      marginHorizontal: 8,
+      fontSize: 16,
+      color: colors.text,
     },
     actionsContainer: {
       flexDirection: 'row',
@@ -201,14 +224,11 @@ export default function LoopDetailsScreen() {
   };
 
   const renderUpNext = () => {
-    if (posts.length === 0) {
-      return null;
-    }
+    if (posts.length === 0) return null;
+
     return (
       <View style={{ marginBottom: themeSpacing.sm }}>
-        <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.text, marginBottom: themeSpacing.sm }}>
-          Up Next
-        </Text>
+        <Text style={styles.sectionTitle}>Up Next</Text>
         <RNAnimated.View style={[{ paddingVertical: themeSpacing.sm }, upNextOpacityStyle]}>
           <PostCardS 
             post={posts[0]} 
@@ -236,6 +256,50 @@ export default function LoopDetailsScreen() {
     postOptionsModalRef.current?.open();
   };
 
+  const renderPostQueue = () => {
+    const queuedPosts = posts.slice(1);
+    if (queuedPosts.length === 0) return null;
+
+    return (
+      <View>
+        <Text style={styles.sectionTitle}>Queue</Text>
+        {queuedPosts.map(post => (
+          <TestPostCardMini
+            key={post.id}
+            image={post.imageSource}
+            caption={post.caption}
+            onPress={() => { /* ... */ }}
+          />
+        ))}
+      </View>
+    );
+  };
+
+  const onUpdatePosts = (newPosts: Post[]) => {
+    const newDisplayPosts: PostDisplayData[] = newPosts.map(p => ({
+      id: p.id,
+      caption: p.caption,
+      imageSource: { uri: p.imageUrl },
+    }));
+    // Assuming you have a reducer action to update posts for a loop
+    // dispatch({ type: 'UPDATE_LOOP_POSTS', payload: { loopId: loop.id, newPosts: newDisplayPosts } });
+  };
+
+  const handleDeleteLoop = () => {
+    if (!loop) return;
+    Alert.alert(
+      'Delete Loop',
+      `Are you sure you want to delete the "${loop.title}" loop? This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel', onPress: () => loopActionsModalRef.current?.close() },
+        { text: 'Delete', style: 'destructive', onPress: () => {
+          dispatch({ type: 'DELETE', payload: loop.id });
+          navigation.goBack();
+        }}
+      ]
+    );
+  };
+
   if (!loop) {
     return (
       <View style={styles.centeredFeedback}>
@@ -243,6 +307,8 @@ export default function LoopDetailsScreen() {
       </View>
     );
   }
+
+  const postCount = getLoopPostCount(loop.id, MOCK_POSTS);
 
   return (
     <>
@@ -276,8 +342,20 @@ export default function LoopDetailsScreen() {
             <View style={styles.listHeaderContentContainer}> 
               <View style={styles.titleOptionsRow}>
                 <View style={styles.titleSubtitleContainer}>
-                  <Text style={styles.titleText}>{loop.title}</Text> 
-                  <Text style={styles.subtitleText}>Posts {loop.schedule}</Text>
+                  <Text 
+                    style={styles.titleText}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {loop.title}
+                  </Text>
+                  
+                  <View style={styles.subtitleContainer}>
+                    <Ionicons name="copy-outline" size={14} color={colors.text} style={styles.subtitleIcon} />
+                    <Text style={styles.subtitleText}>{postCount} {postCount === 1 ? 'post' : 'posts'}</Text>
+                    <Text style={styles.subtitleSeparator}>•</Text>
+                    <Text style={styles.subtitleText}>{getFrequencyLabel(loop.frequency)}</Text>
+                  </View>
                 </View>
                 <View style={styles.actionsContainer}>
                   <Switch
@@ -289,7 +367,7 @@ export default function LoopDetailsScreen() {
                     style={styles.switchStyle} 
                   />
                   <TouchableOpacity 
-                    onPress={() => openEditPopup(loop)} 
+                    onPress={() => loopActionsModalRef.current?.open()}
                     style={styles.optionsButton}
                   >
                     <Ionicons name="ellipsis-vertical" size={24} color={colors.tabInactive} />
@@ -297,21 +375,8 @@ export default function LoopDetailsScreen() {
                 </View>
               </View>
               {renderUpNext()}
-              <View style={styles.queueTitleSection}>
-                <Text style={styles.sectionTitle}>
-                  Queue ({Math.max(0, posts.length - 1)})
-                </Text>
-              </View>
             </View>
-            {posts.slice(1).map((item) => (
-              <TestPostCardMini
-                key={item.id}
-                image={item.imageSource}
-                caption={item.caption}
-                onPress={() => console.log(`Pressed ${item.id}`)}
-                onLongPress={() => handlePostOptions(item)}
-              />
-            ))}
+            {renderPostQueue()}
           </ScrollView>
         </View>
       </SafeAreaView>
@@ -425,6 +490,38 @@ export default function LoopDetailsScreen() {
             </Pressable>
           </View>
         )}
+      </Modalize>
+      <Modalize
+        ref={loopActionsModalRef}
+        adjustToContentHeight
+        modalStyle={{ backgroundColor: colors.card }}
+        handleStyle={{ backgroundColor: colors.border }}
+        HeaderComponent={
+          <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}> 
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{loop?.title}</Text>
+          </View>
+        }
+      >
+        <View style={{ paddingVertical: spacing.sm }}>
+          <Pressable
+            style={({ pressed }) => [styles.modalOption, { backgroundColor: pressed ? colors.border + '33' : 'transparent' }]}
+            onPress={() => {
+              loopActionsModalRef.current?.close();
+              openEditPopup(loop);
+            }}
+          >
+            <Ionicons name="create-outline" size={24} color={colors.text} style={{ marginRight: spacing.lg }} />
+            <Text style={{ color: colors.text, fontSize: 16, fontWeight: '500' }}>Edit Loop</Text>
+          </Pressable>
+          <View style={[styles.separator, { backgroundColor: colors.border, marginVertical: 8 }]} />
+          <Pressable
+            style={({ pressed }) => [styles.modalOption, { backgroundColor: pressed ? colors.border + '33' : 'transparent' }]}
+            onPress={handleDeleteLoop}
+          >
+            <Ionicons name="trash-outline" size={24} color="#FF3B30" style={{ marginRight: spacing.lg }} />
+            <Text style={{ color: '#FF3B30', fontSize: 16, fontWeight: '500' }}>Delete Loop</Text>
+          </Pressable>
+        </View>
       </Modalize>
     </>
   );

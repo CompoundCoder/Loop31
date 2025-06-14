@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { useAnimatedStyle, withTiming, Easing, useSharedValue, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import { getFrequencyLabel } from '@/constants/loopFrequencies';
 
 // --- Define a list of selectable colors ---
 const PREDEFINED_COLORS = [
@@ -409,6 +410,11 @@ const LoopEditMenu: React.FC<LoopEditMenuProps> = ({ isVisible, onClose, loop, o
                 </View>
               </View>
             </Animated.View>
+
+            <View style={styles.sectionContainer}>
+              <Text style={styles.label}>Frequency</Text>
+              <Text style={styles.frequencyText}>{getFrequencyLabel(loop.frequency)}</Text>
+            </View>
           </ModalScrollView> 
         </View>
       )}
@@ -527,6 +533,11 @@ const createStyles = (theme: ThemeStyles, typography: AppTheme['typography']) =>
     },
     dayButtonText: {
       fontSize: typography.fontSize.body, fontWeight: typography.fontWeight.medium,
+    },
+    frequencyText: {
+      fontSize: typography.fontSize.body,
+      color: colors.text,
+      opacity: 0.7,
     },
   });
 };

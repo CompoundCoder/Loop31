@@ -17,10 +17,9 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, subtitle, style })
       <Text
         style={{
           color: colors.text,
-          fontSize: typography.fontSize.title,
-          fontWeight: typography.fontWeight.bold,
+          fontSize: 22,
+          fontWeight: 'bold',
           marginBottom: subtitle ? 2 : 0,
-          marginLeft: spacing.md,
         }}
       >
         {title}
@@ -31,7 +30,6 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, subtitle, style })
             color: colors.text + 'B3',
             fontSize: typography.fontSize.body,
             fontWeight: typography.fontWeight.regular,
-            marginLeft: spacing.md,
             marginBottom: 2,
           }}
         >

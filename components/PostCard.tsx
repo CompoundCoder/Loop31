@@ -13,7 +13,7 @@ import {
   Easing,
 } from 'react-native';
 import { useTheme } from '@react-navigation/native';
-import { useThemeStyles } from '@/hooks/useThemeStyles';
+import { useThemeStyles, type ThemeStyles } from '@/hooks/useThemeStyles';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -89,7 +89,8 @@ function PostCard({
   showLoopBadge = true,
 }: PostCardProps) {
   const theme = useTheme() as unknown as ExtendedTheme;
-  const { elevation } = useThemeStyles();
+  const themeStyles = useThemeStyles();
+  const styles = createStyles(themeStyles);
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -108,20 +109,10 @@ function PostCard({
   const loopLabelColor = post.loopFolders?.[0] ? MOCK_LOOP_COLORS[post.loopFolders[0]] : undefined;
   const loopLabelText = post.loopFolders?.[0] ? post.loopFolders[0].replace(/-/g, ' ') : '';
 
-  // Format the date in a friendly way
-  const formatDate = (date: string, status: string) => {
-    const postDate = new Date(date);
-    const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
-    const formattedDate = postDate.toLocaleDateString('en-US', options);
-    
-    if (status === 'published') {
-      return `Published ${formattedDate}`;
-    } else if (status === 'scheduled') {
-      const timeOfDay = post.scheduledTimeOfDay || 'morning';
-      return `Scheduled for ${formattedDate} • ${timeOfDay}`;
-    }
-    return `Draft • ${formattedDate}`;
-  };
+  // Format the date for the "Posted" status
+  const postedDate = post.createdAt
+    ? new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    : '';
 
   const renderMedia = () => {
     const hasValidMedia = post.media?.length > 0 && post.media[0];
@@ -221,39 +212,32 @@ function PostCard({
       <Pressable 
         onPress={onPress} 
         style={({ pressed }) => [
-          styles.container, // Ensure flexDirection: column is still set here if needed (default)
+          styles.container,
           {
             borderRadius: cardBorderRadius,
             backgroundColor: cardBackground,
             opacity: pressed ? 0.85 : 1,
-            // height: '100%', // Removed fixed height
           },
-          elevation,
+          themeStyles.elevation.sm, // Correct usage of elevation
           containerStyle,
         ]}
         disabled={isLoading}
       >
         {renderMedia()}
 
-        {/* Remove fixed height from content area */}
         <View style={styles.contentArea}>
-          {/* Apply fixed height to caption Text */}
           <Text 
             style={[
               styles.caption,
-              { 
-                color: theme.colors.text,
-                height: 66, // <-- Apply fixed height (lineHeight * 3)
-              },
+              { color: theme.colors.text },
               captionStyle
             ]}
-            numberOfLines={3}
+            numberOfLines={2}
             ellipsizeMode="tail"
           >
             {post.caption}
           </Text>
 
-          {/* Metadata row will now sit naturally below caption */}
           <View style={styles.metadataRow}>
             <Text style={[
               styles.dateText,
@@ -262,20 +246,22 @@ function PostCard({
               },
               dateStyle
             ]}>
-              {formatDate(post.createdAt, post.status)}
+              Posted {postedDate}
             </Text>
 
-            <View style={styles.platformIconsContainer}>
-              {post.accountTargets?.map(platform => (
-                <MaterialCommunityIcons
-                  key={platform}
-                  name={(PLATFORM_ICONS[platform] || 'help-circle') as any} 
-                  size={16}
-                  color={theme.dark ? theme.colors.border : theme.colors.text + '99'}
-                  style={{ marginLeft: theme.spacing.xs }}
-                />
-              ))}
-            </View>
+            {post.accountTargets && post.accountTargets.length > 0 && (
+              <View style={styles.platformIconsContainer}>
+                {post.accountTargets.slice(0, 3).map((platform: string, index: number) => (
+                  <MaterialCommunityIcons
+                    key={index}
+                    name={(PLATFORM_ICONS[platform] || 'help-circle') as any}
+                    size={16}
+                    color={theme.colors.text}
+                    style={{ marginLeft: index > 0 ? 4 : 0 }}
+                  />
+                ))}
+              </View>
+            )}
           </View>
         </View>
       </Pressable>
@@ -283,93 +269,95 @@ function PostCard({
   );
 }
 
-export default PostCard;
+const createStyles = (theme: ThemeStyles) => {
+  const { colors, spacing, typography } = theme;
+  return StyleSheet.create({
+    container: {
+      overflow: 'hidden',
+    },
+    mediaContainer: {
+      height: 280,
+      width: '100%',
+      backgroundColor: '#000',
+      position: 'relative',
+    },
+    mediaImage: {
+      width: '100%',
+      height: '100%',
+      resizeMode: 'cover',
+    },
+    placeholderMedia: {
+      height: '100%',
+      width: '100%',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    placeholderIcon: {
+      opacity: 0.8,
+    },
+    placeholderText: {},
+    loopBadgeContainer: {
+      position: 'absolute',
+      top: 12,
+      left: 12,
+    },
+    content: {
+      width: '100%',
+    },
+    caption: {
+      fontSize: 16,
+      fontWeight: typography.fontWeight.regular,
+      color: colors.text,
+      marginBottom: spacing.sm,
+      // Enforce a fixed height to accommodate two lines
+      lineHeight: 22,
+      height: 22 * 2,
+    },
+    footer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    date: {
+      fontSize: 13,
+      fontWeight: '400',
+    },
+    platforms: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    platformIcon: {},
+    // Skeleton styles
+    skeletonCaption: {
+      height: 66,
+      width: '100%',
+    },
+    skeletonDate: {
+      height: 13,
+      width: 120,
+    },
+    skeletonIcon: {
+      height: 16,
+      width: 16,
+    },
+    contentArea: {
+      padding: 12, 
+    },
+    metadataRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    dateText: {
+      fontSize: 14,
+      fontWeight: typography.fontWeight.regular,
+      opacity: 0.8,
+    },
+    platformIconsContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+  });
+};
 
-const styles = StyleSheet.create({
-  container: {
-    overflow: 'hidden',
-    // flexDirection: 'column', // Keep if needed, or remove if default is fine
-  },
-  mediaContainer: {
-    height: 280,
-    width: '100%',
-    backgroundColor: '#000',
-    position: 'relative',
-  },
-  mediaImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  placeholderMedia: {
-    height: '100%',
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  placeholderIcon: {
-    opacity: 0.8,
-  },
-  placeholderText: {},
-  loopBadgeContainer: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-  },
-  content: {
-    width: '100%',
-  },
-  caption: {
-    fontSize: 16,
-    lineHeight: 22,
-    fontWeight: '400',
-    marginBottom: 8, // Keep margin below caption area before metadata
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  date: {
-    fontSize: 13,
-    fontWeight: '400',
-  },
-  platforms: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  platformIcon: {},
-  // Skeleton styles
-  skeletonCaption: {
-    height: 66,
-    width: '100%',
-  },
-  skeletonDate: {
-    height: 13,
-    width: 120,
-  },
-  skeletonIcon: {
-    height: 16,
-    width: 16,
-  },
-  contentArea: {
-    padding: 12, 
-    // Remove justifyContent, height is determined by content now
-    // justifyContent: 'space-between', 
-  },
-  metadataRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    // marginTop: 8, // This margin might now be handled by caption's marginBottom
-  },
-  dateText: {
-    fontSize: 14,
-    opacity: 0.65,
-    fontWeight: '400',
-  },
-  platformIconsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-}); 
+export default PostCard; 
