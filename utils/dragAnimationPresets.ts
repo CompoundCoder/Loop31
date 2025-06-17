@@ -1,3 +1,7 @@
+// This file is deprecated.
+// Animation values have been moved to presets/animations.ts
+// This file can be safely deleted in the future.
+
 // 🔁 Unified drag scale/opacity settings — used app-wide
 import { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 

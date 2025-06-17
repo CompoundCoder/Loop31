@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import Reanimated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useThemeStyles, type ThemeStyles } from '@/hooks/useThemeStyles';
+import * as typography from '@/presets/typography';
 
 export interface Post {
   id: string;
@@ -63,14 +64,14 @@ const PostCardS: React.FC<PostCardSProps> = React.memo(({
       )}
       {post.caption && variant === 'featured' && (
         <View style={styles.captionContainer}>
-          <Text style={styles.captionText} numberOfLines={2} ellipsizeMode="tail">
+          <Text style={typography.captionSmall} numberOfLines={2} ellipsizeMode="tail">
             {post.caption}
           </Text>
         </View>
       )}
       {post.caption && variant === 'mini' && (
         <View style={styles.miniCaptionContainer}>
-          <Text style={styles.miniCaptionText} numberOfLines={2} ellipsizeMode="tail">
+          <Text style={typography.captionSmall} numberOfLines={2} ellipsizeMode="tail">
             {post.caption}
           </Text>
         </View>
@@ -129,12 +130,6 @@ const createStyles = (theme: ThemeStyles, variant: 'featured' | 'mini', cardWidt
       paddingVertical: spacing.md, 
       minHeight: (18 * 2) + (spacing.sm * 2),
     },
-    captionText: { 
-      color: colors.text,
-      fontSize: 14,
-      lineHeight: 18,
-      textAlign: 'left',
-    },
     miniCaptionContainer: { 
       paddingHorizontal: spacing.xs,
       paddingVertical: 4,
@@ -142,12 +137,6 @@ const createStyles = (theme: ThemeStyles, variant: 'featured' | 'mini', cardWidt
       width: '100%',
       minHeight: 32,
       justifyContent: 'center',
-    },
-    miniCaptionText: { 
-      color: colors.text,
-      fontSize: 12,
-      lineHeight: 16,
-      textAlign: 'center',
     },
   });
 };

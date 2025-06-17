@@ -31,6 +31,7 @@ interface EditPostPopupProps {
   post: PostDisplayData;
   loopId: string;
   onClose: () => void;
+  onSaveSuccess: (updatedPost: PostDisplayData) => void;
 }
 
 interface PostFormData {
@@ -116,22 +117,19 @@ const EditPostPopupContent: React.FC<{
   };
 
   const handleSave = () => {
-    if (!imageUri) {
-      Alert.alert('Image required', 'Please select an image for your post.');
-      return;
-    }
-    if (caption.trim() === '') {
-      Alert.alert('Caption required', 'Please write a caption for your post.');
+    // Allow saving if either caption or image exists
+    if (!imageUri && caption.trim() === '') {
+      Alert.alert('Empty Post', 'Please add an image or a caption before saving.');
       return;
     }
 
     onSave({
-      imageUri,
+      imageUri: imageUri || '',
       caption: caption.trim(),
     });
   };
 
-  const canSave = imageUri !== null && caption.trim() !== '';
+  const canSave = imageUri !== null || caption.trim() !== '';
   const remixButtonOpacity = useSharedValue(0);
   
   useEffect(() => {
@@ -174,19 +172,21 @@ const EditPostPopupContent: React.FC<{
       </View>
 
       <View style={{ paddingHorizontal: spacing.xl, paddingBottom: spacing.xl }}>
-        <TouchableOpacity onPress={handlePickImage} style={imagePickerStyle}>
-          {imageUri ? (
+        {/* == Image Section == */}
+        {imageUri ? (
+          <TouchableOpacity onPress={handlePickImage} style={imagePickerStyle}>
             <Image source={{ uri: imageUri }} style={imagePreviewStyle} />
-          ) : post.imageSource ? (
-            <Image source={post.imageSource} style={imagePreviewStyle} />
-          ) : (
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity onPress={handlePickImage} style={imagePickerStyle}>
             <View style={styles.imagePickerPlaceholder}>
               <Ionicons name="image-outline" size={40} color={colors.tabInactive} />
-              <Text style={{ color: colors.tabInactive, marginTop: spacing.sm }}>Select an Image</Text>
+              <Text style={{ color: colors.tabInactive, marginTop: spacing.sm }}>Add an Image</Text>
             </View>
-          )}
-        </TouchableOpacity>
+          </TouchableOpacity>
+        )}
 
+        {/* == Caption Section == */}
         <View style={{ marginTop: spacing.lg }}>
           <TextInput
             style={[styles.input, { 
@@ -230,44 +230,19 @@ const EditPostPopupContent: React.FC<{
   );
 };
 
-const EditPostPopup: React.FC<EditPostPopupProps> = ({ isVisible, post, loopId, onClose }) => {
+const EditPostPopup: React.FC<EditPostPopupProps> = ({ isVisible, post, loopId, onClose, onSaveSuccess }) => {
   const animationProgress = useSharedValue(0);
   const [isRendered, setIsRendered] = useState(isVisible);
   const { dispatch, state } = useLoops();
 
   const handleUpdatePost = (data: PostFormData) => {
-    // Find the current loop in state
-    const currentLoop = state.loops.find(loop => loop.id === loopId);
-    
-    if (!currentLoop) {
-      console.error(`Could not find loop with ID ${loopId}`);
-      return;
-    }
-
     // Create updated post object with the same ID but new content
     const updatedPost: PostDisplayData = {
       id: post.id,
       caption: data.caption,
-      imageSource: { uri: data.imageUri }
+      imageSource: data.imageUri ? { uri: data.imageUri } : post.imageSource,
     };
-
-    // Create new posts array replacing the existing post
-    const updatedPosts = currentLoop.posts.map(p => 
-      p.id === post.id ? updatedPost : p
-    );
-    
-    // Dispatch action to update the loop's posts
-    dispatch({
-      type: 'UPDATE_LOOP_POSTS',
-      payload: {
-        loopId: loopId,
-        newPosts: updatedPosts
-      }
-    });
-
-    console.log(`Updated post ${post.id} for loop ${loopId}`);
-
-    // Close the popup
+    onSaveSuccess(updatedPost);
     onClose();
   };
 

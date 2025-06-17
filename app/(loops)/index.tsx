@@ -37,6 +37,12 @@ import { useLoopListRenderers, type HookThemeStyles } from '@/hooks/useLoopListR
 import { useLoopActions } from '@/hooks/useLoopActions';
 import { useLoopLayout } from '@/hooks/useLoopLayout';
 import { useEditLoopPopup } from '@/hooks/useEditLoopPopup';
+import * as typography from '@/presets/typography';
+import { appIcons } from '@/presets/icons';
+import { CircleButton } from '@/components/common/CircleButton';
+import { getButtonPresets } from '@/presets/buttons';
+import { getLoopPostCount } from '@/utils/loopHelpers';
+import { MOCK_POSTS } from '@/data/mockPosts';
 
 export type LoopsStackParamList = {
   index: undefined;
@@ -50,6 +56,8 @@ interface LoopsScreenProps {
 
 export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
   const { colors, spacing, borderRadius } = useThemeStyles();
+  const theme = useThemeStyles();
+  const buttonPresets = getButtonPresets(theme);
   const [refreshing, setRefreshing] = useState(false);
   const [isCreateLoopVisible, setCreateLoopVisible] = useState(false);
 
@@ -67,8 +75,15 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
   });
 
   const { loopToEdit, isEditPopupVisible, openEditPopup, closeEditPopup } = useEditLoopPopup();
+  
+  const loopsWithPostCounts = useMemo(() => {
+    return state.loops.map(loop => ({
+      ...loop,
+      postCount: getLoopPostCount(loop.id, MOCK_POSTS),
+    }));
+  }, [state.loops]);
 
-  const { searchQuery, setSearchQuery, filteredLoops, hasMatches } = useLoopSearch({ initialLoops: state.loops });
+  const { searchQuery, setSearchQuery, filteredLoops, hasMatches } = useLoopSearch({ initialLoops: loopsWithPostCounts });
 
   const router = useRouter();
   const navigation = useNavigation<NativeStackNavigationProp<LoopsStackParamList>>();
@@ -162,7 +177,7 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
   if (isLoading && !searchQuery && state.loops.length === 0 && listData.length === 0) {
     return (
       <ScreenContainer>
-        <AnimatedHeader title="Loops" scrollY={scrollY} actionButton={<View ref={addButtonRef}><HeaderActionButton iconName="add" onPress={showCreateLoopForm} accessibilityLabel="Create" /></View>} />
+        <AnimatedHeader title="Loops" scrollY={scrollY} actionButton={<View ref={addButtonRef}><CircleButton preset={buttonPresets.add} onPress={showCreateLoopForm} accessibilityLabel="Create" /></View>} />
         <EmptyState isLoading />
       </ScreenContainer>
     );
@@ -170,11 +185,12 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
 
   return (
     <ScreenContainer>
-      <AnimatedHeader title="Loops" scrollY={scrollY} actionButton={<View ref={addButtonRef}><HeaderActionButton iconName="add" onPress={showCreateLoopForm} accessibilityLabel="Create" /></View>} />
+      <AnimatedHeader title="Loops" scrollY={scrollY} actionButton={<View ref={addButtonRef}><CircleButton preset={buttonPresets.add} onPress={showCreateLoopForm} accessibilityLabel="Create" /></View>} />
       {showOverallEmptyState ? (
         <LoopsEmptyState onCreateLoop={showCreateLoopForm} />
       ) : noResultsAfterSearch ? (
-        <EmptyState title="No Loops Found" message={`We couldn\'t find any loops matching "${searchQuery}". Try a different search?`} iconName="magnify-close" />
+        // TODO: This icon might need to be standardized later
+        <EmptyState title="No Loops Found" message={`We couldn't find any loops matching "${searchQuery}". Try a different search?`} iconName="magnify-close" />
       ) : (
         <LoopListSection
           isLoading={isLoading}
@@ -198,7 +214,7 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
         modalStyle={{ backgroundColor: colors.card }}
         handleStyle={{ backgroundColor: colors.border }}
         handlePosition="inside"
-        HeaderComponent={ modalSelectedLoopData ? <View style={[styles.modalHeader, { backgroundColor: colors.card, borderBottomColor: colors.border }]}><Text style={[styles.modalTitle, { color: colors.text }]}>{modalSelectedLoopData.title}</Text></View> : null }
+        HeaderComponent={ modalSelectedLoopData ? <View style={[styles.modalHeader, { backgroundColor: colors.card, borderBottomColor: colors.border }]}><Text style={[typography.sectionTitle, { color: colors.text }]}>{modalSelectedLoopData.title}</Text></View> : null }
       >
         {modalSelectedLoopData && (
           <LoopActionsModalContent
@@ -220,7 +236,7 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
       </Modalize>
       <Popover from={addButtonRef} isVisible={isPopoverVisible} onRequestClose={closeCreatePopover} popoverStyle={{ borderRadius: borderRadius.md, backgroundColor: colors.card, paddingVertical: spacing.xs }} animationConfig={{ duration: 150 }} backgroundStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }} >
         <View style={styles.popoverMenu}>
-          <TouchableOpacity style={styles.popoverOption} onPress={() => handlePopoverAction('loop')} accessibilityLabel="Create new loop"><Text style={[styles.popoverText, { color: colors.text }]}>New Loop</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.popoverOption} onPress={() => handlePopoverAction('loop')} accessibilityLabel="Create new loop"><Text style={[typography.metadataText, { color: colors.text }]}>New Loop</Text></TouchableOpacity>
         </View>
       </Popover>
       
@@ -246,9 +262,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalHeader: { padding: 16, borderBottomWidth: StyleSheet.hairlineWidth, alignItems: 'center' },
-  modalTitle: { fontSize: 18, fontWeight: 'bold' },
   popoverMenu: {},
-  popoverOption: { paddingVertical: 12, paddingHorizontal: 16 },
-  popoverText: { fontSize: 16, fontWeight: '500' },
-  popoverSeparator: { height: StyleSheet.hairlineWidth, marginHorizontal: 10 },
+  popoverOption: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
 });

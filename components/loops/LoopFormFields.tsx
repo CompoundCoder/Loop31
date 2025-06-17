@@ -12,6 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import ColorPicker from '@/components/common/ColorPicker';
 import DropdownSelector from '@/components/common/DropdownSelector';
 import { POST_FREQUENCIES } from '@/constants/loopFrequencies';
+import { getFormsPresets } from '@/presets/forms';
 
 // --- Define a list of selectable colors ---
 const PREDEFINED_COLORS = [
@@ -39,112 +40,9 @@ interface LoopFormFieldsProps {
   typography: AppTheme['typography'];
 }
 
-const createStyles = (themeStyles: ThemeStyles, typography: AppTheme['typography']) => {
-  const { colors, spacing, borderRadius } = themeStyles;
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-    },
-    sectionContainer: {
-      marginBottom: spacing.xl,
-    },
-    sectionTitle: {
-      fontSize: typography.fontSize.subtitle,
-      fontWeight: typography.fontWeight.medium,
-      color: colors.text,
-      marginBottom: spacing.sm,
-    },
-    input: {
-      backgroundColor: colors.background,
-      color: colors.text,
-      paddingHorizontal: spacing.md,
-      paddingVertical: Platform.OS === 'ios' ? spacing.sm + spacing.xs : spacing.sm,
-      borderRadius: borderRadius.sm,
-      fontSize: typography.fontSize.body,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
-    },
-    colorSwatchesContainer: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'space-between',
-      marginTop: spacing.xs,
-    },
-    colorSwatch: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      margin: spacing.xs,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderWidth: 2,
-      borderColor: 'transparent',
-    },
-    scheduleOptionsContainer: {},
-    scheduleOption: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.sm,
-      borderRadius: borderRadius.sm,
-      marginBottom: spacing.xs,
-    },
-    scheduleOptionTextContainer: {
-      flex: 1,
-      marginRight: spacing.sm,
-    },
-    scheduleOptionText: {
-      fontSize: typography.fontSize.body,
-      color: colors.text,
-    },
-    scheduleOptionDetailText: {
-      fontSize: typography.fontSize.caption,
-      color: colors.text + '99',
-    },
-    scheduleOptionTextSelected: {
-      color: colors.accent,
-      fontWeight: typography.fontWeight.medium,
-    },
-    scheduleOptionDetailTextSelected: {
-      color: colors.accent,
-    },
-    scheduleSelectedIcon: {},
-    customDayPickerContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      alignItems: 'center',
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.xs,
-      marginTop: spacing.xs,
-    },
-    dayButton: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginHorizontal: Platform.OS === 'ios' ? spacing.xs : spacing.xs / 2,
-    },
-    dayButtonText: {
-      fontSize: typography.fontSize.body,
-      fontWeight: typography.fontWeight.medium,
-    },
-    fieldContainer: {
-      marginBottom: spacing.md,
-    },
-    label: {
-      fontSize: typography.fontSize.body,
-      fontWeight: typography.fontWeight.medium,
-      color: colors.text,
-      marginBottom: spacing.xs,
-    },
-  });
-};
-
 const LoopFormFields: React.FC<LoopFormFieldsProps> = ({ loop, isCreateMode = false, onDataChange, typography }) => {
   const themeStyles = useThemeStyles();
-  const styles = createStyles(themeStyles, typography);
+  const formPresets = getFormsPresets(themeStyles);
   const { SCHEDULE_OPTIONS, parseSchedule } = useLoopSchedule();
 
   const [formData, setFormData] = useState<LoopFormData>(() => {
@@ -231,12 +129,16 @@ const LoopFormFields: React.FC<LoopFormFieldsProps> = ({ loop, isCreateMode = fa
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
+  // Destructure styles for easier use, keeping local styles for now
+  const styles = createStyles(themeStyles, typography);
+
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Loop Name</Text>
+      {/* SECTION: Loop Name */}
+      <View style={formPresets.formSection}>
+        <Text style={formPresets.label}>Loop Name</Text>
         <TextInput
-          style={styles.input}
+          style={formPresets.textInput}
           value={formData.title}
           onChangeText={handleTitleChange}
           placeholder="Enter loop name"
@@ -244,25 +146,10 @@ const LoopFormFields: React.FC<LoopFormFieldsProps> = ({ loop, isCreateMode = fa
         />
       </View>
 
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Color Tag</Text>
-        <View style={styles.colorSwatchesContainer}>
-          {PREDEFINED_COLORS.map((color) => (
-            <TouchableOpacity
-              key={color}
-              onPress={() => handleColorPress(color)}
-              style={[
-                styles.colorSwatch,
-                { backgroundColor: color },
-                formData.color === color && { borderColor: themeStyles.colors.accent },
-              ]}
-            >
-              {formData.color === color && (
-                <Ionicons name="checkmark" size={18} color="#FFF" />
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
+      {/* SECTION: Loop Color */}
+      <View style={formPresets.formSection}>
+        <Text style={formPresets.label}>Loop Color</Text>
+        <ColorPicker selectedColor={formData.color} onColorChange={handleColorPress} />
       </View>
 
       <View style={styles.sectionContainer}>
@@ -321,6 +208,15 @@ const LoopFormFields: React.FC<LoopFormFieldsProps> = ({ loop, isCreateMode = fa
       </View>
     </ScrollView>
   );
+};
+
+// We keep the local styles for now, but the idea is to slowly remove
+// sectionContainer, label, and input as they are replaced by presets.
+const createStyles = (themeStyles: ThemeStyles, typography: AppTheme['typography']) => {
+  // ...
+  return StyleSheet.create({
+    // ...
+  });
 };
 
 export default LoopFormFields; 

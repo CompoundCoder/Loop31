@@ -24,6 +24,9 @@ import * as Haptics from 'expo-haptics';
 import { PanGestureHandler, PanGestureHandlerGestureEvent, TapGestureHandler, TapGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import type { Loop } from '@/context/LoopsContext';
+import { getModalsPresets } from '@/presets/modals';
+import { appIcons } from '@/presets/icons';
+import * as typography from '@/presets/typography';
 
 const LOOP_COLORS = ['#FF6B6B', '#4ECDC4', '#54A0FF', '#F9A03F', '#A5D6A7', '#FFD166', '#D4A5FF'];
 
@@ -44,7 +47,7 @@ export interface LoopFormData {
   schedule: string;
 }
 
-const ColorSwatch: React.FC<{ color: string; isSelected: boolean; onPress: () => void; }> = ({ color, isSelected, onPress }) => {
+const ColorSwatch: React.FC<{ color: string; isSelected: boolean; onPress: () => void; modalStyles: any; }> = ({ color, isSelected, onPress, modalStyles }) => {
   const checkmarkOpacity = useSharedValue(isSelected ? 1 : 0);
   useEffect(() => {
     checkmarkOpacity.value = withTiming(isSelected ? 1 : 0, { duration: 200 });
@@ -54,7 +57,12 @@ const ColorSwatch: React.FC<{ color: string; isSelected: boolean; onPress: () =>
     <TouchableOpacity onPress={onPress}>
       <View style={[modalStyles.colorSwatch, { backgroundColor: color }]}>
         <Animated.View style={[modalStyles.checkmarkOverlay, animatedCheckmarkStyle]}>
-          <Ionicons name="checkmark" size={24} color="white" />
+          <Ionicons 
+            name={appIcons.navigation.save.name as any} 
+            size={24} 
+            color="white" 
+            style={{ shadowColor: '#000', shadowOpacity: 0.5, shadowRadius: 2, shadowOffset: { width: 0, height: 1 } }}
+          />
         </Animated.View>
       </View>
     </TouchableOpacity>
@@ -63,11 +71,12 @@ const ColorSwatch: React.FC<{ color: string; isSelected: boolean; onPress: () =>
 
 const FrequencySlider: React.FC<{
   selectedIndex: number; onIndexChange: (index: number) => void;
-  stops: typeof FREQUENCY_STOPS; theme: ReturnType<typeof useThemeStyles>;
-}> = ({ selectedIndex, onIndexChange, stops, theme }) => {
+  stops: any[]; theme: ReturnType<typeof useThemeStyles>;
+  modalStyles: any;
+}> = ({ selectedIndex, onIndexChange, stops, theme, modalStyles }) => {
   const [width, setWidth] = useState(0);
   const usableWidth = width > 0 ? width - THUMB_SIZE : 0;
-  const snapPoints = useMemo(() => stops.map((_, i) => i * (usableWidth / (stops.length - 1))), [usableWidth, stops]);
+  const snapPoints = useMemo(() => stops.map((_: any, i: number) => i * (usableWidth / (stops.length - 1))), [usableWidth, stops]);
   const translateX = useSharedValue(snapPoints[selectedIndex] || 0);
 
   useEffect(() => {
@@ -88,7 +97,7 @@ const FrequencySlider: React.FC<{
     onActive: (event, ctx) => { translateX.value = Math.max(0, Math.min(ctx.startX + event.translationX, usableWidth)); },
     onEnd: (event) => {
       const projectedX = translateX.value + event.velocityX * 0.05;
-      const closestIndex = snapPoints.reduce((acc, curr, i) => (Math.abs(curr - projectedX) < Math.abs(snapPoints[acc] - projectedX) ? i : acc), 0);
+      const closestIndex = snapPoints.reduce((acc: number, curr: number, i: number) => (Math.abs(curr - projectedX) < Math.abs(snapPoints[acc] - projectedX) ? i : acc), 0);
       runOnJS(onSelectIndex)(closestIndex);
     },
   });
@@ -96,7 +105,7 @@ const FrequencySlider: React.FC<{
   const tapGestureHandler = useAnimatedGestureHandler<TapGestureHandlerGestureEvent>({
     onEnd: (event) => {
       const tapX = event.x;
-      const closestIndex = snapPoints.reduce((acc, curr, i) => (Math.abs(curr + THUMB_SIZE / 2 - tapX) < Math.abs(snapPoints[acc] + THUMB_SIZE / 2 - tapX) ? i : acc), 0);
+      const closestIndex = snapPoints.reduce((acc: number, curr: number, i: number) => (Math.abs(curr + THUMB_SIZE / 2 - tapX) < Math.abs(snapPoints[acc] + THUMB_SIZE / 2 - tapX) ? i : acc), 0);
       runOnJS(onSelectIndex)(closestIndex);
     },
   });
@@ -114,10 +123,10 @@ const FrequencySlider: React.FC<{
             </PanGestureHandler>
           </View>
           <View style={modalStyles.sliderLabelsContainer}>
-            {stops.map((stop, index) => (
+            {stops.map((stop: any, index: number) => (
               <Text key={stop.value} style={[
-                modalStyles.sliderShortLabel,
-                { color: theme.colors.tabInactive, left: snapPoints[index] - (THUMB_SIZE / 2), width: THUMB_SIZE * 2, textAlign: 'center' }
+                typography.captionSmall,
+                { color: theme.colors.tabInactive, left: snapPoints[index] - (THUMB_SIZE / 2), width: THUMB_SIZE * 2, textAlign: 'center', position: 'absolute' }
               ]}>
                 {stop.shortLabel}
               </Text>
@@ -134,10 +143,11 @@ interface LoopPopupContentProps {
   onSave: (data: LoopFormData) => void;
   title: string;
   saveButtonText: string;
-  initialValues?: Partial<Loop>;
+  initialValues?: Partial<Loop> & { schedule?: string };
+  modalStyles: ReturnType<typeof getModalsPresets>;
 }
 
-const LoopPopupContent: React.FC<LoopPopupContentProps> = ({ onClose, onSave, title, saveButtonText, initialValues }) => {
+const LoopPopupContent: React.FC<LoopPopupContentProps> = ({ onClose, onSave, title, saveButtonText, initialValues, modalStyles }) => {
   const theme = useThemeStyles();
   const { colors, spacing, typography, borderRadius } = theme;
   const { SCHEDULE_OPTIONS, WEEKDAYS, getFrequencyTitle } = useLoopSchedule();
@@ -223,7 +233,7 @@ const LoopPopupContent: React.FC<LoopPopupContentProps> = ({ onClose, onSave, ti
         <TextInput style={[modalStyles.input, { backgroundColor: colors.backgroundDefault, borderColor: colors.border, color: colors.text, fontSize: typography.fontSize.body, paddingHorizontal: spacing.lg, paddingVertical: Platform.OS === 'ios' ? spacing.md + 2 : spacing.sm + 4, borderRadius: borderRadius.md }]} value={loopName} onChangeText={setLoopName} placeholder="e.g., Morning Motivation" placeholderTextColor={textFadedColor} />
         
         <Text style={[modalStyles.sectionTitle, { color: colors.text, marginTop: spacing.xl, marginBottom: spacing.sm, fontSize: typography.fontSize.subtitle, fontWeight: '500' }]}>{frequencyTitle}</Text>
-        <FrequencySlider stops={SCHEDULE_OPTIONS} selectedIndex={selectedFrequencyIndex} onIndexChange={setSelectedFrequencyIndex} theme={theme} />
+        <FrequencySlider stops={SCHEDULE_OPTIONS} selectedIndex={selectedFrequencyIndex} onIndexChange={setSelectedFrequencyIndex} theme={theme} modalStyles={modalStyles} />
         
         <Animated.View style={animatedCustomPickerStyle}>
           <View style={[modalStyles.customDayPicker, { marginTop: spacing.xl }]}>
@@ -237,14 +247,15 @@ const LoopPopupContent: React.FC<LoopPopupContentProps> = ({ onClose, onSave, ti
         
         <Text style={[modalStyles.sectionTitle, { color: colors.text, marginTop: spacing.xl, marginBottom: spacing.md, fontSize: typography.fontSize.subtitle, fontWeight: '500' }]}>Color</Text>
         <View style={modalStyles.colorGrid}>
-          {LOOP_COLORS.map((loopColor) => <ColorSwatch key={loopColor} color={loopColor} isSelected={selectedColor === loopColor} onPress={() => setSelectedColor(loopColor)} />)}
+          {LOOP_COLORS.map((loopColor) => <ColorSwatch key={loopColor} color={loopColor} isSelected={selectedColor === loopColor} onPress={() => setSelectedColor(loopColor)} modalStyles={modalStyles} />)}
         </View>
       </View>
       <View style={[modalStyles.footer, { borderTopColor: colors.border, padding: spacing.lg, flexDirection: 'row' }]}>
         <TouchableOpacity onPress={onClose} style={[modalStyles.footerButtonBase, { backgroundColor: backgroundAltColor, marginRight: spacing.md, flex: 1, borderRadius: borderRadius.md }]}>
           <Text style={{ color: colors.text, fontWeight: '500', fontSize: typography.fontSize.body }}>Cancel</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleSave} disabled={!canSave} style={[modalStyles.footerButtonBase, { backgroundColor: canSave ? colors.accent : primaryMutedColor, flex: 1, borderRadius: borderRadius.md }]}>
+        <TouchableOpacity onPress={handleSave} disabled={!canSave} style={[modalStyles.footerButtonBase, { backgroundColor: canSave ? colors.accent : primaryMutedColor, flex: 1, borderRadius: borderRadius.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }]}>
+          <Ionicons name={appIcons.navigation.save.name as any} size={20} color={canSave ? primaryContrastColor : textFadedColor} style={{ marginRight: spacing.sm }}/>
           <Text style={{ color: canSave ? primaryContrastColor : textFadedColor, fontWeight: 'bold', fontSize: typography.fontSize.body }}>{saveButtonText}</Text>
         </TouchableOpacity>
       </View>
@@ -262,8 +273,10 @@ interface LoopPopupBaseProps {
 }
 
 const LoopPopupBase: React.FC<LoopPopupBaseProps> = ({ visible, onClose, onSave, title, saveButtonText, initialValues }) => {
-  const animationProgress = useSharedValue(0);
+  const theme = useThemeStyles();
+  const modalStyles = getModalsPresets(theme);
   const [isRendered, setIsRendered] = useState(visible);
+  const animationProgress = useSharedValue(0);
 
   useEffect(() => {
     if (visible) {
@@ -298,14 +311,15 @@ const LoopPopupBase: React.FC<LoopPopupBaseProps> = ({ visible, onClose, onSave,
   return (
     <Animated.View style={[styles.fullScreenContainer, animatedContainerStyle]}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flexContainer}>
-        <Pressable style={styles.backdrop} onPress={onClose} />
-        <Animated.View style={[styles.contentContainer, animatedContentStyle]}>
+        <Pressable style={modalStyles.modalBackdrop} onPress={onClose} />
+        <Animated.View style={[modalStyles.modalContainer, styles.contentContainer, animatedContentStyle]}>
           <LoopPopupContent 
             onClose={onClose} 
-            onSave={onSave} 
-            title={title} 
+            onSave={onSave}
+            title={title}
             saveButtonText={saveButtonText}
             initialValues={initialValues}
+            modalStyles={modalStyles}
           />
         </Animated.View>
       </KeyboardAvoidingView>
@@ -313,14 +327,11 @@ const LoopPopupBase: React.FC<LoopPopupBaseProps> = ({ visible, onClose, onSave,
   );
 };
 
-export default LoopPopupBase;
-
 const styles = StyleSheet.create({
   fullScreenContainer: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     zIndex: 1000,
   },
   flexContainer: {
@@ -329,31 +340,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
   contentContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: '90%',
+    maxHeight: '85%',
   },
 });
 
-const modalStyles = StyleSheet.create({
-  modalContent: { width: Platform.OS === 'web' ? '60%' : '95%', maxWidth: 500, overflow: 'hidden' },
-  header: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 20, borderBottomWidth: 1 },
-  title: {},
-  sectionTitle: {},
-  input: { borderWidth: 1 },
-  sliderContainer: { height: THUMB_SIZE, justifyContent: 'center', marginTop: 8, marginBottom: 4 },
-  sliderTrack: { height: 4, borderRadius: 2, justifyContent: 'center' },
-  sliderThumb: { width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: THUMB_SIZE / 2, position: 'absolute', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 3, elevation: 4 },
-  sliderLabelsContainer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
-  sliderShortLabel: { fontSize: 12, position: 'absolute' },
-  customDayPicker: { flexDirection: 'row', justifyContent: 'center' },
-  dayButton: { width: 38, height: 38, borderRadius: 19, justifyContent: 'center', alignItems: 'center', borderWidth: 1, marginHorizontal: 5 },
-  colorGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' },
-  colorSwatch: { width: 38, height: 38, borderRadius: 19, margin: 5, justifyContent: 'center', alignItems: 'center' },
-  checkmarkOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', borderRadius: 19 },
-  footer: { borderTopWidth: 1 },
-  footerButtonBase: { paddingVertical: 14, paddingHorizontal: 20, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-}); 
+export default LoopPopupBase; 

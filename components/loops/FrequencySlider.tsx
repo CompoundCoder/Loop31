@@ -10,6 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { type ThemeStyles } from '@/hooks/useThemeStyles';
 import { type ScheduleOption } from '@/hooks/useLoopSchedule';
+import * as typography from '@/presets/typography';
 
 interface FrequencySliderProps {
   stops: ScheduleOption[];
@@ -87,10 +88,11 @@ export const FrequencySlider: React.FC<FrequencySliderProps> = ({
           <Text
             key={stop.value}
             style={[
-              styles.label,
+              typography.captionSmall,
               {
                 color: index === selectedIndex ? colors.accent : colors.text,
                 opacity: index === selectedIndex ? 1 : 0.5,
+                fontWeight: '500',
               },
             ]}
           >
@@ -132,9 +134,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 8,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: '500',
   },
 }); 

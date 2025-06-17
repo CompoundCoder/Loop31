@@ -16,6 +16,7 @@ export function useThemeStyles() {
     opacity: theme.opacity,
     typography: theme.typography,
     elevation: appElevation, // Use the imported elevation object directly
+    transitions: theme.transitions,
   }), [theme]);
 }
 

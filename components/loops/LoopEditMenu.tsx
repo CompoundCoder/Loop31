@@ -1,16 +1,11 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform, ScrollView as ModalScrollView, StyleProp, ViewStyle, TouchableWithoutFeedback } from 'react-native';
-import Modal from 'react-native-modal';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Modal, StyleSheet, TouchableOpacity, TextInput, Platform, KeyboardAvoidingView, ScrollView as ModalScrollView } from 'react-native';
 import { useThemeStyles, type ThemeStyles } from '@/hooks/useThemeStyles';
-import { useLoopSchedule } from '@/hooks/useLoopSchedule';
-import { type Theme as AppTheme } from '@/theme/theme';
-import { type Loop } from '@/context/LoopsContext';
-import { Ionicons } from '@expo/vector-icons';
-import Animated, { useAnimatedStyle, withTiming, Easing, useSharedValue, withSpring } from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
-import { getFrequencyLabel } from '@/constants/loopFrequencies';
+import { type Theme as AppTheme } from '@/theme/theme'; // IMPORT our app's Theme type
+import { type Loop } from '@/context/LoopsContext'; // Assuming Loop type is exported
+import { Ionicons } from '@expo/vector-icons'; // For checkmark icon
+import Animated, { useAnimatedStyle, withTiming, Easing, runOnJS, useSharedValue, withSpring } from 'react-native-reanimated'; // Import Animated and hooks
+import * as Haptics from 'expo-haptics'; // ADD Haptics
 
 // --- Define a list of selectable colors ---
 const PREDEFINED_COLORS = [
@@ -25,17 +20,17 @@ const PREDEFINED_COLORS = [
 
 // --- Define NEW Schedule Options ---
 interface ScheduleOption {
-  label: string;
-  value: string;
-  details?: string;
+  label: string; 
+  value: string; 
+  details?: string; 
 }
 
 const SCHEDULE_OPTIONS: ScheduleOption[] = [
   { label: 'Automatically (recommended)', value: 'Auto' },
   { label: 'Every Day', value: 'Daily', details: '(7x per week)' },
-  { label: 'A Few Times a Week', value: 'MWF', details: '(Mon, Wed, Fri)' },
-  { label: 'Once per Week', value: 'Weekly', details: '(e.g., Every Tuesday)' },
-  { label: 'Custom Schedule', value: 'Custom' },
+  { label: 'A Few Times a Week', value: 'MWF', details: '(Mon, Wed, Fri)' }, 
+  { label: 'Once a Week', value: 'Weekly', details: '(e.g., Every Tuesday)' }, 
+  { label: 'Custom Schedule…', value: 'Custom' },
 ];
 
 // --- Define Days for Custom Picker ---
@@ -45,9 +40,9 @@ const DAYS_DISPLAY = ['S', 'M', 'T', 'W', 'T', 'F', 'S']; // For button labels
 interface LoopEditMenuProps {
   isVisible: boolean;
   onClose: () => void;
-  loop: Loop | null;
+  loop: Loop | null; // Allow null for initial render if loop might not be ready
   onSave: (updatedData: { id: string; title?: string; color?: string; schedule?: string }) => void;
-  typography: AppTheme['typography'];
+  typography: AppTheme['typography']; // ADDED typography prop
 }
 
 // --- NEW: AnimatedDayButton Internal Component ---
@@ -68,7 +63,7 @@ const AnimatedDayButton: React.FC<AnimatedDayButtonProps> = ({
   themeStyles, 
   typography 
 }) => {
-  const styles = createStyles(themeStyles, typography);
+  const styles = createStyles(themeStyles, typography); // Assuming createStyles is accessible or defined globally/passed
   const scale = useSharedValue(1);
 
   const animatedButtonStyle = useAnimatedStyle(() => {
@@ -112,384 +107,244 @@ const AnimatedDayButton: React.FC<AnimatedDayButtonProps> = ({
   );
 };
 
-// New AnimatedPressableOption component
-interface AnimatedPressableOptionProps {
-  onPress: () => void;
-  children: React.ReactNode;
-  style?: StyleProp<ViewStyle>;
-}
-
-const AnimatedPressableOption: React.FC<AnimatedPressableOptionProps> = ({ onPress, children, style }) => {
-  const scale = useSharedValue(1);
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const handlePressIn = () => { scale.value = withSpring(0.97, { dampingRatio: 0.7, stiffness: 150 }); };
-  const handlePressOut = () => { scale.value = withSpring(1.0, { dampingRatio: 0.7, stiffness: 150 }); };
-  const handleActualPress = () => {
-    scale.value = withSpring(1.0, { dampingRatio: 0.7, stiffness: 150 }); // Ensure reset before calling onPress
-    onPress();
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); // Added haptic feedback
-  };
-
-  return (
-    <Animated.View style={animatedStyle}>
-      <TouchableOpacity
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        onPress={handleActualPress}
-        style={style}
-        activeOpacity={1} // Disable default opacity change as we have scale
-      >
-        {children}
-      </TouchableOpacity>
-    </Animated.View>
-  );
-};
-
 const LoopEditMenu: React.FC<LoopEditMenuProps> = ({ isVisible, onClose, loop, onSave, typography }) => {
   const themeStyles = useThemeStyles();
+  if (!loop || !typography) { return null; }
   const styles = createStyles(themeStyles, typography);
-  const insets = useSafeAreaInsets();
-  const { SCHEDULE_OPTIONS, DAYS_FULL, parseSchedule, formatCustomDays } = useLoopSchedule();
 
-  const [editedTitle, setEditedTitle] = useState(loop?.title || '');
-  const [originalTitle, setOriginalTitle] = useState(loop?.title || '');
-  const [editedColor, setEditedColor] = useState(loop?.color || PREDEFINED_COLORS[0]);
+  const [editedTitle, setEditedTitle] = useState(loop.title);
+  const [editedColor, setEditedColor] = useState(loop.color || PREDEFINED_COLORS[0]);
   const [editedSchedule, setEditedSchedule] = useState('');
   const [customDays, setCustomDays] = useState<string[]>([]);
-  const [hasMounted, setHasMounted] = useState(false);
-  const [isScheduleInitialized, setIsScheduleInitialized] = useState(false);
-
+  const [dayPickerHeight, setDayPickerHeight] = useState(0);
+  
   useEffect(() => {
-    let mountTimer: NodeJS.Timeout;
-    if (isVisible)
-      mountTimer = setTimeout(() => {
-        setHasMounted(true);
-        if (loop) {
-          setEditedTitle(loop.title);
-          setOriginalTitle(loop.title);
-          setEditedColor(loop.color || PREDEFINED_COLORS[0]);
-          const { frequency, customDays: initialCustomDays } = parseSchedule(loop.schedule || '');
-          setEditedSchedule(frequency);
-          setCustomDays(initialCustomDays);
-          setIsScheduleInitialized(true);
-        }
-      }, 50);
-    return () => clearTimeout(mountTimer);
-  }, [isVisible, loop, parseSchedule]);
+    if (isVisible && loop) {
+      setEditedTitle(loop.title);
+      setEditedColor(loop.color || PREDEFINED_COLORS[0]);
+      const schedule = loop.schedule || '';
+      const scheduleLower = schedule.toLowerCase();
+      let initialScheduleValue = SCHEDULE_OPTIONS.find(opt => opt.value.toLowerCase() === scheduleLower)?.value || SCHEDULE_OPTIONS[0].value;
+      let initialCustomDays: string[] = [];
 
-  const handleModalHide = () => {
-    setHasMounted(false);
-    setIsScheduleInitialized(false);
-  };
-
-  const handleDismiss = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    onClose();
-  };
-
-  const commitScheduleChange = useCallback(() => {
-    if (!loop) return;
-    let scheduleToSave = editedSchedule;
-    if (editedSchedule === 'custom') {
-      if (customDays.length > 0) {
-        scheduleToSave = formatCustomDays(customDays);
-      } else {
-        if (customDays.length === 0) {
-          console.log("[LoopEditMenu] Custom schedule selected but no days chosen. Not saving schedule change from commitScheduleChange.");
-          return;
+      const matchedOption = SCHEDULE_OPTIONS.find(opt => opt.value.toLowerCase() === scheduleLower);
+      if (matchedOption && matchedOption.value !== 'Custom') {
+        initialScheduleValue = matchedOption.value;
+      } else if (schedule) {
+        const potentialDays = schedule.split(',').map(d => d.trim()).filter(Boolean);
+        const validDays = potentialDays.filter(d => DAYS_FULL.some(kd => kd.toLowerCase() === d.toLowerCase()));
+        if (validDays.length > 0 && validDays.length === potentialDays.length) {
+          if (validDays.length === 7) initialScheduleValue = 'Daily';
+          else if (validDays.length === 3 && validDays.map(d => d.toLowerCase()).sort().join(',') === 'fri,mon,wed') initialScheduleValue = 'MWF';
+          else {
+            initialScheduleValue = 'Custom';
+            initialCustomDays = validDays.map(d => DAYS_FULL.find(fd => fd.toLowerCase() === d.toLowerCase()) || '').filter(Boolean);
+          }
+        } else if (!SCHEDULE_OPTIONS.find(opt => opt.value.toLowerCase() === scheduleLower)) {
+            initialScheduleValue = 'Auto';
         }
       }
+      setEditedSchedule(initialScheduleValue);
+      setCustomDays(initialCustomDays);
+    } else {
+        setEditedSchedule('');
+        setCustomDays([]);
     }
-    if (scheduleToSave !== loop.schedule) {
-      console.log(`[LoopEditMenu] commitScheduleChange: Saving schedule: ${scheduleToSave}`);
-      onSave({ id: loop.id, schedule: scheduleToSave });
-    }
-  }, [loop, editedSchedule, customDays, onSave, formatCustomDays]);
+  }, [loop, isVisible]);
 
-  const handleTitleEndEditing = () => {
-    // This function is no longer responsible for saving. It can be used for other onBlur logic if needed.
-  };
-
-  const handleColorPress = (color: string) => {
-    console.log('[LoopEditMenu] Color pressed:', color);
-    setEditedColor(color);
-    if (loop) {
-      onSave({ id: loop.id, color: color }); // Save immediately
+  const handleSaveModified = () => {
+    let scheduleToSave = editedSchedule;
+    if (editedSchedule === 'Custom') {
+        if (customDays.length > 0) {
+            const sortedDays = customDays.sort((a, b) => DAYS_FULL.indexOf(a) - DAYS_FULL.indexOf(b));
+            scheduleToSave = sortedDays.join(',');
+        } else {
+            scheduleToSave = 'Weekly'; 
+        }
     }
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onSave({ id: loop.id, title: editedTitle, color: editedColor, schedule: scheduleToSave });
   };
-
-  const handleScheduleOptionPress = (optionValue: string) => {
-    console.log('[LoopEditMenu] Schedule option pressed:', optionValue);
-    setEditedSchedule(optionValue);
-    if (loop && optionValue !== 'Custom') {
-      onSave({ id: loop.id, schedule: optionValue }); // Save immediately if not custom
-    }
-  };
-  
   const toggleCustomDayModified = (day: string) => {
-    console.log('[LoopEditMenu] toggleCustomDayModified called with:', day);
-    const newCustomDays = customDays.includes(day)
-      ? customDays.filter((d) => d !== day)
-      : [...customDays, day];
-    setCustomDays(newCustomDays);
-    if (editedSchedule !== 'Custom' && newCustomDays.length > 0) {
-      setEditedSchedule('Custom');
-    } else if (newCustomDays.length === 0 && editedSchedule === 'Custom'){
-    }
+    setCustomDays(prevDays => {
+      const dayIndex = prevDays.indexOf(day);
+      if (dayIndex > -1) {
+        return prevDays.filter((d) => d !== day);
+      } else {
+        return [...prevDays, day];
+      }
+    });
   };
 
-  useEffect(() => {
-    if (isVisible && loop && isScheduleInitialized && hasMounted) {
-      commitScheduleChange();
+  const onDayPickerLayoutLocal = (event: any) => {
+    const measuredHeight = event.nativeEvent.layout.height;
+    if (measuredHeight > 0 && dayPickerHeight !== measuredHeight) { 
+         setDayPickerHeight(measuredHeight);
     }
-  }, [editedSchedule, customDays, commitScheduleChange, isVisible, loop, isScheduleInitialized, hasMounted]);
+  };
 
   const animatedDayPickerStyleLocal = useAnimatedStyle(() => {
-    const isCustomActive = editedSchedule === 'Custom';
-    const easingConfigOpen = Easing.inOut(Easing.ease);
-    const easingConfigClose = Easing.out(Easing.cubic); // Smoother deceleration for exit
-
+    const isCustom = editedSchedule === 'Custom';
     return {
-      maxHeight: withTiming(isCustomActive ? 120 : 0, { 
-        duration: 280, 
-        easing: isCustomActive ? easingConfigOpen : easingConfigClose 
-      }),
-      opacity: withTiming(isCustomActive ? 1 : 0, { 
-        duration: isCustomActive ? 250 : 220, 
-        easing: Easing.inOut(Easing.ease) 
-      }),
+      height: withTiming(isCustom ? dayPickerHeight : 0, { duration: 250, easing: Easing.inOut(Easing.ease) }),
+      opacity: withTiming(isCustom ? 1 : 0, { duration: 250, easing: Easing.inOut(Easing.ease) }),
       overflow: 'hidden',
-      marginTop: withTiming(isCustomActive ? themeStyles.spacing.sm : 0, { 
-        duration: 280, 
-        easing: isCustomActive ? easingConfigOpen : easingConfigClose 
-      }),
     };
   });
-  
-  if (!loop && isVisible) { 
-    return null; 
-  }
-  if (!loop && !isVisible) {
-    return null;
-  }
 
   return (
-    <Modal
-      isVisible={isVisible}
-      style={styles.modalStyle}
-      animationIn="slideInUp"
-      animationOut="slideOutDown"
-      animationInTiming={350}
-      animationOutTiming={300}
-      backdropOpacity={0}
-      useNativeDriver={true}
-      hideModalContentWhileAnimating={true}
-      onSwipeComplete={handleDismiss}
-      swipeDirection="down"
-      avoidKeyboard={true}
-      propagateSwipe={true}
-      onModalHide={handleModalHide}
-    >
-      {/* Custom Tappable Backdrop Area - Sits behind the panel */}
-      <TouchableWithoutFeedback onPress={handleDismiss} accessible={false}>
-        <View style={StyleSheet.absoluteFillObject} />
-      </TouchableWithoutFeedback>
-
-      {/* Shadow Gradient Overlay */}
-      <LinearGradient
-        colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.85)']}
-        locations={[0.05, 0.85]} // Top 5% transparent, fades to dark over next 80%, bottom 15% fully dark
-        style={styles.shadowGradientOverlay}
-        pointerEvents="none" // Make sure it doesn't block interactions
-      />
-
-      {hasMounted && loop && (
-        <View style={[styles.contentView, { paddingBottom: insets.bottom || themeStyles.spacing.lg }]}>
-          <View style={styles.grabber} />
+    <Modal animationType="slide" transparent={true} visible={isVisible} onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
+        <TouchableOpacity style={styles.overlayTouchable} activeOpacity={1} onPress={onClose} />
+        <View style={[styles.menuContainer]}>
           <View style={styles.headerContainer}>
+            <TouchableOpacity onPress={onClose} style={styles.headerButton}><Text style={styles.headerButtonText}>Cancel</Text></TouchableOpacity>
             <Text style={styles.menuTitle}>Edit Loop</Text>
+            <TouchableOpacity onPress={handleSaveModified} style={styles.headerButton}><Text style={[styles.headerButtonText, styles.doneButtonText]}>Done</Text></TouchableOpacity>
           </View>
 
           <ModalScrollView 
             showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="always"
-            style={styles.scrollViewStyle}
-            contentContainerStyle={styles.scrollViewContentContainer}
+            contentContainerStyle={{ paddingBottom: 50 }}
           >
-            <View style={styles.sectionContainer}>
+            <View style={[styles.sectionContainer]}>
               <Text style={styles.label}>Loop Name</Text>
-              <TextInput 
-                style={styles.input}
-                placeholder="Enter Loop Name"
-                placeholderTextColor={themeStyles.colors.tabInactive}
-                value={editedTitle}
-                onChangeText={(text) => {
-                  setEditedTitle(text);
-                  if (loop) {
-                    // Live update for title
-                    if (text.trim() !== originalTitle) {
-                        onSave({ id: loop.id, title: text.trim() });
-                        // We might want to update originalTitle here too, or let the parent re-render handle it.
-                        // For true live update, the parent re-render with new loop data is key.
-                    }
-                  }
-                }}
-                onEndEditing={handleTitleEndEditing} // Can still be used for blur effects, just not saving
-                maxLength={100}
-              />
+              <TextInput style={styles.input} value={editedTitle} onChangeText={setEditedTitle} placeholder="Enter loop name" placeholderTextColor={themeStyles.colors.text + '80'} />
             </View>
             
-            <View style={styles.sectionContainer}>
+            <View style={[styles.sectionContainer]}>
               <Text style={styles.label}>Loop Color</Text>
               <View style={styles.colorSwatchesContainer}>
                 {PREDEFINED_COLORS.map((color) => (
-                  <TouchableOpacity key={color} style={[styles.colorSwatch, { backgroundColor: color }]} onPress={() => handleColorPress(color)}>
+                  <TouchableOpacity key={color} style={[styles.colorSwatch, { backgroundColor: color }]} onPress={() => setEditedColor(color)}>
                     {editedColor.toLowerCase() === color.toLowerCase() && (<Ionicons name="checkmark-outline" size={20} color={themeStyles.colors.card} />)}
                   </TouchableOpacity>
                 ))}
               </View>
             </View>
 
-            <View style={[styles.sectionContainer, { marginBottom: 0}]} pointerEvents="auto">
+            <View style={[styles.sectionContainer, { marginBottom: 0}]}>
               <Text style={styles.label}>Posting Schedule</Text>
               <View style={styles.scheduleOptionsContainer}>
-                {SCHEDULE_OPTIONS.map((option) => {
-                  const scheduleOptionContent = (
-                    <>
-                      <View style={styles.scheduleOptionTextContainer}>
-                        <Text style={[styles.scheduleOptionText, editedSchedule === option.value && styles.scheduleOptionTextSelected]}>{option.label}</Text>
-                        {option.details && (<Text style={[styles.scheduleOptionDetailText, editedSchedule === option.value && styles.scheduleOptionDetailTextSelected]}>{option.details}</Text>)}
-                      </View>
-                      {editedSchedule === option.value && (<Ionicons name="checkmark" size={22} color={themeStyles.colors.accent} style={styles.scheduleSelectedIcon} />)}
-                    </>
-                  );
-
-                  if (option.value === 'Custom') {
-                    return (
-                      <AnimatedPressableOption
-                        key={option.value}
-                        onPress={() => handleScheduleOptionPress(option.value)}
-                        style={styles.scheduleOption} 
-                      >
-                        {scheduleOptionContent}
-                      </AnimatedPressableOption>
-                    );
-                  }
-                  return (
-                    <TouchableOpacity
-                      key={option.value}
-                      style={styles.scheduleOption}
-                      onPress={() => handleScheduleOptionPress(option.value)}
-                    >
-                      {scheduleOptionContent}
-                    </TouchableOpacity>
-                  );
-                })}
+                {SCHEDULE_OPTIONS.map((option) => (
+                  <TouchableOpacity key={option.value} style={styles.scheduleOption} onPress={() => setEditedSchedule(option.value)}>
+                    <View style={styles.scheduleOptionTextContainer}>
+                      <Text style={[styles.scheduleOptionText, editedSchedule === option.value && styles.scheduleOptionTextSelected]}>{option.label}</Text>
+                      {option.details && (<Text style={[styles.scheduleOptionDetailText, editedSchedule === option.value && styles.scheduleOptionDetailTextSelected]}>{option.details}</Text>)}
+                    </View>
+                    {editedSchedule === option.value && (<Ionicons name="checkmark" size={22} color={themeStyles.colors.accent} style={styles.scheduleSelectedIcon} />)}
+                  </TouchableOpacity>
+                ))}
               </View>
             </View>
 
-            <Animated.View style={[animatedDayPickerStyleLocal]} pointerEvents="auto">
-              <View> 
-                <Text style={styles.label}>Select Days</Text>
-                <View style={styles.customDayPickerContainer}>
-                  {DAYS_FULL.map((day, index) => (
-                    <AnimatedDayButton
-                      key={day}
-                      themeStyles={themeStyles}
-                      typography={typography}
-                      dayCharacter={DAYS_DISPLAY[index]}
-                      fullDayName={day}
-                      isSelected={customDays.includes(day)}
-                      onPress={toggleCustomDayModified}
-                    />
-                  ))}
+            <Animated.View style={[animatedDayPickerStyleLocal]}>
+              <View 
+                style={{
+                  position: dayPickerHeight === 0 ? 'absolute' : 'relative', 
+                  opacity: dayPickerHeight === 0 ? 0 : 1,
+                }}
+                onLayout={onDayPickerLayoutLocal} 
+              >
+                <View style={[{ marginTop: themeStyles.spacing.sm, marginBottom: themeStyles.spacing.md }]}>
+                  <Text style={styles.label}>Select Days</Text>
+                  <View style={[styles.customDayPickerContainer]}>
+                    {DAYS_FULL.map((day, index) => (
+                      <AnimatedDayButton
+                        key={day}
+                        dayCharacter={DAYS_DISPLAY[index]}
+                        fullDayName={day}
+                        isSelected={customDays.includes(day)}
+                        onPress={toggleCustomDayModified}
+                        themeStyles={themeStyles}
+                        typography={typography}
+                      />
+                    ))}
+                  </View>
                 </View>
               </View>
             </Animated.View>
-
-            <View style={styles.sectionContainer}>
-              <Text style={styles.label}>Frequency</Text>
-              <Text style={styles.frequencyText}>{getFrequencyLabel(loop.frequency)}</Text>
-            </View>
           </ModalScrollView> 
         </View>
-      )}
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
 
+// Define a more specific type for typography if possible, or use `any` as a fallback
+// For now, let's assume typography has fontSize and fontWeight, which are objects
+interface TypographyStyles {
+  fontSize: { [key: string]: number };
+  fontWeight: { [key: string]: string };
+  // Add other typography properties if used by createStyles
+}
+
 const createStyles = (theme: ThemeStyles, typography: AppTheme['typography']) => {
   const { colors, spacing, borderRadius } = theme;
   return StyleSheet.create({
-    modalStyle: {
-      justifyContent: 'flex-end',
-      margin: 0,
+    modalOverlay: {
+      flex: 1,
+      justifyContent: 'flex-end', // Aligns menu to bottom
+      backgroundColor: 'rgba(0,0,0,0.4)', // Semi-transparent background
     },
-    shadowGradientOverlay: {
+    overlayTouchable: {
       position: 'absolute',
+      top: 0,
       left: 0,
       right: 0,
-      top: 0,
       bottom: 0,
     },
-    contentView: {
+    menuContainer: {
       backgroundColor: colors.card,
       borderTopLeftRadius: borderRadius.lg,
       borderTopRightRadius: borderRadius.lg,
       paddingHorizontal: spacing.lg,
-      paddingTop: spacing.md,
-      width: '100%',
-      maxHeight: '90%',
+      paddingTop: spacing.md, // Space for header buttons
+      paddingBottom: Platform.OS === 'ios' ? spacing.xl + spacing.sm : spacing.lg, // Extra padding for home indicator on iOS
+      maxHeight: '80%', // Limit height
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: -8 },
-      shadowOpacity: 0.25,
-      shadowRadius: 20,
-      elevation: 15,
-    },
-    grabber: {
-      width: 48,
-      height: 5,
-      borderRadius: 2.5,
-      backgroundColor: colors.border,
-      alignSelf: 'center',
-      marginBottom: spacing.md,
+      shadowOffset: { width: 0, height: -2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 5,
     },
     headerContainer: {
       flexDirection: 'row',
-      justifyContent: 'center',
+      justifyContent: 'space-between',
       alignItems: 'center',
       paddingBottom: spacing.md,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.border,
-      marginBottom: spacing.sm,
+    },
+    headerButton: {
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.xs, // Small horizontal padding for balance
+    },
+    headerButtonText: {
+      fontSize: typography.fontSize.subtitle,
+      color: colors.accent,
+      fontWeight: typography.fontWeight.medium,
+    },
+    doneButtonText: {
+      // No specific color override needed if accent is desired for Done
     },
     menuTitle: {
       fontSize: typography.fontSize.subtitle,
       fontWeight: typography.fontWeight.bold,
       color: colors.text,
     },
-    scrollViewStyle: {
-    },
-    scrollViewContentContainer: {
-      paddingBottom: spacing.lg,
-    },
     sectionContainer: {
-      marginTop: spacing.sm,
+      marginTop: spacing.md,
       marginBottom: spacing.md,
     },
     label: {
       fontSize: typography.fontSize.caption,
-      color: colors.text + 'A0',
+      color: colors.text + 'A0', // Slightly less prominent
       marginBottom: spacing.sm,
       textTransform: 'uppercase',
       fontWeight: typography.fontWeight.medium,
     },
     input: {
-      backgroundColor: colors.background,
+      backgroundColor: colors.background, // Or a slightly different input background from theme
       color: colors.text,
       paddingHorizontal: spacing.md,
       paddingVertical: Platform.OS === 'ios' ? spacing.sm + spacing.xs : spacing.sm,
@@ -500,44 +355,81 @@ const createStyles = (theme: ThemeStyles, typography: AppTheme['typography']) =>
     },
     colorSwatchesContainer: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'space-between',
+      flexWrap: 'wrap', // Allow swatches to wrap
+      justifyContent: 'space-between', // Distribute space
       marginTop: spacing.xs,
     },
     colorSwatch: {
-      width: 36, height: 36, borderRadius: 18, margin: spacing.xs,
-      justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: 'transparent',
+      width: 36, // Size of the color swatch
+      height: 36,
+      borderRadius: 18, // Make it circular
+      margin: spacing.xs, // Spacing around swatches
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: 'transparent', // Default no border
     },
-    scheduleOptionsContainer: {},
+    scheduleOptionsContainer: {
+      // Container for all schedule options - can be empty if items have their own margin
+    },
     scheduleOption: {
-      flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-      paddingVertical: spacing.md, paddingHorizontal: spacing.sm,
-      borderRadius: borderRadius.sm, marginBottom: spacing.xs,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: spacing.md, // Increased padding for more spacious feel
+      paddingHorizontal: spacing.sm, 
+      // REMOVED backgroundColor, borderWidth, borderColor from here
+      borderRadius: borderRadius.sm, // Keep for touch feedback if any
+      marginBottom: spacing.xs, 
     },
-    scheduleOptionTextContainer: { flex: 1, marginRight: spacing.sm },
-    scheduleOptionText: { fontSize: typography.fontSize.body, color: colors.text },
-    scheduleOptionDetailText: { fontSize: typography.fontSize.caption, color: colors.text + '99' },
-    scheduleOptionTextSelected: { color: colors.accent, fontWeight: typography.fontWeight.medium },
-    scheduleOptionDetailTextSelected: { color: colors.accent },
-    scheduleSelectedIcon: {},
-    customDayPickerContainer: {
-      flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center',
-      paddingVertical: spacing.sm, 
-      paddingHorizontal: spacing.xs, 
-      marginTop: spacing.xs,
+    scheduleOptionTextContainer: { // NEW: To group label and details
+        flex: 1, // Allow text to take available space before the checkmark
+        marginRight: spacing.sm, // Space before checkmark
     },
-    dayButton: {
-      width: 32, height: 32, borderRadius: 16,
-      justifyContent: 'center', alignItems: 'center',
-      marginHorizontal: Platform.OS === 'ios' ? spacing.xs : spacing.xs / 2,
-    },
-    dayButtonText: {
-      fontSize: typography.fontSize.body, fontWeight: typography.fontWeight.medium,
-    },
-    frequencyText: {
+    scheduleOptionText: {
       fontSize: typography.fontSize.body,
       color: colors.text,
-      opacity: 0.7,
+      // flexShrink: 1, // Not needed if textContainer has flex:1
+    },
+    scheduleOptionDetailText: {
+      fontSize: typography.fontSize.caption,
+      color: colors.text + '99',
+      // marginLeft: spacing.sm, // Not needed if grouped in a column
+    },
+    scheduleOptionTextSelected: { // This style will apply to both label and details when selected
+      color: colors.accent,
+      fontWeight: typography.fontWeight.medium, // Keep or make bolder
+    },
+    scheduleOptionDetailTextSelected: { // Specific for details if different styling needed when selected
+        color: colors.accent, // Match accent color
+    },
+    scheduleSelectedIcon: {
+      // marginLeft: spacing.sm, // Let justifycontent handle positioning
+    },
+    // --- NEW Styles for Custom Day Picker ---
+    customDayPickerContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-around', // Distribute days evenly
+      alignItems: 'center',
+      backgroundColor: colors.background, // Match schedule option background
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.xs,
+      borderRadius: borderRadius.sm,
+      borderWidth: 1,
+      borderColor: colors.border,
+      marginTop: spacing.xs, // Space below main schedule options
+    },
+    dayButton: { // Base style for Animated.View wrapper of the button
+      width: 32, 
+      height: 32,
+      borderRadius: 16,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginHorizontal: Platform.OS === 'ios' ? spacing.xs : spacing.xs / 2, // Adjust spacing for 7 days
+    },
+    dayButtonText: { // Base style for Animated.Text
+      fontSize: typography.fontSize.body, 
+      fontWeight: typography.fontWeight.medium,
     },
   });
 };

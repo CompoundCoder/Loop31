@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useThemeStyles } from '../../hooks/useThemeStyles';
 import * as Haptics from 'expo-haptics';
+import { appIcons } from '@/presets/icons';
 
 // Props for the modal content component
 interface LoopActionsModalContentProps {
@@ -79,23 +80,23 @@ export const LoopActionsModalContent: React.FC<LoopActionsModalContentProps> = (
 
       {/* Pin/Unpin Action */} 
       {isPinned ? (
-        <ActionButton icon="pin-off-outline" label="Unpin Loop" onPress={handleUnpinPress} />
+        <ActionButton icon={appIcons.actions.unpin.name as any} label="Unpin Loop" onPress={handleUnpinPress} />
       ) : (
-        <ActionButton icon="pin-outline" label="Pin Loop" onPress={handlePinPress} />
+        <ActionButton icon={appIcons.actions.pin.name as any} label="Pin Loop" onPress={handlePinPress} />
       )}
 
       {/* Edit Action */} 
-      <ActionButton icon="pencil-outline" label="Edit Loop" onPress={handleEditPress} />
+      <ActionButton icon={appIcons.actions.edit.name as any} label="Edit Loop" onPress={handleEditPress} />
 
       {/* Duplicate Action */} 
-      <ActionButton icon="content-copy" label="Duplicate Loop" onPress={handleDuplicatePress} />
+      <ActionButton icon={appIcons.actions.duplicate.name as any} label="Duplicate Loop" onPress={handleDuplicatePress} />
 
       {/* --- Separator --- */} 
       <Separator />
 
       {/* Delete Action */} 
       <ActionButton
-        icon="trash-can-outline"
+        icon={appIcons.actions.delete.name as any}
         label="Delete Loop"
         onPress={handleDeletePress}
         isDestructive={true}

@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { MenuHeaderProps } from './types';
 import { useThemeStyles, type ThemeStyles } from '../../hooks/useThemeStyles';
+import { appIcons } from '@/presets/icons';
 
 const MenuHeader: React.FC<MenuHeaderProps> = ({ title, onClose, onSave, showSaveButton }) => {
   const theme = useThemeStyles() as ThemeStyles;
@@ -53,7 +54,7 @@ const MenuHeader: React.FC<MenuHeaderProps> = ({ title, onClose, onSave, showSav
   return (
     <View style={styles.headerContainer}>
       <TouchableOpacity onPress={onClose} style={styles.button} accessibilityLabel="Close menu" accessibilityRole="button">
-        <Ionicons name="close" size={26} color={theme.colors.text} style={styles.closeButtonIcon} />
+        <Ionicons name={appIcons.navigation.close.name as any} size={26} color={theme.colors.text} style={styles.closeButtonIcon} />
       </TouchableOpacity>
       <Text style={styles.titleText} numberOfLines={1} ellipsizeMode="tail">{title}</Text>
       {showSaveButton && typeof onSave === 'function' ? (

@@ -13,6 +13,7 @@ export interface Loop {
   status?: 'active' | 'paused' | 'draft' | 'error';
   previewImageUrl?: string; // Optional preview image URL
   frequency?: string;
+  schedule?: string; // e.g., "mon,wed,fri" for custom schedules
   randomize?: boolean;
   linkedAccounts?: string[];
 }

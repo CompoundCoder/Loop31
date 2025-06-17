@@ -1,6 +1,8 @@
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import { StyleSheet, View, Text, Pressable, StyleProp, ViewStyle, Switch, Image, Platform } from 'react-native';
 import { useThemeStyles, type ThemeStyles } from '@/hooks/useThemeStyles';
+import { appIcons } from '@/presets/icons';
+import * as typography from '@/presets/typography';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@react-navigation/native';
@@ -50,10 +52,10 @@ export const LoopCard = forwardRef<SwipeableRowRef, LoopCardProps>((
 
   switch (loop.status) {
     case 'paused':
-      statusIcon = 'pause-circle-outline';
+      statusIcon = appIcons.status.paused.name as any;
       break;
     case 'error':
-      statusIcon = 'alert-circle-outline';
+      statusIcon = appIcons.status.error.name as any;
       statusColor = colors.notification;
       break;
   }
@@ -64,14 +66,14 @@ export const LoopCard = forwardRef<SwipeableRowRef, LoopCardProps>((
     const actionConfig = isPinned ? 
       {
         handler: onSwipeUnpin ? () => onSwipeUnpin(loop.id) : undefined,
-        icon: "pin-off" as keyof typeof MaterialCommunityIcons.glyphMap,
+        icon: appIcons.actions.unpin.name as any,
         text: "Unpin",
         bgColor: colors.border,
         textColor: colors.text,
       } : 
       {
         handler: onSwipePin ? () => onSwipePin(loop.id) : undefined,
-        icon: "pin" as keyof typeof MaterialCommunityIcons.glyphMap,
+        icon: appIcons.actions.pin.name as any,
         text: "Pin",
         bgColor: colors.accent,
         textColor: colors.background,
@@ -127,7 +129,7 @@ export const LoopCard = forwardRef<SwipeableRowRef, LoopCardProps>((
         {isPinned && (
           <View style={styles.pinIconContainer}>
             <MaterialCommunityIcons 
-              name="pin" 
+              name={appIcons.actions.pin.name as any} 
               size={16} 
               color={colors.text + '99'}
             />
@@ -178,10 +180,10 @@ export const LoopCard = forwardRef<SwipeableRowRef, LoopCardProps>((
             </View>
             
             <View style={styles.statsRow}>
-              <MaterialCommunityIcons name="file-multiple-outline" size={14} color={colors.text + '99'} />
-              <Text style={[styles.statsText, { marginLeft: 4 }]}>{postCount} posts</Text>
+              <MaterialCommunityIcons name={appIcons.content.post.name as any} size={14} color={colors.text + '99'} />
+              <Text style={[typography.metadataTextSmall, { marginLeft: 4, color: colors.text + '99' }]}>{postCount} posts</Text>
               <Text style={styles.statsSeparator}>•</Text>
-              <Text style={styles.statsText}>{getFrequencyLabel(loop.frequency)}</Text>
+              <Text style={[typography.metadataTextSmall, { color: colors.text + '99' }]}>{getFrequencyLabel(loop.frequency)}</Text>
               {statusIcon && (
                 <>
                   <Text style={styles.statsSeparator}>•</Text>
@@ -284,10 +286,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 2, 
-  },
-  statsText: {
-    fontSize: 13, 
-    fontWeight: '400',
   },
   statsSeparator: {
     fontSize: 13,

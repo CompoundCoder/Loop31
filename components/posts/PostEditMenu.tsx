@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import useUndo from 'use-undo';
 import debounce from 'lodash.debounce'; // Import debounce
 import { LinearGradient } from 'expo-linear-gradient'; // Added import
+import * as typography from '@/presets/typography';
 
 // Basic Post type, assuming it would be shared or imported from a common types file
 interface Post {

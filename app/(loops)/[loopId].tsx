@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { View, TouchableOpacity, Switch, StyleSheet, Text, ScrollView, Platform, Animated as RNAnimated, Alert, Pressable } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import TestPostCardMini from '../../components/test-PostCardMini';
 import { spacing } from '../../theme/theme';
@@ -21,6 +21,11 @@ import { Modalize } from 'react-native-modalize';
 import { MOCK_POSTS, type Post } from '@/data/mockPosts';
 import { getLoopPostCount } from '@/utils/loopHelpers';
 import { getFrequencyLabel } from '@/constants/loopFrequencies';
+import * as Haptics from 'expo-haptics';
+import { appIcons } from '@/presets/icons';
+import * as typographyPresets from '@/presets/typography';
+import { CircleButton } from '@/components/common/CircleButton';
+import { getButtonPresets } from '@/presets/buttons';
 
 const touchableMinHeight = 44;
 
@@ -31,6 +36,8 @@ export const options = {
 
 export default function LoopDetailsScreen() {
   const { colors, typography, spacing: themeSpacing } = useThemeStyles();
+  const theme = useThemeStyles();
+  const buttonPresets = getButtonPresets(theme);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const router = useRouter();
@@ -47,7 +54,7 @@ export default function LoopDetailsScreen() {
   const loopActionsModalRef = useRef<Modalize>(null);
 
   // Get posts for this specific loop and transform them to the expected format
-  const posts: PostDisplayData[] = useMemo(() => {
+  const initialPosts: PostDisplayData[] = useMemo(() => {
     if (!loopId) return [];
     const filteredPosts = MOCK_POSTS.filter(p => p.loopFolders?.includes(loopId));
     return filteredPosts.map(p => ({
@@ -56,6 +63,12 @@ export default function LoopDetailsScreen() {
       imageSource: { uri: p.imageUrl }, // Transform imageUrl to imageSource
     }));
   }, [loopId]);
+
+  const [posts, setPosts] = useState(initialPosts);
+  
+  useEffect(() => {
+    setPosts(initialPosts);
+  }, [initialPosts]);
 
   const [isActive, setIsActive] = useState(loop?.isActive ?? false);
   const { isEditPopupVisible, loopToEdit, openEditPopup, closeEditPopup } = useEditLoopPopup();
@@ -79,7 +92,7 @@ export default function LoopDetailsScreen() {
     },
     fixedHeaderContainer: { 
       backgroundColor: colors.card, 
-      paddingLeft: spacing.sm,
+      paddingLeft: SCREEN_LAYOUT.content.horizontalPadding,
       paddingRight: SCREEN_LAYOUT.content.horizontalPadding,
       height: 50, 
       flexDirection: 'row',
@@ -124,7 +137,10 @@ export default function LoopDetailsScreen() {
     backButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: 8, 
+      justifyContent: 'center',
+      width: 36,
+      height: 36,
+      borderRadius: 18,
     },
     backButtonIconIos: {
       marginRight: Platform.OS === 'ios' ? 4 : 0, 
@@ -146,20 +162,11 @@ export default function LoopDetailsScreen() {
       flexShrink: 1, 
       marginRight: 16, 
     },
-    titleText: {
-      fontSize: 28,
-      fontWeight: 'bold',
-      color: colors.text,
-    },
     subtitleContainer: {
       flexDirection: 'row',
       alignItems: 'center',
       marginTop: 8,
       opacity: 0.7,
-    },
-    subtitleText: {
-      fontSize: 15,
-      color: colors.text,
     },
     subtitleIcon: {
       marginRight: 6,
@@ -221,6 +228,7 @@ export default function LoopDetailsScreen() {
     if (loop?.id) {
       dispatch({ type: 'TOGGLE_ACTIVE', payload: { loopId: loop.id, isActive: newIsActiveValue } });
     }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
 
   const renderUpNext = () => {
@@ -228,7 +236,7 @@ export default function LoopDetailsScreen() {
 
     return (
       <View style={{ marginBottom: themeSpacing.sm }}>
-        <Text style={styles.sectionTitle}>Up Next</Text>
+        <Text style={typographyPresets.sectionTitle}>Up Next</Text>
         <RNAnimated.View style={[{ paddingVertical: themeSpacing.sm }, upNextOpacityStyle]}>
           <PostCardS 
             post={posts[0]} 
@@ -251,6 +259,13 @@ export default function LoopDetailsScreen() {
     setSelectedPostToEdit(null);
   };
 
+  const handleSavePost = (updatedPost: PostDisplayData) => {
+    setPosts(currentPosts => 
+      currentPosts.map(p => p.id === updatedPost.id ? updatedPost : p)
+    );
+    handleCloseEditPost();
+  };
+
   const handlePostOptions = (post: PostDisplayData) => {
     setSelectedPostToEdit(post);
     postOptionsModalRef.current?.open();
@@ -262,13 +277,13 @@ export default function LoopDetailsScreen() {
 
     return (
       <View>
-        <Text style={styles.sectionTitle}>Queue</Text>
+        <Text style={typographyPresets.sectionTitle}>Queue</Text>
         {queuedPosts.map(post => (
           <TestPostCardMini
             key={post.id}
             image={post.imageSource}
             caption={post.caption}
-            onPress={() => { /* ... */ }}
+            onLongPress={() => handlePostOptions(post)}
           />
         ))}
       </View>
@@ -315,17 +330,18 @@ export default function LoopDetailsScreen() {
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <View style={styles.fixedHeaderContainer}>
           <View style={styles.backButtonContainer}> 
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-              <Ionicons name="chevron-back" size={28} color={colors.accent} style={styles.backButtonIconIos} />
-              <Text style={styles.backButtonText}>Back</Text>
-            </TouchableOpacity>
+            <CircleButton 
+              preset={buttonPresets.back}
+              onPress={() => navigation.goBack()}
+              accessibilityLabel="Go back"
+            />
           </View>
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitleText}>Loop Details</Text>
+            <Text style={typographyPresets.pageHeaderTitle}>Loop Details</Text>
           </View>
           <View style={styles.headerRightContainer}>
-            <HeaderActionButton 
-              iconName="add"
+            <CircleButton
+              preset={buttonPresets.add}
               onPress={() => setIsPostPopupVisible(true)}
               accessibilityLabel="Create Post"
             />
@@ -342,19 +358,14 @@ export default function LoopDetailsScreen() {
             <View style={styles.listHeaderContentContainer}> 
               <View style={styles.titleOptionsRow}>
                 <View style={styles.titleSubtitleContainer}>
-                  <Text 
-                    style={styles.titleText}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {loop.title}
-                  </Text>
+                  <Text style={typographyPresets.screenTitle} numberOfLines={1}>{loop?.title ?? 'Loop'}</Text>
                   
                   <View style={styles.subtitleContainer}>
-                    <Ionicons name="copy-outline" size={14} color={colors.text} style={styles.subtitleIcon} />
-                    <Text style={styles.subtitleText}>{postCount} {postCount === 1 ? 'post' : 'posts'}</Text>
-                    <Text style={styles.subtitleSeparator}>•</Text>
-                    <Text style={styles.subtitleText}>{getFrequencyLabel(loop.frequency)}</Text>
+                    <MaterialCommunityIcons name={appIcons.content.post.name as any} size={14} color={colors.text} style={styles.subtitleIcon} />
+                    <Text style={typographyPresets.metadataText}>{postCount} Posts</Text>
+                    <Text style={typographyPresets.metadataText}>•</Text>
+                    <Ionicons name={appIcons.status.schedule.name as any} size={14} color={colors.text} style={styles.subtitleIcon} />
+                    <Text style={typographyPresets.metadataText}>{getFrequencyLabel(loop?.frequency)}</Text>
                   </View>
                 </View>
                 <View style={styles.actionsContainer}>
@@ -397,6 +408,7 @@ export default function LoopDetailsScreen() {
           post={selectedPostToEdit}
           loopId={loop.id}
           onClose={handleCloseEditPost}
+          onSaveSuccess={handleSavePost}
         />
       )}
       <Modalize
@@ -428,7 +440,7 @@ export default function LoopDetailsScreen() {
                   const [moved] = updatedPosts.splice(idx, 1);
                   // Insert at index 0 to make it the Up Next post
                   updatedPosts.unshift(moved);
-                  dispatch({ type: 'UPDATE_LOOP_POSTS', payload: { loopId: loop.id, newPosts: updatedPosts } });
+                  setPosts(updatedPosts); // Use local state update
                 }
                 setSelectedPostToEdit(null);
                 postOptionsModalRef.current?.close();
@@ -436,7 +448,7 @@ export default function LoopDetailsScreen() {
               disabled={posts.findIndex(p => p.id === selectedPostToEdit.id) === 0}
             >
               <Ionicons 
-                name="arrow-up-circle-outline" 
+                name={appIcons.actions.moveToUpNext.name as any} 
                 size={24} 
                 color={posts.findIndex(p => p.id === selectedPostToEdit.id) === 0 ? colors.tabInactive : colors.text} 
                 style={{ marginRight: spacing.lg }} 
@@ -458,7 +470,7 @@ export default function LoopDetailsScreen() {
               ]}
               onPress={() => handleEditPost(selectedPostToEdit)}
             >
-              <Ionicons name="create-outline" size={24} color={colors.text} style={{ marginRight: spacing.lg }} />
+              <MaterialCommunityIcons name={appIcons.actions.edit.name as any} size={24} color={colors.text} style={{ marginRight: spacing.lg }} />
               <Text style={{ color: colors.text, fontSize: 16, fontWeight: '500' }}>Edit Post</Text>
             </Pressable>
             <View style={[styles.separator, { backgroundColor: colors.border, marginVertical: 8 }]} />
@@ -477,7 +489,7 @@ export default function LoopDetailsScreen() {
                     { text: 'Delete', style: 'destructive', onPress: () => {
                       // Remove post from queue
                       const updatedPosts = posts.filter(p => p.id !== selectedPostToEdit.id);
-                      dispatch({ type: 'UPDATE_LOOP_POSTS', payload: { loopId: loop.id, newPosts: updatedPosts } });
+                      setPosts(updatedPosts); // Use local state update
                       setSelectedPostToEdit(null);
                       postOptionsModalRef.current?.close();
                     }}
@@ -485,7 +497,12 @@ export default function LoopDetailsScreen() {
                 );
               }}
             >
-              <Ionicons name="trash-outline" size={24} color="#FF3B30" style={{ marginRight: spacing.lg }} />
+              <MaterialCommunityIcons
+                name={appIcons.actions.delete.name as any}
+                size={24}
+                color="#FF3B30"
+                style={{ marginRight: spacing.lg }}
+              />
               <Text style={{ color: '#FF3B30', fontSize: 16, fontWeight: '500' }}>Delete</Text>
             </Pressable>
           </View>
@@ -510,7 +527,7 @@ export default function LoopDetailsScreen() {
               openEditPopup(loop);
             }}
           >
-            <Ionicons name="create-outline" size={24} color={colors.text} style={{ marginRight: spacing.lg }} />
+            <MaterialCommunityIcons name={appIcons.actions.edit.name as any} size={24} color={colors.text} style={{ marginRight: spacing.lg }} />
             <Text style={{ color: colors.text, fontSize: 16, fontWeight: '500' }}>Edit Loop</Text>
           </Pressable>
           <View style={[styles.separator, { backgroundColor: colors.border, marginVertical: 8 }]} />
@@ -518,7 +535,12 @@ export default function LoopDetailsScreen() {
             style={({ pressed }) => [styles.modalOption, { backgroundColor: pressed ? colors.border + '33' : 'transparent' }]}
             onPress={handleDeleteLoop}
           >
-            <Ionicons name="trash-outline" size={24} color="#FF3B30" style={{ marginRight: spacing.lg }} />
+            <MaterialCommunityIcons
+              name={appIcons.actions.delete.name as any}
+              size={24}
+              color="#FF3B30"
+              style={{ marginRight: spacing.lg }}
+            />
             <Text style={{ color: '#FF3B30', fontSize: 16, fontWeight: '500' }}>Delete Loop</Text>
           </Pressable>
         </View>
