@@ -5,248 +5,190 @@ import {
   Text,
   Alert,
   TouchableOpacity,
-  RefreshControl,
+  SectionList,
 } from 'react-native';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { useRouter, useNavigation } from 'expo-router';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import Animated from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 
 import AnimatedHeader from '@/components/AnimatedHeader';
-import EmptyState from '@/components/EmptyState';
 import ScreenContainer from '@/components/ScreenContainer';
-import HeaderActionButton from '@/components/HeaderActionButton';
+import { LoopCard } from '@/components/loops/LoopCard';
+import LoopListSectionHeader from '@/components/loops/LoopListSectionHeader';
 import CreateLoopPopup from '@/components/loops/CreateLoopPopup';
 import EditLoopPopup from '@/components/loops/EditLoopPopup';
+import { CircleButton } from '@/components/common/CircleButton';
+import { getButtonPresets } from '@/presets/buttons';
 
 import { Modalize } from 'react-native-modalize';
 import { LoopActionsModalContent } from '@/components/modals/LoopActionsModalContent';
 import { LoopsEmptyState } from '@/components/loops/LoopsEmptyState';
-import { useNotifications } from '@/modules/notifications';
-import { SwipeableRowRef } from '@/components/common/SwipeableRow';
-import Popover from 'react-native-popover-view';
 import { useLoops, type Loop } from '@/context/LoopsContext';
-import { useLoopSearch } from '@/hooks/useLoopSearch';
-import { useLoopActionModal } from '@/hooks/useLoopActionModal';
-import { useLoopManager } from '@/hooks/useLoopManager';
-import { useLoopsHeader } from '@/hooks/useLoopsHeader';
-import { useLoopHeader } from '@/hooks/useLoopHeader';
-import LoopListSection from '@/components/loops/LoopListSection';
-
-import { useLoopListRenderers, type HookThemeStyles } from '@/hooks/useLoopListRenderers';
-import { useLoopActions } from '@/hooks/useLoopActions';
-import { useLoopLayout } from '@/hooks/useLoopLayout';
 import { useEditLoopPopup } from '@/hooks/useEditLoopPopup';
-import * as typography from '@/presets/typography';
-import { appIcons } from '@/presets/icons';
-import { CircleButton } from '@/components/common/CircleButton';
-import { getButtonPresets } from '@/presets/buttons';
 import { getLoopPostCount } from '@/utils/loopHelpers';
 import { MOCK_POSTS } from '@/data/mockPosts';
+import { duplicateLoop as duplicateLoopUtil } from '@/logic/loopManager';
+import { addLoopToRecentlyDeleted } from '@/data/recentlyDeleted';
+
+const AnimatedSectionList = Animated.createAnimatedComponent(SectionList) as any;
 
 export type LoopsStackParamList = {
-  index: undefined;
   '[loopId]': { loopId: string };
-  create: undefined;
 };
 
-interface LoopsScreenProps {
-  isLoading?: boolean;
-}
+type LoopSection = {
+  title: string;
+  data: (Loop & { postCount: number })[];
+};
 
-export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
-  const { colors, spacing, borderRadius } = useThemeStyles();
+export default function LoopsScreen() {
   const theme = useThemeStyles();
+  const { colors, spacing } = theme;
   const buttonPresets = getButtonPresets(theme);
-  const [refreshing, setRefreshing] = useState(false);
-  const [isCreateLoopVisible, setCreateLoopVisible] = useState(false);
-
-  const {
-    scrollY,
-    handleScroll,
-  } = useLoopHeader();
-
   const { state, dispatch } = useLoops();
-  const { addNotification } = useNotifications();
-
-  const { deleteLoop, duplicateLoop } = useLoopManager({
-    addNotification,
-    themeColors: { accent: colors.accent, border: colors.border, warning: colors.warning },
-  });
-
+  const { loops } = state;
+  
+  const [isCreateLoopVisible, setCreateLoopVisible] = useState(false);
   const { loopToEdit, isEditPopupVisible, openEditPopup, closeEditPopup } = useEditLoopPopup();
   
-  const loopsWithPostCounts = useMemo(() => {
-    return state.loops.map(loop => ({
+  const scrollY = useSharedValue(0);
+  const modalRef = useRef<Modalize>(null);
+  const [selectedLoop, setSelectedLoop] = useState<Loop | null>(null);
+
+  const navigation = useNavigation<NativeStackNavigationProp<LoopsStackParamList>>();
+  
+  const handleScroll = useAnimatedScrollHandler(event => {
+    scrollY.value = event.contentOffset.y;
+  });
+
+  const showCreateLoopForm = useCallback(() => setCreateLoopVisible(true), []);
+
+  const handleLongPress = (loop: Loop) => {
+    setSelectedLoop(loop);
+    modalRef.current?.open();
+  };
+  
+  const handleCloseMenu = () => {
+    modalRef.current?.close();
+  };
+
+  const handlePin = (loopId: string) => dispatch({ type: 'PIN', payload: loopId });
+  const handleUnpin = (loopId: string) => dispatch({ type: 'UNPIN', payload: loopId });
+  const handleDelete = (loop: Loop) => {
+    Alert.alert(
+      'Delete Loop',
+      'Are you sure you want to delete this loop?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive', 
+          onPress: async () => {
+            await addLoopToRecentlyDeleted(loop);
+            dispatch({ type: 'DELETE', payload: loop.id });
+            handleCloseMenu();
+          } 
+        },
+      ]
+    );
+  };
+  
+  const handleEdit = (loop: Loop) => {
+    openEditPopup(loop);
+    modalRef.current?.close();
+  };
+
+  const handleDuplicate = (loop: Loop) => {
+    const newLoop = duplicateLoopUtil(loop);
+    dispatch({ type: 'ADD_LOOP', payload: newLoop });
+    modalRef.current?.close();
+  };
+
+  const sections = useMemo(() => {
+    const loopsWithPostCounts = loops.map(loop => ({
       ...loop,
       postCount: getLoopPostCount(loop.id, MOCK_POSTS),
     }));
-  }, [state.loops]);
 
-  const { searchQuery, setSearchQuery, filteredLoops, hasMatches } = useLoopSearch({ initialLoops: loopsWithPostCounts });
+    const pinnedLoops = loopsWithPostCounts.filter(loop => loop.isPinned);
+    const otherLoops = loopsWithPostCounts.filter(loop => !loop.isPinned);
 
-  const router = useRouter();
-  const navigation = useNavigation<NativeStackNavigationProp<LoopsStackParamList>>();
-  const swipeableRowRefs = useRef<Map<string, SwipeableRowRef | null>>(new Map());
-
-  const showCreateLoopForm = useCallback(() => {
-    setCreateLoopVisible(true);
-  }, []);
-
-  const { addButtonRef, isPopoverVisible, openCreatePopover, closeCreatePopover, handlePopoverAction } = useLoopsHeader({ router, onOpenNewLoopForm: showCreateLoopForm });
-
-  const handleEditRequest = (loopId: string) => {
-    const loop = state.loops.find(l => l.id === loopId);
-    if (loop) {
-      console.log('Attempting to open edit popup for loop:', JSON.stringify(loop, null, 2));
-      openEditPopup(loop);
-    } else {
-      console.log(`[EditLoop] Error: Could not find loop with ID ${loopId}`);
+    const sectionsData = [];
+    if (pinnedLoops.length > 0) {
+      sectionsData.push({ title: 'Pinned', data: pinnedLoops });
     }
-    modalRef.current?.close();
-  };
+    if (otherLoops.length > 0) {
+      sectionsData.push({ title: 'Loops', data: otherLoops });
+    }
+    return sectionsData;
+  }, [loops]);
   
-  const handleDuplicateLoopForModalInternal = useCallback((loopId: string) => { duplicateLoop(loopId); }, [duplicateLoop]);
-  const handleDeleteLoopInternal = useCallback((loopId: string) => { deleteLoop(loopId); }, [deleteLoop]);
+  const renderItem = ({ item }: { item: Loop & { postCount: number } }) => (
+    <View style={{ marginBottom: spacing.md }}>
+      <LoopCard
+        loop={item}
+        isPinned={item.isPinned}
+        onPress={() => navigation.navigate('[loopId]', { loopId: item.id })}
+        onLongPress={() => handleLongPress(item)}
+        onToggleActive={(loopId, isActive) => dispatch({ type: 'TOGGLE_ACTIVE', payload: { loopId, isActive } })}
+      />
+    </View>
+  );
 
-  const { modalRef, selectedLoopData: modalSelectedLoopData, handleLongPressLoop: openLoopActionModalForModalize, handleModalAction, handleModalCloseConfirmed } = useLoopActionModal({
-    onEdit: handleEditRequest,
-    onDuplicate: handleDuplicateLoopForModalInternal,
-    onDelete: handleDeleteLoopInternal,
-  });
-
-  const memoizedNavigate = useCallback((screen: string, params?: Record<string, any>) => {
-    if (screen === '[loopId]' && params?.loopId) {
-      navigation.navigate('[loopId]', { loopId: params.loopId as string });
-    } else {
-      console.warn(`Navigation to screen "${screen}" not fully handled by adapter.`);
-    }
-  }, [navigation]);
-
-  const {
-    handleLoopPress,
-    handleLongPressLoop,
-    handleToggleLoopActive,
-    handlePinLoop,
-    handleUnpinLoop
-  } = useLoopActions({
-    navigation: memoizedNavigate,
-    dispatch: dispatch,
-    setSelectedLoop: openLoopActionModalForModalize,
-  });
-
-  const handleRefresh = useCallback(() => { setRefreshing(true); setTimeout(() => setRefreshing(false), 1000); }, []);
-  const handlePackPress = useCallback((packId: string, isLocked: boolean) => {
-    if (isLocked) Alert.alert("Pack Locked", "This pack requires purchase or subscription.");
-    else router.push(`/shop/pack/${packId}`);
-  }, [router]);
-
-  const hookThemeStyles: HookThemeStyles = { colors, spacing, borderRadius };
-
-  const {
-    listData,
-    renderItem,
-    keyExtractor
-  } = useLoopListRenderers({
-    filteredLoops: filteredLoops,
-    pinnedIds: state.pinnedLoopIds,
-    swipeableRowRefs: swipeableRowRefs,
-    onLoopPress: handleLoopPress,
-    onLongPressLoop: handleLongPressLoop,
-    onToggleLoopActive: handleToggleLoopActive,
-    onPinLoop: handlePinLoop,
-    onUnpinLoop: handleUnpinLoop,
-    onPackPress: handlePackPress,
-    themeStyles: hookThemeStyles,
-    listItemStyle: styles.listItem,
-  });
-
-  const {
-    showOverallEmptyState,
-    noResultsAfterSearch,
-    initiallyHadLoops
-  } = useLoopLayout({
-    filteredLoops,
-    loopList: state.loops,
-    pinnedLoopIds: state.pinnedLoopIds,
-    searchQuery,
-    isLoading,
-    hasMatches,
-  });
-
-  if (isLoading && !searchQuery && state.loops.length === 0 && listData.length === 0) {
-    return (
-      <ScreenContainer>
-        <AnimatedHeader title="Loops" scrollY={scrollY} actionButton={<View ref={addButtonRef}><CircleButton preset={buttonPresets.add} onPress={showCreateLoopForm} accessibilityLabel="Create" /></View>} />
-        <EmptyState isLoading />
-      </ScreenContainer>
-    );
+  if (loops.length === 0) {
+    return <LoopsEmptyState onCreateLoop={showCreateLoopForm} />;
   }
+
+  const HEADER_HEIGHT = 100;
 
   return (
     <ScreenContainer>
-      <AnimatedHeader title="Loops" scrollY={scrollY} actionButton={<View ref={addButtonRef}><CircleButton preset={buttonPresets.add} onPress={showCreateLoopForm} accessibilityLabel="Create" /></View>} />
-      {showOverallEmptyState ? (
-        <LoopsEmptyState onCreateLoop={showCreateLoopForm} />
-      ) : noResultsAfterSearch ? (
-        // TODO: This icon might need to be standardized later
-        <EmptyState title="No Loops Found" message={`We couldn't find any loops matching "${searchQuery}". Try a different search?`} iconName="magnify-close" />
-      ) : (
-        <LoopListSection
-          isLoading={isLoading}
-          searchQuery={searchQuery}
-          hasMatches={hasMatches}
-          initiallyHadLoops={initiallyHadLoops}
-          refreshing={refreshing}
-          scrollY={scrollY}
-          onRefresh={handleRefresh}
-          onScroll={handleScroll}
-          onOpenCreateLoopForm={showCreateLoopForm}
-          listData={listData}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-        />
-      )}
-      <Modalize
-        ref={modalRef}
-        adjustToContentHeight
-        onClosed={handleModalCloseConfirmed}
-        modalStyle={{ backgroundColor: colors.card }}
-        handleStyle={{ backgroundColor: colors.border }}
-        handlePosition="inside"
-        HeaderComponent={ modalSelectedLoopData ? <View style={[styles.modalHeader, { backgroundColor: colors.card, borderBottomColor: colors.border }]}><Text style={[typography.sectionTitle, { color: colors.text }]}>{modalSelectedLoopData.title}</Text></View> : null }
-      >
-        {modalSelectedLoopData && (
+      <AnimatedHeader 
+        title="Loops" 
+        scrollY={scrollY} 
+        actionButton={
+          <CircleButton 
+            preset={buttonPresets.addDark} 
+            onPress={showCreateLoopForm} 
+            accessibilityLabel="Create new loop" 
+          />
+        }
+      />
+      
+      <AnimatedSectionList
+        sections={sections as LoopSection[]}
+        renderItem={renderItem}
+        keyExtractor={(item: Loop) => item.id}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        stickySectionHeadersEnabled={false}
+        renderSectionHeader={({ section: { title } }: { section: LoopSection }) => <LoopListSectionHeader title={title} />}
+        contentContainerStyle={{ paddingTop: HEADER_HEIGHT, paddingHorizontal: 24 }}
+      />
+
+      <Modalize ref={modalRef} adjustToContentHeight onClosed={() => setSelectedLoop(null)}>
+        {selectedLoop && (
           <LoopActionsModalContent
-            loopId={modalSelectedLoopData.id}
-            loopTitle={modalSelectedLoopData.title}
-            isPinned={modalSelectedLoopData.isPinned}
-            onEdit={() => {
-              if (modalSelectedLoopData?.id) {
-                handleEditRequest(modalSelectedLoopData.id);
-              }
-            }}
-            onDuplicate={() => handleModalAction('duplicate')}
-            onDelete={() => handleModalAction('delete')}
-            onPin={handlePinLoop}
-            onUnpin={handleUnpinLoop}
-            onClose={() => modalRef.current?.close()}
+            loopId={selectedLoop.id}
+            loopTitle={selectedLoop.title}
+            isPinned={selectedLoop.isPinned}
+            onPin={() => { handlePin(selectedLoop.id); handleCloseMenu(); }}
+            onUnpin={() => { handleUnpin(selectedLoop.id); handleCloseMenu(); }}
+            onEdit={() => handleEdit(selectedLoop)}
+            onDuplicate={() => handleDuplicate(selectedLoop)}
+            onDelete={() => handleDelete(selectedLoop)}
+            onClose={handleCloseMenu}
           />
         )}
       </Modalize>
-      <Popover from={addButtonRef} isVisible={isPopoverVisible} onRequestClose={closeCreatePopover} popoverStyle={{ borderRadius: borderRadius.md, backgroundColor: colors.card, paddingVertical: spacing.xs }} animationConfig={{ duration: 150 }} backgroundStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }} >
-        <View style={styles.popoverMenu}>
-          <TouchableOpacity style={styles.popoverOption} onPress={() => handlePopoverAction('loop')} accessibilityLabel="Create new loop"><Text style={[typography.metadataText, { color: colors.text }]}>New Loop</Text></TouchableOpacity>
-        </View>
-      </Popover>
       
       <CreateLoopPopup
         visible={isCreateLoopVisible}
         onClose={() => setCreateLoopVisible(false)}
-        onSaveSuccess={() => {
-          setCreateLoopVisible(false);
-        }}
+        onSaveSuccess={() => setCreateLoopVisible(false)}
       />
+      
       <EditLoopPopup
         visible={isEditPopupVisible}
         onClose={closeEditPopup}
@@ -256,15 +198,3 @@ export default function LoopsScreen({ isLoading = false }: LoopsScreenProps) {
     </ScreenContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  listItem: {
-    marginBottom: 16,
-  },
-  modalHeader: { padding: 16, borderBottomWidth: StyleSheet.hairlineWidth, alignItems: 'center' },
-  popoverMenu: {},
-  popoverOption: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-});

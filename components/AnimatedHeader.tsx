@@ -8,6 +8,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { useThemeStyles } from '../hooks/useThemeStyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useColorScheme } from 'react-native';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -34,6 +35,7 @@ export default function AnimatedHeader({
 }: AnimatedHeaderProps) {
   const { colors, spacing } = useThemeStyles();
   const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
 
   // Define header background color in one place
   const headerBackgroundColor = colors.background;
@@ -78,6 +80,13 @@ export default function AnimatedHeader({
       Extrapolation.CLAMP
     );
     return { opacity };
+  });
+
+  const animatedHeaderStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: scrollY.value }],
+      backgroundColor: colors.blurredHeaderBackground,
+    };
   });
 
   return (

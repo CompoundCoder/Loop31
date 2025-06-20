@@ -12,7 +12,10 @@ interface LoopListSectionHeaderProps {
 
 const LoopListSectionHeader: React.FC<LoopListSectionHeaderProps> = ({ title, style }) => {
   const { spacing } = useThemeStyles();
-  const defaultStyle = { marginBottom: spacing.sm }; // Default style from original renderItem
+  const defaultStyle = { 
+    marginBottom: spacing.sm,
+    paddingHorizontal: 24,
+  };
 
   return (
     <View style={[defaultStyle, style]}>

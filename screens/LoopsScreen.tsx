@@ -7,19 +7,24 @@ import { getLoopPostCount } from '@/utils/loopHelpers';
 import type { Loop } from '@/types/loop';
 import { Modalize } from 'react-native-modalize';
 import { LoopActionsModalContent } from '@/components/modals/LoopActionsModalContent';
+import { useLoops } from '@/context/LoopsContext';
+import { duplicateLoop } from '@/logic/loopManager';
+import { useNavigation } from 'expo-router';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-// Temporary mock data for loops, as it seems to be missing.
-const MOCK_LOOPS: Loop[] = [
-  { id: 'loop-1-tech', title: 'Tech Updates', color: '#4A90E2', postCount: 0, schedule: '', frequency: 'daily_3x', isActive: true },
-  { id: 'loop-2-science', title: 'Science Discoveries', color: '#50E3C2', postCount: 0, schedule: '', frequency: 'weekly_1x', isActive: true },
-  { id: 'loop-3-general', title: 'General Musings', color: '#B8E986', postCount: 0, schedule: '', frequency: 'weekly_5x', isActive: false },
-];
+type LoopsStackParamList = {
+  '(loops)/[loopId]': { loopId: string };
+};
+
+type LoopsNavigationProp = NativeStackNavigationProp<LoopsStackParamList>;
 
 export default function LoopsScreen() {
   const { colors } = useThemeStyles();
-  const [loops, setLoops] = useState<Loop[]>(MOCK_LOOPS);
+  const { state, dispatch } = useLoops();
+  const { loops } = state;
   const [selectedLoop, setSelectedLoop] = useState<Loop | null>(null);
   const modalizeRef = useRef<Modalize>(null);
+  const navigation = useNavigation<LoopsNavigationProp>();
 
   const handleLongPress = (loop: Loop) => {
     setSelectedLoop(loop);
@@ -28,30 +33,36 @@ export default function LoopsScreen() {
 
   const handleCloseMenu = () => {
     modalizeRef.current?.close();
+    setSelectedLoop(null);
   };
-  
-  // Mock pinned IDs for demonstration
-  const [pinnedLoopIds, setPinnedLoopIds] = useState(new Set(['loop-2-science']));
 
   const handlePin = (loopId: string) => {
-    console.log(`Pinning ${loopId}`);
-    setPinnedLoopIds(prev => new Set(prev).add(loopId));
+    dispatch({ type: 'PIN', payload: loopId });
+    handleCloseMenu();
   };
   
   const handleUnpin = (loopId: string) => {
-    console.log(`Unpinning ${loopId}`);
-    setPinnedLoopIds(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(loopId);
-      return newSet;
-    });
+    dispatch({ type: 'UNPIN', payload: loopId });
+    handleCloseMenu();
   };
 
-  const handleEdit = (loopId: string) => console.log(`Editing ${loopId}`);
-  const handleDuplicate = (loopId: string) => console.log(`Duplicating ${loopId}`);
+  const handleEdit = (loopId: string) => {
+    console.log(`Editing ${loopId}`);
+    handleCloseMenu();
+  }
+
+  const handleDuplicate = (loopId: string) => {
+    const loopToDuplicate = loops.find(l => l.id === loopId);
+    if (loopToDuplicate) {
+      const newLoop = duplicateLoop(loopToDuplicate);
+      dispatch({ type: 'ADD_LOOP', payload: newLoop });
+    }
+    handleCloseMenu();
+  };
+
   const handleDelete = (loopId: string) => {
-    console.log(`Deleting ${loopId}`);
-    setLoops(prev => prev.filter(l => l.id !== loopId));
+    dispatch({ type: 'DELETE', payload: loopId });
+    handleCloseMenu();
   };
 
   const loopsWithPostCounts = useMemo(() => {
@@ -64,8 +75,9 @@ export default function LoopsScreen() {
   const renderItem = ({ item }: { item: Loop }) => (
     <LoopCard 
       loop={item} 
-      onPress={() => console.log('Selected loop:', item.id)}
+      onPress={() => navigation.navigate('(loops)/[loopId]', { loopId: item.id })}
       onLongPress={() => handleLongPress(item)}
+      isPinned={item.isPinned}
     />
   );
 
@@ -79,17 +91,17 @@ export default function LoopsScreen() {
           contentContainerStyle={styles.listContent}
         />
       </View>
-      <Modalize ref={modalizeRef} adjustToContentHeight>
+      <Modalize ref={modalizeRef} adjustToContentHeight onClosed={() => setSelectedLoop(null)}>
         {selectedLoop && (
           <LoopActionsModalContent
             loopId={selectedLoop.id}
             loopTitle={selectedLoop.title}
-            isPinned={pinnedLoopIds.has(selectedLoop.id)}
-            onPin={handlePin}
-            onUnpin={handleUnpin}
-            onEdit={handleEdit}
-            onDuplicate={handleDuplicate}
-            onDelete={handleDelete}
+            isPinned={!!selectedLoop.isPinned}
+            onPin={() => handlePin(selectedLoop.id)}
+            onUnpin={() => handleUnpin(selectedLoop.id)}
+            onEdit={() => handleEdit(selectedLoop.id)}
+            onDuplicate={() => handleDuplicate(selectedLoop.id)}
+            onDelete={() => handleDelete(selectedLoop.id)}
             onClose={handleCloseMenu}
           />
         )}

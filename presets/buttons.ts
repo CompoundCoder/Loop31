@@ -37,5 +37,25 @@ export const getButtonPresets = (theme: Theme) => {
       iconSize: 24,
       iconColor: colors.text,
     } as ButtonPreset,
+    addWhite: {
+      style: {
+        ...baseCircle,
+        backgroundColor: colors.card,
+      },
+      iconName: appIcons.navigation.add.name,
+      iconLibrary: appIcons.navigation.add.library,
+      iconSize: 24,
+      iconColor: colors.text,
+    } as ButtonPreset,
+    addDark: {
+      style: {
+        ...baseCircle,
+        backgroundColor: colors.subtleButton,
+      },
+      iconName: appIcons.navigation.add.name,
+      iconLibrary: appIcons.navigation.add.library,
+      iconSize: 24,
+      iconColor: colors.primary,
+    }
   };
 }; 

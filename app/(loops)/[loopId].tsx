@@ -9,7 +9,7 @@ import { SCREEN_LAYOUT } from '@/constants/layout';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRouter } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
-import { useLoops, type Loop as ContextLoop, type PostDisplayData } from '@/context/LoopsContext';
+import { useLoops, type Loop as ContextLoop } from '@/context/LoopsContext';
 import { useFadeIn } from '@/hooks/useFadeIn';
 import { useEditLoopPopup } from '@/hooks/useEditLoopPopup';
 import EditLoopPopup from '@/components/loops/EditLoopPopup';
@@ -26,6 +26,14 @@ import { appIcons } from '@/presets/icons';
 import * as typographyPresets from '@/presets/typography';
 import { CircleButton } from '@/components/common/CircleButton';
 import { getButtonPresets } from '@/presets/buttons';
+import { addPostToRecentlyDeleted } from '@/data/recentlyDeleted';
+import { ImageSourcePropType } from 'react-native';
+
+export interface PostDisplayData {
+  id: string;
+  caption: string;
+  imageSource: ImageSourcePropType;
+}
 
 const touchableMinHeight = 44;
 
@@ -263,7 +271,7 @@ export default function LoopDetailsScreen() {
     setPosts(currentPosts => 
       currentPosts.map(p => p.id === updatedPost.id ? updatedPost : p)
     );
-    handleCloseEditPost();
+    setIsEditPostVisible(false);
   };
 
   const handlePostOptions = (post: PostDisplayData) => {
@@ -298,6 +306,7 @@ export default function LoopDetailsScreen() {
     }));
     // Assuming you have a reducer action to update posts for a loop
     // dispatch({ type: 'UPDATE_LOOP_POSTS', payload: { loopId: loop.id, newPosts: newDisplayPosts } });
+    setPosts(newDisplayPosts);
   };
 
   const handleDeleteLoop = () => {
@@ -311,6 +320,29 @@ export default function LoopDetailsScreen() {
           dispatch({ type: 'DELETE', payload: loop.id });
           navigation.goBack();
         }}
+      ]
+    );
+  };
+
+  const handleDeletePost = () => {
+    if (!selectedPostToEdit) return;
+    postOptionsModalRef.current?.close();
+    Alert.alert(
+      'Delete Post',
+      'Are you sure you want to delete this post?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive', 
+          onPress: async () => {
+            const postToDelete = MOCK_POSTS.find(p => p.id === selectedPostToEdit.id);
+            if (postToDelete) {
+              await addPostToRecentlyDeleted(postToDelete);
+            }
+            setPosts(posts.filter(p => p.id !== selectedPostToEdit.id));
+          } 
+        },
       ]
     );
   };
@@ -426,7 +458,7 @@ export default function LoopDetailsScreen() {
         }
       >
         {selectedPostToEdit && (
-          <View style={{ paddingVertical: spacing.sm, paddingBottom: spacing.sm }}>
+          <View style={{ padding: spacing.lg }}>
             <Pressable
               style={({ pressed }) => [
                 styles.modalOption,
@@ -451,7 +483,7 @@ export default function LoopDetailsScreen() {
                 name={appIcons.actions.moveToUpNext.name as any} 
                 size={24} 
                 color={posts.findIndex(p => p.id === selectedPostToEdit.id) === 0 ? colors.tabInactive : colors.text} 
-                style={{ marginRight: spacing.lg }} 
+                style={{ marginRight: spacing.md }} 
               />
               <Text 
                 style={{ 
@@ -470,40 +502,19 @@ export default function LoopDetailsScreen() {
               ]}
               onPress={() => handleEditPost(selectedPostToEdit)}
             >
-              <MaterialCommunityIcons name={appIcons.actions.edit.name as any} size={24} color={colors.text} style={{ marginRight: spacing.lg }} />
+              <MaterialCommunityIcons name="pencil-outline" size={24} color={colors.text} style={{ marginRight: spacing.md }} />
               <Text style={{ color: colors.text, fontSize: 16, fontWeight: '500' }}>Edit Post</Text>
             </Pressable>
-            <View style={[styles.separator, { backgroundColor: colors.border, marginVertical: 8 }]} />
+            <View style={[styles.separator, { backgroundColor: colors.border }]} />
             <Pressable
               style={({ pressed }) => [
                 styles.modalOption,
                 { backgroundColor: pressed ? colors.border + '33' : 'transparent' }
               ]}
-              onPress={() => {
-                // Delete handler
-                Alert.alert(
-                  'Delete Post',
-                  'Are you sure you want to delete this post?',
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    { text: 'Delete', style: 'destructive', onPress: () => {
-                      // Remove post from queue
-                      const updatedPosts = posts.filter(p => p.id !== selectedPostToEdit.id);
-                      setPosts(updatedPosts); // Use local state update
-                      setSelectedPostToEdit(null);
-                      postOptionsModalRef.current?.close();
-                    }}
-                  ]
-                );
-              }}
+              onPress={handleDeletePost}
             >
-              <MaterialCommunityIcons
-                name={appIcons.actions.delete.name as any}
-                size={24}
-                color="#FF3B30"
-                style={{ marginRight: spacing.lg }}
-              />
-              <Text style={{ color: '#FF3B30', fontSize: 16, fontWeight: '500' }}>Delete</Text>
+              <MaterialCommunityIcons name="delete-outline" size={24} color={colors.error} style={{ marginRight: spacing.md }}/>
+              <Text style={{ fontSize: 16, color: colors.error }}>Delete Post</Text>
             </Pressable>
           </View>
         )}

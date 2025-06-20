@@ -155,6 +155,9 @@ type ColorPalette = {
   warning: string;
   error: string;
   tabInactive: string;
+  subtleButton: string;
+  blurredHeaderBackground: string;
+  buttonAccentText: string;
 };
 
 const lightColors: ColorPalette = {
@@ -171,6 +174,9 @@ const lightColors: ColorPalette = {
   warning: '#FF9500',
   error: '#FF3B30',
   tabInactive: '#8E8E93',
+  subtleButton: '#B9B9B9',
+  blurredHeaderBackground: 'rgba(255, 255, 255, 0.8)',
+  buttonAccentText: '#FFFFFF',
 };
 
 const darkColors: ColorPalette = {
@@ -187,6 +193,9 @@ const darkColors: ColorPalette = {
   warning: '#FF9F0A',
   error: '#FF453A',
   tabInactive: '#8E8E93',
+  subtleButton: '#48484A',
+  blurredHeaderBackground: 'rgba(28, 28, 30, 0.8)',
+  buttonAccentText: '#FFFFFF',
 };
 
 // Opacity levels

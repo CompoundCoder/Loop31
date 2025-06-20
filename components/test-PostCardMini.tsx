@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Image, Text, StyleSheet, TouchableOpacity, ImageSourcePropType } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { cardShadow } from '@/theme/shadows';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 const CARD_MEDIA_ASPECT_RATIO = 7 / 5;
 
@@ -18,11 +19,12 @@ interface TestPostCardMiniProps {
 // const imageSize = cardHeight - 2 * 12; // Removed fixed image size calculation
 
 const TestPostCardMini: React.FC<TestPostCardMiniProps> = ({ image, caption, onPress, onLongPress, drag, isActive }) => {
+  const { colors } = useThemeStyles();
   return (
     <TouchableOpacity 
       onPress={onPress} 
       onLongPress={onLongPress}
-      style={[styles.cardContainer, cardShadow]}
+      style={[styles.cardContainer, { backgroundColor: colors.card }, cardShadow]}
       activeOpacity={isActive ? 1 : 0.8} // Adjust activeOpacity based on isActive, or keep consistent if preferred
       disabled={isActive} // Disable touchable when active to prevent onPress firing during drag
     >
@@ -32,7 +34,7 @@ const TestPostCardMini: React.FC<TestPostCardMiniProps> = ({ image, caption, onP
       <View style={styles.rightColumn}>
         <View style={styles.spacer} />
         <View style={styles.captionWrapper}>
-          <Text style={styles.captionText} numberOfLines={3} ellipsizeMode="tail">
+          <Text style={[styles.captionText, { color: colors.text }]} numberOfLines={3} ellipsizeMode="tail">
             {caption}
           </Text>
         </View>
@@ -45,7 +47,6 @@ const styles = StyleSheet.create({
   cardContainer: {
     flexDirection: 'row',
     alignItems: 'stretch',
-    backgroundColor: 'rgb(255, 255, 255)', // TEMP: light yellow
     borderRadius: 12,
     padding: 12,
     marginBottom: 6, 
@@ -77,7 +78,6 @@ const styles = StyleSheet.create({
   },
   captionText: {
     fontSize: 16,
-    color: '#1C1E21',
     lineHeight: 22, 
     textAlign: 'left', 
   },

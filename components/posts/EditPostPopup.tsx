@@ -11,6 +11,7 @@ import {
   Image,
   Alert,
   Dimensions,
+  ImageSourcePropType,
 } from 'react-native';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import Animated, {
@@ -24,7 +25,12 @@ import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useLoops } from '@/context/LoopsContext';
-import type { PostDisplayData } from '@/context/LoopsContext';
+
+export interface PostDisplayData {
+  id: string;
+  caption: string;
+  imageSource: ImageSourcePropType;
+}
 
 interface EditPostPopupProps {
   isVisible: boolean;
@@ -208,7 +214,7 @@ const EditPostPopupContent: React.FC<{
           />
            <Animated.View style={[styles.remixButtonContainer, animatedRemixButtonStyle]}>
               <TouchableOpacity style={[styles.remixButton, { backgroundColor: colors.accent, borderRadius: borderRadius.full, }]}>
-                <Text style={[styles.remixButtonText, { color: 'white', fontSize: typography.fontSize.caption, fontWeight: 'bold' }]}>
+                <Text style={[styles.remixButtonText, { color: colors.buttonAccentText, fontSize: typography.fontSize.caption, fontWeight: 'bold' }]}>
                   Remix with AI
                 </Text>
               </TouchableOpacity>
@@ -221,7 +227,7 @@ const EditPostPopupContent: React.FC<{
           <Text style={{ color: colors.text, fontWeight: '500', fontSize: typography.fontSize.body }}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={handleSave} disabled={!canSave} style={[styles.footerButtonBase, { backgroundColor: canSave ? colors.accent : colors.border, flex: 1, borderRadius: borderRadius.md }]}>
-          <Text style={{ color: canSave ? 'white' : colors.tabInactive, fontWeight: 'bold', fontSize: typography.fontSize.body }}>
+          <Text style={{ color: canSave ? colors.buttonAccentText : colors.tabInactive, fontWeight: 'bold', fontSize: typography.fontSize.body }}>
             Update Post
           </Text>
         </TouchableOpacity>

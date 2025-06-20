@@ -6,6 +6,7 @@ export interface Loop {
   schedule: string;
   frequency: string;
   isActive: boolean;
+  isPinned: boolean;
   previewImageUrl?: string;
   status?: 'active' | 'paused' | 'draft' | 'error';
 } 
