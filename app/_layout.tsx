@@ -11,6 +11,10 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { ToastStack } from '../components/notifications/ToastStack';
 import { lightTheme, darkTheme } from '../theme/theme';
 import { LoopsProvider } from '@/context/LoopsContext'; // Import LoopsProvider
+import 'react-native-get-random-values';
+import { DarkTheme, DefaultTheme } from '@react-navigation/native';
+import { useFonts } from 'expo-font';
+import { Stack } from 'expo-router';
 
 // Define the comprehensive theme type that components will use.
 // This includes React Navigation's required fields and all our custom theme properties.

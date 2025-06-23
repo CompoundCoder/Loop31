@@ -10,6 +10,9 @@ export interface Post {
   caption: string;
   platforms: SocialPlatform[];
   loopFolders?: string[]; // Optional array of loop folder IDs
+  forkedFromId?: string; // ID of the original post it was forked from
+  deletedAt?: string | null;
+  deletedFromLoopId?: string | null;
 }
 
 // Export the array of mock posts with correct loopFolders

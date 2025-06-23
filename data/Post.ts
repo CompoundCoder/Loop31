@@ -1,9 +1,12 @@
+import { ImageSourcePropType } from "react-native";
+
 type TimeOfDay = 'morning' | 'noon' | 'evening';
 type PostStatus = 'draft' | 'scheduled' | 'published' | 'deleted';
 
 export class Post {
   id: string;
   caption: string;
+  imageSource: ImageSourcePropType;
   media: string[];
   scheduledDate: string | null;
   scheduledTimeOfDay: TimeOfDay | null;
@@ -19,16 +22,19 @@ export class Post {
     media = [],
     accountTargets = [],
     loopFolders,
+    imageSource,
   }: {
     id: string;
     caption?: string;
     media?: string[];
     accountTargets?: string[];
     loopFolders?: string[];
+    imageSource: ImageSourcePropType;
   }) {
     this.id = id;
     this.caption = caption;
     this.media = [...media];
+    this.imageSource = imageSource;
     this.scheduledDate = null;
     this.scheduledTimeOfDay = null;
     this.accountTargets = [...accountTargets];
@@ -84,6 +90,7 @@ export class Post {
       id: this.id,
       caption: this.caption,
       media: this.media,
+      imageSource: this.imageSource,
       scheduledDate: this.scheduledDate,
       scheduledTimeOfDay: this.scheduledTimeOfDay,
       accountTargets: this.accountTargets,

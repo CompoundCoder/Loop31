@@ -11,12 +11,12 @@ import { useNavigation, useRouter } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
 import { useLoops, type Loop as ContextLoop } from '@/context/LoopsContext';
 import { useFadeIn } from '@/hooks/useFadeIn';
-import { useEditLoopPopup } from '@/hooks/useEditLoopPopup';
+//import { useEditLoopPopup } from '@/hooks/useEditLoopPopup';
 import EditLoopPopup from '@/components/loops/EditLoopPopup';
 import PostCardS from '@/components/loops/PostCardS';
 import HeaderActionButton from '@/components/HeaderActionButton';
-import CreatePostPopup from '@/components/posts/CreatePostPopup';
-import EditPostPopup from '@/components/posts/EditPostPopup';
+// TODO: Refactor to use the new PostMenus component after full testing
+import PostMenus, { type PostFormData } from '@/components/posts/PostMenus';
 import { Modalize } from 'react-native-modalize';
 import { MOCK_POSTS, type Post } from '@/data/mockPosts';
 import { getLoopPostCount } from '@/utils/loopHelpers';
@@ -28,6 +28,9 @@ import { CircleButton } from '@/components/common/CircleButton';
 import { getButtonPresets } from '@/presets/buttons';
 import { addPostToRecentlyDeleted } from '@/data/recentlyDeleted';
 import { ImageSourcePropType } from 'react-native';
+import { BottomSheetMenu, MenuItem } from '@/components/ui/BottomSheetMenu';
+import { v4 as uuidv4 } from 'uuid';
+import { duplicateLoopAndLinkPosts } from '@/logic/loopManager';
 
 export interface PostDisplayData {
   id: string;
@@ -43,7 +46,7 @@ export const options = {
 };
 
 export default function LoopDetailsScreen() {
-  const { colors, typography, spacing: themeSpacing } = useThemeStyles();
+  const { colors, typography, spacing: themeSpacing, borderRadius } = useThemeStyles();
   const theme = useThemeStyles();
   const buttonPresets = getButtonPresets(theme);
   const insets = useSafeAreaInsets();
@@ -53,33 +56,152 @@ export default function LoopDetailsScreen() {
   const { state, dispatch } = useLoops();
   const { opacityStyle: upNextOpacityStyle } = useFadeIn();
 
-  const [isPostPopupVisible, setIsPostPopupVisible] = useState(false);
-  const [isEditPostVisible, setIsEditPostVisible] = useState(false);
-  const [selectedPostToEdit, setSelectedPostToEdit] = useState<PostDisplayData | null>(null);
+  const [isPostFormVisible, setIsPostFormVisible] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<PostDisplayData | null>(null);
   const loop: ContextLoop | undefined = state.loops.find(l => l.id === loopId);
+
+  // Force re-render when MOCK_POSTS is mutated
+  const [postDataVersion, setPostDataVersion] = useState(0);
+
+  const [isEditLoopPopupVisible, setIsEditLoopPopupVisible] = useState(false);
+  const [loopToEdit, setLoopToEdit] = useState<ContextLoop | null>(null);
 
   const postOptionsModalRef = useRef<Modalize>(null);
   const loopActionsModalRef = useRef<Modalize>(null);
+  const postActionsMenuRef = useRef<Modalize>(null);
 
-  // Get posts for this specific loop and transform them to the expected format
-  const initialPosts: PostDisplayData[] = useMemo(() => {
+  const handleDuplicateLoop = () => {
+    if (!loop) return;
+    const newLoop = duplicateLoopAndLinkPosts(loop, MOCK_POSTS);
+    dispatch({ type: 'ADD_LOOP', payload: newLoop });
+    loopActionsModalRef.current?.close();
+  };
+
+  // Get active posts for this specific loop
+  const activePosts: PostDisplayData[] = useMemo(() => {
     if (!loopId) return [];
-    const filteredPosts = MOCK_POSTS.filter(p => p.loopFolders?.includes(loopId));
+    const filteredPosts = MOCK_POSTS.filter(
+      p => p.loopFolders?.includes(loopId) && !p.deletedAt
+    );
     return filteredPosts.map(p => ({
       id: p.id,
       caption: p.caption,
-      imageSource: { uri: p.imageUrl }, // Transform imageUrl to imageSource
+      imageSource: { uri: p.imageUrl },
     }));
-  }, [loopId]);
+  }, [loopId, postDataVersion]);
 
-  const [posts, setPosts] = useState(initialPosts);
+  // Get deleted posts for this specific loop
+  const deletedPosts: Post[] = useMemo(() => {
+    if (!loopId) return [];
+    return MOCK_POSTS.filter(
+      p => p.deletedAt && p.deletedFromLoopId === loopId
+    );
+  }, [loopId, postDataVersion]);
+
+  const [posts, setPosts] = useState(activePosts);
   
   useEffect(() => {
-    setPosts(initialPosts);
-  }, [initialPosts]);
+    setPosts(activePosts);
+  }, [activePosts]);
 
   const [isActive, setIsActive] = useState(loop?.isActive ?? false);
-  const { isEditPopupVisible, loopToEdit, openEditPopup, closeEditPopup } = useEditLoopPopup();
+  //const { isEditPopupVisible, loopToEdit, openEditPopup, closeEditPopup } = useEditLoopPopup();
+
+  const handleCreatePost = () => {
+    setSelectedPost(null);
+    setIsPostFormVisible(true);
+  };
+
+  const handlePostLongPress = (post: PostDisplayData) => {
+    setSelectedPost(post);
+    postActionsMenuRef.current?.open();
+  };
+
+  const handleEditPost = (postToEdit: PostDisplayData) => {
+    const postInStore = MOCK_POSTS.find(p => p.id === postToEdit.id);
+    
+    // If the post isn't found or has no loop folders, edit normally.
+    if (!postInStore || !postInStore.loopFolders) {
+        setSelectedPost(postToEdit);
+        setIsPostFormVisible(true);
+        postActionsMenuRef.current?.close();
+        return;
+    }
+
+    // Fork-on-edit logic: fork if the post is linked to more than one loop.
+    if (postInStore.loopFolders.length > 1) {
+      // 1. Create a forked copy
+      const forkedPost: Post = {
+        ...postInStore,
+        id: uuidv4(),
+        forkedFromId: postInStore.id,
+        loopFolders: [loopId], // Belongs only to this new loop
+      };
+
+      // 2. Update original post's loop folders to remove the current loop
+      postInStore.loopFolders = postInStore.loopFolders.filter(
+        folderId => folderId !== loopId
+      );
+
+      // 3. Add forked post to the main data source
+      MOCK_POSTS.unshift(forkedPost);
+
+      // 4. Update local state to display the new forked post instead of the old one
+      const forkedPostForDisplay: PostDisplayData = {
+        id: forkedPost.id,
+        caption: forkedPost.caption,
+        imageSource: { uri: forkedPost.imageUrl },
+      };
+      
+      setPosts(currentPosts => 
+        currentPosts.map(p => p.id === postInStore.id ? forkedPostForDisplay : p)
+      );
+      
+      // 5. Set the *newly forked post* as selected and open the editor
+      setSelectedPost(forkedPostForDisplay);
+      setIsPostFormVisible(true);
+      postActionsMenuRef.current?.close();
+
+    } else {
+      // Default behavior: just open the editor for the selected post
+      setSelectedPost(postToEdit);
+      setIsPostFormVisible(true);
+      postActionsMenuRef.current?.close();
+    }
+  };
+
+  const handleSavePost = (data: PostFormData) => {
+    if (selectedPost) { // Editing existing post
+      const postToUpdate = MOCK_POSTS.find(p => p.id === selectedPost.id);
+      if (postToUpdate) {
+        postToUpdate.caption = data.caption;
+        if (data.imageSource && typeof data.imageSource === 'object' && 'uri' in data.imageSource && data.imageSource.uri) {
+          postToUpdate.imageUrl = data.imageSource.uri;
+        }
+      }
+    } else { // Creating new post
+      const newPostForDisplay: PostDisplayData = {
+        id: `post-${Date.now()}-${Math.random()}`,
+        caption: data.caption,
+        imageSource: data.imageSource!,
+      };
+
+      // Also update the mock data source if needed
+      const newPostForMock: Post = {
+        id: newPostForDisplay.id,
+        caption: newPostForDisplay.caption,
+        imageUrl: (newPostForDisplay.imageSource as any)?.uri || '',
+        platforms: ['twitter'],
+        loopFolders: [loopId].filter(Boolean) as string[],
+      };
+      MOCK_POSTS.unshift(newPostForMock);
+
+      setPosts(currentPosts => [newPostForDisplay, ...currentPosts]);
+    }
+    setIsPostFormVisible(false);
+    setSelectedPost(null);
+    setPostDataVersion(v => v + 1); // Force refresh
+  };
 
   useEffect(() => {
     if (loop) {
@@ -229,6 +351,38 @@ export default function LoopDetailsScreen() {
       height: StyleSheet.hairlineWidth,
       width: '100%',
     },
+    deletedSection: {
+      marginTop: 40,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+      paddingTop: 24,
+    },
+    deletedItem: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 12,
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      paddingHorizontal: 16,
+      marginBottom: 8,
+    },
+    deletedItemText: {
+      color: colors.text,
+      flex: 1,
+      marginRight: 16,
+    },
+    deletedItemActions: {
+      flexDirection: 'row',
+    },
+    deletedButton: {
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: borderRadius.sm,
+    },
+    deletedButtonText: {
+      fontWeight: '600',
+    }
   }); 
 
   const handleToggleIsActive = (newIsActiveValue: boolean) => {
@@ -249,33 +403,15 @@ export default function LoopDetailsScreen() {
           <PostCardS 
             post={posts[0]} 
             variant="featured" 
-            onLongPress={() => handlePostOptions(posts[0])}
+            onLongPress={() => handlePostLongPress(posts[0])}
           />
         </RNAnimated.View>
       </View>
     );
   };
 
-  const handleEditPost = (post: PostDisplayData) => {
-    setSelectedPostToEdit(post);
-    setIsEditPostVisible(true);
-    postOptionsModalRef.current?.close();
-  };
-
-  const handleCloseEditPost = () => {
-    setIsEditPostVisible(false);
-    setSelectedPostToEdit(null);
-  };
-
-  const handleSavePost = (updatedPost: PostDisplayData) => {
-    setPosts(currentPosts => 
-      currentPosts.map(p => p.id === updatedPost.id ? updatedPost : p)
-    );
-    setIsEditPostVisible(false);
-  };
-
   const handlePostOptions = (post: PostDisplayData) => {
-    setSelectedPostToEdit(post);
+    setSelectedPost(post);
     postOptionsModalRef.current?.open();
   };
 
@@ -291,7 +427,7 @@ export default function LoopDetailsScreen() {
             key={post.id}
             image={post.imageSource}
             caption={post.caption}
-            onLongPress={() => handlePostOptions(post)}
+            onLongPress={() => handlePostLongPress(post)}
           />
         ))}
       </View>
@@ -324,27 +460,65 @@ export default function LoopDetailsScreen() {
     );
   };
 
+  const handleMoveToUpNext = () => {
+    if (!selectedPost) return;
+
+    const postIndex = posts.findIndex(p => p.id === selectedPost.id);
+    if (postIndex > 0) { // Only move if it's not already at the top
+        const newPosts = [...posts];
+        const [movedPost] = newPosts.splice(postIndex, 1);
+        newPosts.unshift(movedPost);
+        setPosts(newPosts);
+    }
+
+    postActionsMenuRef.current?.close();
+  };
+
   const handleDeletePost = () => {
-    if (!selectedPostToEdit) return;
-    postOptionsModalRef.current?.close();
-    Alert.alert(
-      'Delete Post',
-      'Are you sure you want to delete this post?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          style: 'destructive', 
-          onPress: async () => {
-            const postToDelete = MOCK_POSTS.find(p => p.id === selectedPostToEdit.id);
-            if (postToDelete) {
-              await addPostToRecentlyDeleted(postToDelete);
-            }
-            setPosts(posts.filter(p => p.id !== selectedPostToEdit.id));
-          } 
-        },
-      ]
-    );
+    if (!selectedPost) return;
+
+    const postInStore = MOCK_POSTS.find(p => p.id === selectedPost.id);
+
+    if (!postInStore) {
+      // Post not found in the main store, cannot proceed.
+      console.error("Attempted to delete a post that doesn't exist in the main store.");
+      postActionsMenuRef.current?.close();
+      return;
+    }
+
+    if (postInStore.loopFolders && postInStore.loopFolders.length > 1) {
+      // The post is in multiple loops, so just unlink it from this one.
+      postInStore.loopFolders = postInStore.loopFolders.filter(id => id !== loopId);
+    } else {
+      // This is the last loop it's in, so soft-delete it.
+      postInStore.deletedAt = new Date().toISOString();
+      postInStore.deletedFromLoopId = loopId;
+      postInStore.loopFolders = [];
+    }
+
+    setPostDataVersion(v => v + 1); // Trigger re-render of active/deleted lists
+    postActionsMenuRef.current?.close();
+  };
+
+  const handleRestorePost = (postId: string) => {
+    const postIndex = MOCK_POSTS.findIndex(p => p.id === postId);
+    if (postIndex > -1) {
+      const post = MOCK_POSTS[postIndex];
+      if (post.deletedFromLoopId) {
+        post.loopFolders = [...(post.loopFolders || []), post.deletedFromLoopId];
+      }
+      post.deletedAt = null;
+      post.deletedFromLoopId = null;
+      setPostDataVersion(v => v + 1);
+    }
+  };
+
+  const handlePermanentDeletePost = (postId: string) => {
+    const postIndex = MOCK_POSTS.findIndex(p => p.id === postId);
+    if (postIndex > -1) {
+      MOCK_POSTS.splice(postIndex, 1);
+      setPostDataVersion(v => v + 1);
+    }
   };
 
   if (!loop) {
@@ -356,6 +530,106 @@ export default function LoopDetailsScreen() {
   }
 
   const postCount = getLoopPostCount(loop.id, MOCK_POSTS);
+
+  const loopMenuSections: MenuItem[][] = [
+    [
+      {
+        label: 'Edit Loop',
+        icon: <MaterialCommunityIcons name={appIcons.actions.edit.name as any} size={24} color={colors.text} />,
+        onPress: () => {
+          loopActionsModalRef.current?.close();
+          setLoopToEdit(loop);
+          setIsEditLoopPopupVisible(true);
+        },
+      },
+      {
+        label: 'Duplicate Loop',
+        icon: <MaterialCommunityIcons name={appIcons.actions.duplicate.name as any} size={24} color={colors.text} />,
+        onPress: handleDuplicateLoop,
+      },
+    ],
+    [
+      {
+        label: 'Delete Loop',
+        icon: <MaterialCommunityIcons name={appIcons.actions.delete.name as any} size={24} color={colors.error} />,
+        onPress: handleDeleteLoop,
+        destructive: true,
+      },
+    ],
+  ];
+
+  const postMenuItems: MenuItem[][] = selectedPost
+  ? [
+      [
+        {
+          label: 'Move to Up Next',
+          icon: <MaterialCommunityIcons name={appIcons.actions.moveToUpNext.name as any} size={24} color={posts.findIndex(p => p.id === selectedPost.id) === 0 ? colors.tabInactive : colors.text} />,
+          onPress: handleMoveToUpNext,
+          disabled: posts.findIndex(p => p.id === selectedPost.id) === 0,
+        },
+        {
+          label: 'Edit Post',
+          icon: <MaterialCommunityIcons name={appIcons.actions.edit.name as any} size={24} color={colors.text} />,
+          onPress: () => {
+            console.log('Edit', selectedPost.id);
+            postActionsMenuRef.current?.close();
+            handleEditPost(selectedPost);
+          },
+        },
+        {
+          label: 'Duplicate Post',
+          icon: <MaterialCommunityIcons name={appIcons.actions.duplicate.name as any} size={24} color={colors.text} />,
+          onPress: () => {
+            console.log('Duplicate', selectedPost.id);
+            const originalPost = MOCK_POSTS.find(p => p.id === selectedPost.id);
+            if (originalPost) {
+              const newPost: Post = {
+                ...originalPost,
+                id: uuidv4(),
+              };
+              MOCK_POSTS.unshift(newPost); // Add to mock data source
+
+              const newPostForDisplay: PostDisplayData = {
+                id: newPost.id,
+                caption: newPost.caption,
+                imageSource: { uri: newPost.imageUrl },
+              };
+
+              const originalPostIndex = posts.findIndex(p => p.id === selectedPost.id);
+              const newPosts = [...posts];
+              newPosts.splice(originalPostIndex + 1, 0, newPostForDisplay);
+              setPosts(newPosts);
+            }
+            postActionsMenuRef.current?.close();
+          },
+        },
+      ],
+      [
+        {
+          label: 'Delete Post',
+          icon: <MaterialCommunityIcons name={appIcons.actions.delete.name as any} size={24} color={colors.error} />,
+          onPress: () => {
+            console.log('Delete', selectedPost.id);
+
+            postActionsMenuRef.current?.close();
+            Alert.alert(
+              'Delete Post',
+              'Are you sure you want to delete this post?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Delete',
+                  style: 'destructive',
+                  onPress: handleDeletePost,
+                },
+              ]
+            );
+          },
+          destructive: true,
+        },
+      ],
+    ]
+  : [];
 
   return (
     <>
@@ -374,7 +648,7 @@ export default function LoopDetailsScreen() {
           <View style={styles.headerRightContainer}>
             <CircleButton
               preset={buttonPresets.add}
-              onPress={() => setIsPostPopupVisible(true)}
+              onPress={handleCreatePost}
               accessibilityLabel="Create Post"
             />
           </View>
@@ -420,29 +694,40 @@ export default function LoopDetailsScreen() {
               {renderUpNext()}
             </View>
             {renderPostQueue()}
+
+            {deletedPosts.length > 0 && (
+              <View style={styles.deletedSection}>
+                <Text style={typographyPresets.sectionTitle}>Recently Deleted</Text>
+                {deletedPosts.map(post => (
+                  <View key={post.id} style={styles.deletedItem}>
+                    <Text style={styles.deletedItemText} numberOfLines={1}>{post.caption}</Text>
+                    <View style={styles.deletedItemActions}>
+                      <Pressable onPress={() => handleRestorePost(post.id)} style={[styles.deletedButton, { backgroundColor: colors.accent + '20' }]}>
+                        <Text style={[styles.deletedButtonText, { color: colors.accent }]}>Restore</Text>
+                      </Pressable>
+                      <Pressable onPress={() => handlePermanentDeletePost(post.id)} style={[styles.deletedButton, { backgroundColor: colors.error + '20', marginLeft: 8 }]}>
+                        <Text style={[styles.deletedButtonText, { color: colors.error }]}>Delete</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
           </ScrollView>
         </View>
       </SafeAreaView>
       <EditLoopPopup
-        visible={isEditPopupVisible}
-        onClose={closeEditPopup}
-        onSaveSuccess={closeEditPopup}
+        visible={isEditLoopPopupVisible}
+        onClose={() => setIsEditLoopPopupVisible(false)}
+        onSaveSuccess={() => setIsEditLoopPopupVisible(false)}
         loop={loopToEdit}
       />
-      <CreatePostPopup
-        isVisible={isPostPopupVisible}
-        onClose={() => setIsPostPopupVisible(false)}
-        loopId={loop.id}
+      <PostMenus
+        isVisible={isPostFormVisible}
+        onClose={() => setIsPostFormVisible(false)}
+        onSave={handleSavePost}
+        post={selectedPost}
       />
-      {selectedPostToEdit && (
-        <EditPostPopup
-          isVisible={isEditPostVisible}
-          post={selectedPostToEdit}
-          loopId={loop.id}
-          onClose={handleCloseEditPost}
-          onSaveSuccess={handleSavePost}
-        />
-      )}
       <Modalize
         ref={postOptionsModalRef}
         adjustToContentHeight
@@ -450,14 +735,14 @@ export default function LoopDetailsScreen() {
         handleStyle={{ backgroundColor: colors.border }}
         handlePosition="inside"
         HeaderComponent={
-          selectedPostToEdit && (
+          selectedPost && (
             <View style={[styles.modalHeader, { backgroundColor: colors.card, borderBottomColor: colors.border }]}> 
               <Text style={[styles.modalTitle, { color: colors.text }]}>Post Options</Text>
             </View>
           )
         }
       >
-        {selectedPostToEdit && (
+        {selectedPost && (
           <View style={{ padding: spacing.lg }}>
             <Pressable
               style={({ pressed }) => [
@@ -466,7 +751,7 @@ export default function LoopDetailsScreen() {
               ]}
               onPress={() => {
                 // Move to top handler
-                const idx = posts.findIndex(p => p.id === selectedPostToEdit.id);
+                const idx = posts.findIndex(p => p.id === selectedPost.id);
                 if (idx > 0) { // Allow moving if not already the Up Next post
                   const updatedPosts = [...posts];
                   const [moved] = updatedPosts.splice(idx, 1);
@@ -474,20 +759,20 @@ export default function LoopDetailsScreen() {
                   updatedPosts.unshift(moved);
                   setPosts(updatedPosts); // Use local state update
                 }
-                setSelectedPostToEdit(null);
+                setSelectedPost(null);
                 postOptionsModalRef.current?.close();
               }}
-              disabled={posts.findIndex(p => p.id === selectedPostToEdit.id) === 0}
+              disabled={posts.findIndex(p => p.id === selectedPost.id) === 0}
             >
               <Ionicons 
                 name={appIcons.actions.moveToUpNext.name as any} 
                 size={24} 
-                color={posts.findIndex(p => p.id === selectedPostToEdit.id) === 0 ? colors.tabInactive : colors.text} 
+                color={posts.findIndex(p => p.id === selectedPost.id) === 0 ? colors.tabInactive : colors.text} 
                 style={{ marginRight: spacing.md }} 
               />
               <Text 
                 style={{ 
-                  color: posts.findIndex(p => p.id === selectedPostToEdit.id) === 0 ? colors.tabInactive : colors.text, 
+                  color: posts.findIndex(p => p.id === selectedPost.id) === 0 ? colors.tabInactive : colors.text, 
                   fontSize: 16, 
                   fontWeight: '500' 
                 }}
@@ -500,7 +785,7 @@ export default function LoopDetailsScreen() {
                 styles.modalOption,
                 { backgroundColor: pressed ? colors.border + '33' : 'transparent' }
               ]}
-              onPress={() => handleEditPost(selectedPostToEdit)}
+              onPress={() => handleEditPost(selectedPost)}
             >
               <MaterialCommunityIcons name="pencil-outline" size={24} color={colors.text} style={{ marginRight: spacing.md }} />
               <Text style={{ color: colors.text, fontSize: 16, fontWeight: '500' }}>Edit Post</Text>
@@ -511,7 +796,10 @@ export default function LoopDetailsScreen() {
                 styles.modalOption,
                 { backgroundColor: pressed ? colors.border + '33' : 'transparent' }
               ]}
-              onPress={handleDeletePost}
+              onPress={() => {
+                handleDeletePost();
+                postOptionsModalRef.current?.close();
+              }}
             >
               <MaterialCommunityIcons name="delete-outline" size={24} color={colors.error} style={{ marginRight: spacing.md }}/>
               <Text style={{ fontSize: 16, color: colors.error }}>Delete Post</Text>
@@ -519,43 +807,16 @@ export default function LoopDetailsScreen() {
           </View>
         )}
       </Modalize>
-      <Modalize
-        ref={loopActionsModalRef}
-        adjustToContentHeight
-        modalStyle={{ backgroundColor: colors.card }}
-        handleStyle={{ backgroundColor: colors.border }}
-        HeaderComponent={
-          <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}> 
-            <Text style={[styles.modalTitle, { color: colors.text }]}>{loop?.title}</Text>
-          </View>
-        }
-      >
-        <View style={{ paddingVertical: spacing.sm }}>
-          <Pressable
-            style={({ pressed }) => [styles.modalOption, { backgroundColor: pressed ? colors.border + '33' : 'transparent' }]}
-            onPress={() => {
-              loopActionsModalRef.current?.close();
-              openEditPopup(loop);
-            }}
-          >
-            <MaterialCommunityIcons name={appIcons.actions.edit.name as any} size={24} color={colors.text} style={{ marginRight: spacing.lg }} />
-            <Text style={{ color: colors.text, fontSize: 16, fontWeight: '500' }}>Edit Loop</Text>
-          </Pressable>
-          <View style={[styles.separator, { backgroundColor: colors.border, marginVertical: 8 }]} />
-          <Pressable
-            style={({ pressed }) => [styles.modalOption, { backgroundColor: pressed ? colors.border + '33' : 'transparent' }]}
-            onPress={handleDeleteLoop}
-          >
-            <MaterialCommunityIcons
-              name={appIcons.actions.delete.name as any}
-              size={24}
-              color="#FF3B30"
-              style={{ marginRight: spacing.lg }}
-            />
-            <Text style={{ color: '#FF3B30', fontSize: 16, fontWeight: '500' }}>Delete Loop</Text>
-          </Pressable>
-        </View>
-      </Modalize>
+      <BottomSheetMenu
+        modalRef={loopActionsModalRef}
+        menuTitle="Options"
+        sections={loopMenuSections}
+      />
+      <BottomSheetMenu
+        modalRef={postActionsMenuRef}
+        menuTitle="Options"
+        sections={postMenuItems}
+      />
     </>
   );
 }

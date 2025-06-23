@@ -11,6 +11,8 @@ import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { useRouter, useNavigation } from 'expo-router';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Animated, { useSharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { appIcons } from '@/presets/icons';
 
 import AnimatedHeader from '@/components/AnimatedHeader';
 import ScreenContainer from '@/components/ScreenContainer';
@@ -21,14 +23,14 @@ import EditLoopPopup from '@/components/loops/EditLoopPopup';
 import { CircleButton } from '@/components/common/CircleButton';
 import { getButtonPresets } from '@/presets/buttons';
 
-import { Modalize } from 'react-native-modalize';
-import { LoopActionsModalContent } from '@/components/modals/LoopActionsModalContent';
+import type { Modalize } from 'react-native-modalize';
+import { BottomSheetMenu, type MenuItem } from '@/components/ui/BottomSheetMenu';
 import { LoopsEmptyState } from '@/components/loops/LoopsEmptyState';
 import { useLoops, type Loop } from '@/context/LoopsContext';
 import { useEditLoopPopup } from '@/hooks/useEditLoopPopup';
 import { getLoopPostCount } from '@/utils/loopHelpers';
 import { MOCK_POSTS } from '@/data/mockPosts';
-import { duplicateLoop as duplicateLoopUtil } from '@/logic/loopManager';
+import { duplicateLoopAndLinkPosts } from '@/logic/loopManager';
 import { addLoopToRecentlyDeleted } from '@/data/recentlyDeleted';
 
 const AnimatedSectionList = Animated.createAnimatedComponent(SectionList) as any;
@@ -53,7 +55,7 @@ export default function LoopsScreen() {
   const { loopToEdit, isEditPopupVisible, openEditPopup, closeEditPopup } = useEditLoopPopup();
   
   const scrollY = useSharedValue(0);
-  const modalRef = useRef<Modalize>(null);
+  const loopActionMenuRef = useRef<Modalize>(null);
   const [selectedLoop, setSelectedLoop] = useState<Loop | null>(null);
 
   const navigation = useNavigation<NativeStackNavigationProp<LoopsStackParamList>>();
@@ -66,16 +68,25 @@ export default function LoopsScreen() {
 
   const handleLongPress = (loop: Loop) => {
     setSelectedLoop(loop);
-    modalRef.current?.open();
+    loopActionMenuRef.current?.open();
   };
   
   const handleCloseMenu = () => {
-    modalRef.current?.close();
+    loopActionMenuRef.current?.close();
   };
 
-  const handlePin = (loopId: string) => dispatch({ type: 'PIN', payload: loopId });
-  const handleUnpin = (loopId: string) => dispatch({ type: 'UNPIN', payload: loopId });
-  const handleDelete = (loop: Loop) => {
+  const handlePin = () => {
+    if (!selectedLoop) return;
+    dispatch({ type: 'PIN', payload: selectedLoop.id });
+    handleCloseMenu();
+  };
+  const handleUnpin = () => {
+    if (!selectedLoop) return;
+    dispatch({ type: 'UNPIN', payload: selectedLoop.id });
+    handleCloseMenu();
+  };
+  const handleDelete = () => {
+    if (!selectedLoop) return;
     Alert.alert(
       'Delete Loop',
       'Are you sure you want to delete this loop?',
@@ -85,8 +96,8 @@ export default function LoopsScreen() {
           text: 'Delete', 
           style: 'destructive', 
           onPress: async () => {
-            await addLoopToRecentlyDeleted(loop);
-            dispatch({ type: 'DELETE', payload: loop.id });
+            await addLoopToRecentlyDeleted(selectedLoop);
+            dispatch({ type: 'DELETE', payload: selectedLoop.id });
             handleCloseMenu();
           } 
         },
@@ -94,16 +105,58 @@ export default function LoopsScreen() {
     );
   };
   
-  const handleEdit = (loop: Loop) => {
-    openEditPopup(loop);
-    modalRef.current?.close();
+  const handleEdit = () => {
+    if (!selectedLoop) return;
+    openEditPopup(selectedLoop);
+    handleCloseMenu();
   };
 
-  const handleDuplicate = (loop: Loop) => {
-    const newLoop = duplicateLoopUtil(loop);
+  const handleDuplicate = () => {
+    if (!selectedLoop) return;
+    const newLoop = duplicateLoopAndLinkPosts(selectedLoop, MOCK_POSTS);
     dispatch({ type: 'ADD_LOOP', payload: newLoop });
-    modalRef.current?.close();
+    handleCloseMenu();
   };
+
+  const loopMenuItems: MenuItem[][] = useMemo(() => {
+    if (!selectedLoop) return [];
+
+    const pinAction: MenuItem = selectedLoop.isPinned
+      ? {
+          label: 'Unpin Loop',
+          icon: <MaterialCommunityIcons name={appIcons.actions.unpin.name as any} size={24} color={colors.text} />,
+          onPress: handleUnpin,
+        }
+      : {
+          label: 'Pin Loop',
+          icon: <MaterialCommunityIcons name={appIcons.actions.pin.name as any} size={24} color={colors.text} />,
+          onPress: handlePin,
+        };
+
+    return [
+      [
+        pinAction,
+        {
+          label: 'Edit Loop',
+          icon: <MaterialCommunityIcons name={appIcons.actions.edit.name as any} size={24} color={colors.text} />,
+          onPress: handleEdit,
+        },
+        {
+          label: 'Duplicate Loop',
+          icon: <MaterialCommunityIcons name={appIcons.actions.duplicate.name as any} size={24} color={colors.text} />,
+          onPress: handleDuplicate,
+        },
+      ],
+      [
+        {
+          label: 'Delete Loop',
+          icon: <MaterialCommunityIcons name={appIcons.actions.delete.name as any} size={24} color={colors.error} />,
+          onPress: handleDelete,
+          destructive: true,
+        },
+      ],
+    ];
+  }, [selectedLoop, colors.text, colors.error]);
 
   const sections = useMemo(() => {
     const loopsWithPostCounts = loops.map(loop => ({
@@ -166,22 +219,12 @@ export default function LoopsScreen() {
         renderSectionHeader={({ section: { title } }: { section: LoopSection }) => <LoopListSectionHeader title={title} />}
         contentContainerStyle={{ paddingTop: HEADER_HEIGHT, paddingHorizontal: 24 }}
       />
-
-      <Modalize ref={modalRef} adjustToContentHeight onClosed={() => setSelectedLoop(null)}>
-        {selectedLoop && (
-          <LoopActionsModalContent
-            loopId={selectedLoop.id}
-            loopTitle={selectedLoop.title}
-            isPinned={selectedLoop.isPinned}
-            onPin={() => { handlePin(selectedLoop.id); handleCloseMenu(); }}
-            onUnpin={() => { handleUnpin(selectedLoop.id); handleCloseMenu(); }}
-            onEdit={() => handleEdit(selectedLoop)}
-            onDuplicate={() => handleDuplicate(selectedLoop)}
-            onDelete={() => handleDelete(selectedLoop)}
-            onClose={handleCloseMenu}
-          />
-        )}
-      </Modalize>
+      
+      <BottomSheetMenu 
+        modalRef={loopActionMenuRef}
+        menuTitle="Options"
+        sections={loopMenuItems}
+      />
       
       <CreateLoopPopup
         visible={isCreateLoopVisible}

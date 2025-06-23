@@ -1,20 +1,24 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, Pressable } from 'react-native';
 import Reanimated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useThemeStyles, type ThemeStyles } from '@/hooks/useThemeStyles';
 import * as typography from '@/presets/typography';
+import { ImageSourcePropType } from 'react-native';
+import { PostDisplayData } from '@/app/(loops)/[loopId]';
+import { LinearGradient } from 'expo-linear-gradient';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 export interface Post {
   id: string;
-  previewImageUrl?: string;
+  imageSource?: ImageSourcePropType;
   caption: string;
 }
 
 export interface PostCardSProps {
-  post: Post;
+  post: PostDisplayData;
   variant?: 'featured' | 'mini';
   cardWidth?: number;
-  onLongPress?: () => void;
+  onLongPress?: (post: PostDisplayData) => void;
   isBeingDragged?: boolean;
   onPress?: () => void;
 }
@@ -57,11 +61,19 @@ const PostCardS: React.FC<PostCardSProps> = React.memo(({
 
   const content = (
     <View style={styles.cardContainer}>
-      {post.previewImageUrl ? (
-        <Image source={{ uri: post.previewImageUrl }} style={styles.image} resizeMode="cover" />
-      ) : (
-        <View style={[styles.imagePlaceholder, { backgroundColor: placeholderColor }]} />
-      )}
+      <View style={[styles.imageContainer, { backgroundColor: themeStyles.colors.background }]}>
+        {post.imageSource && typeof post.imageSource === 'object' && 'uri' in post.imageSource && post.imageSource.uri ? (
+          <Image
+            source={post.imageSource}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.placeholderContainer}>
+            <MaterialCommunityIcons name="image-off-outline" size={32} color={themeStyles.colors.tabInactive} />
+          </View>
+        )}
+      </View>
       {post.caption && variant === 'featured' && (
         <View style={styles.captionContainer}>
           <Text style={typography.captionSmall} numberOfLines={2} ellipsizeMode="tail">
@@ -81,7 +93,7 @@ const PostCardS: React.FC<PostCardSProps> = React.memo(({
 
   return (
     <Reanimated.View style={[styles.shadowWrapper, dragAnimatedStyle]}>
-      <TouchableOpacity onPress={onPress} onLongPress={onLongPress} activeOpacity={0.9}>
+      <TouchableOpacity onPress={onPress} onLongPress={() => onLongPress?.(post)} activeOpacity={0.9}>
         {content}
       </TouchableOpacity>
     </Reanimated.View>
@@ -113,17 +125,24 @@ const createStyles = (theme: ThemeStyles, variant: 'featured' | 'mini', cardWidt
       flexDirection: 'column',
       alignItems: 'stretch',
     },
-    image: {
-      width: '100%',
-      aspectRatio: variant === 'featured' ? 7 / 5 : 5 / 4,
-      flexShrink: 0,
+    container: {
+      borderRadius: 12,
+      overflow: 'hidden',
+      borderWidth: 1,
     },
-    imagePlaceholder: {
+    imageContainer: {
       width: '100%',
-      aspectRatio: variant === 'featured' ? 7 / 5 : 5 / 4,
+      aspectRatio: 7/5,
       justifyContent: 'center',
       alignItems: 'center',
-      flexShrink: 0,
+    },
+    image: {
+      ...StyleSheet.absoluteFillObject,
+      width: '100%',
+      height: '100%',
+    },
+    textContainer: {
+      padding: 12,
     },
     captionContainer: { 
       paddingHorizontal: spacing.md,
@@ -138,6 +157,17 @@ const createStyles = (theme: ThemeStyles, variant: 'featured' | 'mini', cardWidt
       minHeight: 32,
       justifyContent: 'center',
     },
+    featuredIndicator: {
+      position: 'absolute',
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      borderRadius: 6,
+    },
+    placeholderContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    }
   });
 };
 

@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+// ARCHIVED: Replaced by PostMenus + usePostMenuLogic system on 2025-06-19
+// This version is preserved in case rollback or reference is needed.
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -24,58 +26,58 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import { useLoops } from '@/context/LoopsContext';
+import { PostDisplayData } from '@/app/(loops)/[loopId]';
 
-export interface PostDisplayData {
-  id: string;
+export interface PostFormData {
+  imageSource: ImageSourcePropType | null;
   caption: string;
-  imageSource: ImageSourcePropType;
 }
 
-interface EditPostPopupProps {
+interface PostFormPopupProps {
   isVisible: boolean;
-  post: PostDisplayData;
-  loopId: string;
-  onClose: () => void;
-  onSaveSuccess: (updatedPost: PostDisplayData) => void;
-}
-
-interface PostFormData {
-  imageUri: string;
-  caption: string;
-}
-
-const EditPostPopupContent: React.FC<{
-  post: PostDisplayData;
   onClose: () => void;
   onSave: (data: PostFormData) => void;
-  loopId: string;
-}> = ({ post, onClose, onSave, loopId }) => {
+  post?: PostDisplayData | null; // Make post optional for creation
+}
+
+const PostFormPopupContent: React.FC<{
+  onClose: () => void;
+  onSave: (data: PostFormData) => void;
+  post?: PostDisplayData | null;
+}> = ({ onClose, onSave, post }) => {
   const theme = useThemeStyles();
   const { colors, spacing, typography, borderRadius } = theme;
 
-  // Extract image URI from post.imageSource which could be a require() result or {uri: string}
-  const getInitialImageUri = (): string | null => {
-    if (!post.imageSource) return null;
-    
-    if (typeof post.imageSource === 'number') {
-      // This is a require() result, we can't edit it directly
-      return null;
-    } else if (typeof post.imageSource === 'object') {
-      // Handle both single ImageURISource and ImageURISource[] cases
-      const imageSource = post.imageSource as any;
-      if (imageSource.uri) {
-        return imageSource.uri;
-      }
-    }
-    
-    return null;
-  };
-
-  const [caption, setCaption] = useState(post.caption || '');
-  const [imageUri, setImageUri] = useState<string | null>(getInitialImageUri());
+  const mode = post ? 'edit' : 'create';
+  const [caption, setCaption] = useState('');
+  const [imageSource, setImageSource] = useState<ImageSourcePropType | null>(null);
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
   const [showRemixButton, setShowRemixButton] = useState(false);
+
+  useEffect(() => {
+    if (mode === 'edit' && post) {
+      setCaption(post.caption || '');
+
+      const imageSourceProp = (post as any).imageSource;
+      const imageUrlProp = (post as any).imageUrl;
+
+      if (typeof imageSourceProp === 'number') {
+        setImageSource(imageSourceProp);
+      } else if (typeof imageSourceProp === 'object' && imageSourceProp !== null && imageSourceProp.uri) {
+        setImageSource(imageSourceProp);
+      } else if (typeof imageUrlProp === 'string' && imageUrlProp.length > 0) {
+        setImageSource({ uri: imageUrlProp });
+      } else {
+        setImageSource(null);
+        if (__DEV__ && (imageSourceProp || imageUrlProp)) {
+          console.log('Warning: Unrecognized or missing image source for post:', post.id);
+        }
+      }
+    } else {
+      setCaption('');
+      setImageSource(null);
+    }
+  }, [post, mode]);
 
   const captionInputTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -117,118 +119,140 @@ const EditPostPopupContent: React.FC<{
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const { uri, width, height } = result.assets[0];
-      setImageUri(uri);
+      setImageSource({ uri });
       setImageAspectRatio(width / height);
     }
   };
 
   const handleSave = () => {
-    // Allow saving if either caption or image exists
-    if (!imageUri && caption.trim() === '') {
+    if (!imageSource && caption.trim() === '') {
       Alert.alert('Empty Post', 'Please add an image or a caption before saving.');
       return;
     }
 
     onSave({
-      imageUri: imageUri || '',
+      imageSource: imageSource,
       caption: caption.trim(),
     });
   };
-
-  const canSave = imageUri !== null || caption.trim() !== '';
-  const remixButtonOpacity = useSharedValue(0);
   
+  const canSave = imageSource !== null || caption.trim() !== '';
+  const remixButtonOpacity = useSharedValue(0);
+
   useEffect(() => {
     remixButtonOpacity.value = withTiming(showRemixButton ? 1 : 0, { duration: 300 });
   }, [showRemixButton]);
-  
+
   const animatedRemixButtonStyle = useAnimatedStyle(() => ({
-      opacity: remixButtonOpacity.value,
-      transform: [{ translateY: interpolate(remixButtonOpacity.value, [0, 1], [5, 0]) }]
+    opacity: remixButtonOpacity.value,
+    transform: [{ translateY: interpolate(remixButtonOpacity.value, [0, 1], [5, 0]) }],
   }));
 
   const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
   const maxImageHeight = windowHeight * 0.45;
   const contentPadding = spacing.xl * 2;
-  const pickerWidth = (windowWidth * 0.95) - contentPadding; // 95% is the modal width
+  const pickerWidth = (windowWidth * 0.95) - contentPadding;
 
   const imagePickerStyle = [
     styles.imagePicker,
-    { 
-      borderRadius: borderRadius.md, 
-      backgroundColor: colors.background, 
+    {
+      borderRadius: borderRadius.md,
+      backgroundColor: colors.background,
       marginTop: spacing.lg,
     },
-    imageUri 
-      ? { height: undefined, maxHeight: maxImageHeight }
-      : { height: pickerWidth * (5/7) },
+    imageSource ? { height: undefined, maxHeight: maxImageHeight } : { height: pickerWidth * (5 / 7) },
   ];
-  
+
   const imagePreviewStyle = [
-      styles.imagePreview,
-      imageAspectRatio ? { aspectRatio: imageAspectRatio } : {},
+    styles.imagePreview,
+    imageAspectRatio ? { aspectRatio: imageAspectRatio } : {},
   ];
 
   return (
     <View style={[styles.modalContent, { backgroundColor: colors.card, borderRadius: borderRadius.lg }]}>
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Text style={[styles.title, { color: colors.text, fontSize: typography.fontSize.title, fontWeight: '500' }]}>
-          Edit Post
+          {mode === 'edit' ? 'Edit Post' : 'New Post'}
         </Text>
       </View>
 
       <View style={{ paddingHorizontal: spacing.xl, paddingBottom: spacing.xl }}>
-        {/* == Image Section == */}
-        {imageUri ? (
-          <TouchableOpacity onPress={handlePickImage} style={imagePickerStyle}>
-            <Image source={{ uri: imageUri }} style={imagePreviewStyle} />
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity onPress={handlePickImage} style={imagePickerStyle}>
+        <TouchableOpacity onPress={handlePickImage} style={imagePickerStyle}>
+          {imageSource ? (
+            <Image source={imageSource} style={imagePreviewStyle} resizeMode="contain" />
+          ) : (
             <View style={styles.imagePickerPlaceholder}>
               <Ionicons name="image-outline" size={40} color={colors.tabInactive} />
-              <Text style={{ color: colors.tabInactive, marginTop: spacing.sm }}>Add an Image</Text>
+              <Text style={{ color: colors.tabInactive, marginTop: spacing.sm }}>
+                {mode === 'edit' ? 'Add an Image' : 'Select an Image'}
+              </Text>
             </View>
-          </TouchableOpacity>
-        )}
+          )}
+        </TouchableOpacity>
 
-        {/* == Caption Section == */}
         <View style={{ marginTop: spacing.lg }}>
           <TextInput
-            style={[styles.input, { 
-                backgroundColor: colors.backgroundDefault, 
-                borderColor: colors.border, 
-                color: colors.text, 
-                fontSize: typography.fontSize.body, 
-                paddingHorizontal: spacing.lg, 
-                paddingVertical: Platform.OS === 'ios' ? spacing.md + 2 : spacing.sm + 4, 
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.backgroundDefault,
+                borderColor: colors.border,
+                color: colors.text,
+                fontSize: typography.fontSize.body,
+                paddingHorizontal: spacing.lg,
+                paddingVertical: Platform.OS === 'ios' ? spacing.md + 2 : spacing.sm + 4,
                 borderRadius: borderRadius.md,
                 height: 100,
-                textAlignVertical: 'top'
-            }]}
+                textAlignVertical: 'top',
+              },
+            ]}
             value={caption}
             onChangeText={setCaption}
             placeholder="What should this post say?"
             placeholderTextColor={colors.tabInactive}
             multiline
           />
-           <Animated.View style={[styles.remixButtonContainer, animatedRemixButtonStyle]}>
-              <TouchableOpacity style={[styles.remixButton, { backgroundColor: colors.accent, borderRadius: borderRadius.full, }]}>
-                <Text style={[styles.remixButtonText, { color: colors.buttonAccentText, fontSize: typography.fontSize.caption, fontWeight: 'bold' }]}>
-                  Remix with AI
-                </Text>
-              </TouchableOpacity>
+          <Animated.View style={[styles.remixButtonContainer, animatedRemixButtonStyle]}>
+            <TouchableOpacity
+              style={[
+                styles.remixButton,
+                { backgroundColor: colors.accent, borderRadius: borderRadius.full },
+              ]}>
+              <Text
+                style={[
+                  styles.remixButtonText,
+                  { color: 'white', fontSize: typography.fontSize.caption, fontWeight: 'bold' },
+                ]}>
+                Remix with AI
+              </Text>
+            </TouchableOpacity>
           </Animated.View>
         </View>
       </View>
 
       <View style={[styles.footer, { borderTopColor: colors.border, padding: spacing.lg, flexDirection: 'row' }]}>
-        <TouchableOpacity onPress={onClose} style={[styles.footerButtonBase, { backgroundColor: colors.background, marginRight: spacing.md, flex: 1, borderRadius: borderRadius.md }]}>
+        <TouchableOpacity
+          onPress={onClose}
+          style={[
+            styles.footerButtonBase,
+            { backgroundColor: colors.background, marginRight: spacing.md, flex: 1, borderRadius: borderRadius.md },
+          ]}>
           <Text style={{ color: colors.text, fontWeight: '500', fontSize: typography.fontSize.body }}>Cancel</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleSave} disabled={!canSave} style={[styles.footerButtonBase, { backgroundColor: canSave ? colors.accent : colors.border, flex: 1, borderRadius: borderRadius.md }]}>
-          <Text style={{ color: canSave ? colors.buttonAccentText : colors.tabInactive, fontWeight: 'bold', fontSize: typography.fontSize.body }}>
-            Update Post
+        <TouchableOpacity
+          onPress={handleSave}
+          disabled={!canSave}
+          style={[
+            styles.footerButtonBase,
+            { backgroundColor: canSave ? colors.accent : colors.border, flex: 1, borderRadius: borderRadius.md },
+          ]}>
+          <Text
+            style={{
+              color: canSave ? 'white' : colors.tabInactive,
+              fontWeight: 'bold',
+              fontSize: typography.fontSize.body,
+            }}>
+            {mode === 'edit' ? 'Update Post' : 'Save Post'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -236,21 +260,9 @@ const EditPostPopupContent: React.FC<{
   );
 };
 
-const EditPostPopup: React.FC<EditPostPopupProps> = ({ isVisible, post, loopId, onClose, onSaveSuccess }) => {
+const PostFormPopup: React.FC<PostFormPopupProps> = ({ isVisible, onClose, onSave, post }) => {
   const animationProgress = useSharedValue(0);
   const [isRendered, setIsRendered] = useState(isVisible);
-  const { dispatch, state } = useLoops();
-
-  const handleUpdatePost = (data: PostFormData) => {
-    // Create updated post object with the same ID but new content
-    const updatedPost: PostDisplayData = {
-      id: post.id,
-      caption: data.caption,
-      imageSource: data.imageUri ? { uri: data.imageUri } : post.imageSource,
-    };
-    onSaveSuccess(updatedPost);
-    onClose();
-  };
 
   useEffect(() => {
     if (isVisible) {
@@ -285,7 +297,7 @@ const EditPostPopup: React.FC<EditPostPopupProps> = ({ isVisible, post, loopId, 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flexContainer}>
         <Pressable style={styles.backdrop} onPress={onClose} />
         <Animated.View style={[styles.contentContainer, animatedContentStyle]}>
-          <EditPostPopupContent post={post} onClose={onClose} onSave={handleUpdatePost} loopId={loopId} />
+          <PostFormPopupContent onClose={onClose} onSave={onSave} post={post} />
         </Animated.View>
       </KeyboardAvoidingView>
     </Animated.View>
@@ -331,8 +343,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   imagePickerPlaceholder: {
-      justifyContent: 'center',
-      alignItems: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imagePreview: {
     width: '100%',
@@ -364,4 +376,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EditPostPopup; 
+export default PostFormPopup; 

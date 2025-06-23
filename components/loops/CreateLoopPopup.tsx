@@ -16,11 +16,10 @@ const CreateLoopPopup: React.FC<CreateLoopPopupProps> = ({ visible, onClose, onS
       ...data,
       id: `loop-${Date.now()}`,
       postCount: 0,
-      posts: [],
       status: 'draft',
-      randomize: false,
-      linkedAccounts: [],
-      isActive: false,
+      isActive: true,
+      isPinned: false,
+      previewImageUrl: '',
     };
     dispatch({ type: 'ADD_LOOP', payload: newLoopPayload });
     onSaveSuccess();
