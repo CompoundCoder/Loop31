@@ -38,3 +38,4 @@ yarn-error.*
 app-example
 # SpecStory explanation file
 .specstory/.what-is-this.md
+node_modules.old/

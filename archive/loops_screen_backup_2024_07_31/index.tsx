@@ -29,7 +29,7 @@ import { LoopsEmptyState } from '@/components/loops/LoopsEmptyState';
 import { useLoops, type Loop } from '@/context/LoopsContext';
 import { useEditLoopPopup } from '@/hooks/useEditLoopPopup';
 import { getLoopPostCount } from '@/utils/loopHelpers';
-import { MOCK_POSTS } from '@/data/mockPosts'; 
+import { MOCK_POSTS } from '@/data/mockPosts';
 import { duplicateLoopAndLinkPosts } from '@/logic/loopManager';
 import { addLoopToRecentlyDeleted } from '@/data/recentlyDeleted';
 
@@ -58,8 +58,8 @@ export default function LoopsScreen() {
   const loopActionMenuRef = useRef<Modalize>(null);
   const [selectedLoop, setSelectedLoop] = useState<Loop | null>(null);
 
-  const navigation = useNavigation<NativeStackNavigationProp<LoopsStackParamList>>(); 
-
+  const navigation = useNavigation<NativeStackNavigationProp<LoopsStackParamList>>();
+  
   const handleScroll = useAnimatedScrollHandler(event => {
     scrollY.value = event.contentOffset.y;
   });
@@ -179,15 +179,15 @@ export default function LoopsScreen() {
   
   const renderItem = ({ item }: { item: Loop & { postCount: number } }) => (
     <View style={{ marginBottom: spacing.md }}>
-          <LoopCard 
+      <LoopCard
         loop={item}
         isPinned={item.isPinned}
         onPress={() => navigation.navigate('[loopId]', { loopId: item.id })}
         onLongPress={() => handleLongPress(item)}
-            onToggleActive={(loopId, isActive) => dispatch({ type: 'TOGGLE_ACTIVE', payload: { loopId, isActive } })}
-                    />
-                </View>
-    );
+        onToggleActive={(loopId, isActive) => dispatch({ type: 'TOGGLE_ACTIVE', payload: { loopId, isActive } })}
+      />
+    </View>
+  );
 
   if (loops.length === 0) {
     return <LoopsEmptyState onCreateLoop={showCreateLoopForm} />;
@@ -199,7 +199,7 @@ export default function LoopsScreen() {
     <ScreenContainer>
       <AnimatedHeader 
         title="Loops" 
-        scrollY={scrollY}
+        scrollY={scrollY} 
         actionButton={
           <CircleButton 
             preset={buttonPresets.addDark} 
@@ -211,10 +211,10 @@ export default function LoopsScreen() {
       
       <AnimatedSectionList
         sections={sections as LoopSection[]}
-          renderItem={renderItem}
+        renderItem={renderItem}
         keyExtractor={(item: Loop) => item.id}
-          onScroll={handleScroll} 
-          scrollEventThrottle={16}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         stickySectionHeadersEnabled={false}
         renderSectionHeader={({ section: { title } }: { section: LoopSection }) => <LoopListSectionHeader title={title} />}
         contentContainerStyle={{ paddingTop: HEADER_HEIGHT, paddingHorizontal: 24 }}

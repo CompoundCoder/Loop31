@@ -5,7 +5,7 @@ export const LAYOUT = {
     horizontalPadding: 16,
   },
   content: {
-    horizontalMargin: 24, // spacing.xl (24px) for consistent content width
+    horizontalMargin: 16, // spacing.lg (16px) for consistent content width
     cardSpacing: 16, // spacing.lg (16px) for vertical gaps
   },
 } as const;

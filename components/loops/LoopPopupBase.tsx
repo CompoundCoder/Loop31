@@ -228,11 +228,11 @@ const LoopPopupContent: React.FC<LoopPopupContentProps> = ({ onClose, onSave, ti
       <View style={[modalStyles.header, { borderBottomColor: colors.border }]}>
         <Text style={[modalStyles.title, { color: colors.text, fontSize: typography.fontSize.title, fontWeight: '500' }]}>{title}</Text>
       </View>
-      <View style={{ paddingHorizontal: spacing.xl, paddingBottom: spacing.xl }}>
+      <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.lg }}>
         <Text style={[modalStyles.sectionTitle, { color: colors.text, fontSize: typography.fontSize.subtitle, fontWeight: '500', marginBottom: spacing.md, marginTop: spacing.lg }]}>Name</Text>
         <TextInput style={[modalStyles.input, { backgroundColor: colors.backgroundDefault, borderColor: colors.border, color: colors.text, fontSize: typography.fontSize.body, paddingHorizontal: spacing.lg, paddingVertical: Platform.OS === 'ios' ? spacing.md + 2 : spacing.sm + 4, borderRadius: borderRadius.md }]} value={loopName} onChangeText={setLoopName} placeholder="e.g., Morning Motivation" placeholderTextColor={textFadedColor} />
         
-        <Text style={[modalStyles.sectionTitle, { color: colors.text, marginTop: spacing.xl, marginBottom: spacing.sm, fontSize: typography.fontSize.subtitle, fontWeight: '500' }]}>{frequencyTitle}</Text>
+        <Text style={[modalStyles.sectionTitle, { color: colors.text, marginTop: spacing.lg, marginBottom: spacing.sm, fontSize: typography.fontSize.subtitle, fontWeight: '500' }]}>{frequencyTitle}</Text>
         <FrequencySlider stops={SCHEDULE_OPTIONS} selectedIndex={selectedFrequencyIndex} onIndexChange={setSelectedFrequencyIndex} theme={theme} modalStyles={modalStyles} />
         
         <Animated.View style={animatedCustomPickerStyle}>
@@ -245,7 +245,7 @@ const LoopPopupContent: React.FC<LoopPopupContentProps> = ({ onClose, onSave, ti
           </View>
         </Animated.View>
         
-        <Text style={[modalStyles.sectionTitle, { color: colors.text, marginTop: spacing.xl, marginBottom: spacing.md, fontSize: typography.fontSize.subtitle, fontWeight: '500' }]}>Color</Text>
+        <Text style={[modalStyles.sectionTitle, { color: colors.text, marginTop: spacing.lg, marginBottom: spacing.md, fontSize: typography.fontSize.subtitle, fontWeight: '500' }]}>Color</Text>
         <View style={modalStyles.colorGrid}>
           {LOOP_COLORS.map((loopColor) => <ColorSwatch key={loopColor} color={loopColor} isSelected={selectedColor === loopColor} onPress={() => setSelectedColor(loopColor)} modalStyles={modalStyles} />)}
         </View>

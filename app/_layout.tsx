@@ -135,6 +135,15 @@ export default function RootLayout() {
                   ),
                 }}
               />
+              <Tabs.Screen
+                name="test" 
+                options={{
+                  title: 'Test',
+                  tabBarIcon: ({ focused, color, size }) => (
+                    <AnimatedTabIcon focused={focused} iconName="settings-outline" color={color} size={size} />
+                  ),
+                }}
+              />
               {/* Screens to hide from the tab bar */}
               <Tabs.Screen name="shop/pack/[packId]" options={{ href: null }} />
               <Tabs.Screen name="+not-found" options={{ href: null }} />
